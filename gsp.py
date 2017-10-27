@@ -103,4 +103,4 @@ class GSP:
 			self.freq_patterns.append(self._support(candidates, minsup))
 
 			self._print_status(k_items, candidates)
-		return self.freq_patterns
+		return self.freq_patterns[:-1]
