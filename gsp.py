@@ -47,11 +47,13 @@ class GSP:
 		self.unique_candidates = [set([item]) for item in set(x for l in self.transactions for x in l)]
 
 		# the total of different items in the base
-		self.t_size = len(self.unique_candidates)
+		#self.t_size = len(self.unique_candidates)
 
 	def _support(self, items, minsup = 0):
 		'''
-		The support is the probability that the antecedent of the rule is present in the base (transactions) in relation to the total amount of records in the base.
+		The support count (or simply support) for a sequence is defined as the fraction of total data-sequences that "contain" this sequence. 
+		(Although the word "contains" is not strictly accurate once we incorporate taxonomies, 
+		it captures the spirt of when a data-sequence contributes to the support of a sequential pattern.)
 
 		Parameters
 			items: set of items that will be evaluated
@@ -59,14 +61,11 @@ class GSP:
 		'''
 		results = {}
 		for item in items:
-			# The number of times the item appears in the base
+			# The number of times the item appears in the transactions 
 			frequency = len([t for t in self.transactions if item.issubset(t)])
 
-			# ratio between the frequency and the total of different items in the base
-			support = round(frequency / self.t_size, 3)
-
-			if support >= minsup:
-				results[tuple(item)] = [frequency, support]
+			if frequency >= minsup:
+				results[tuple(item)] = [frequency]
 		return results
 
 	def _print_status(self, run, candidates):
@@ -80,6 +79,7 @@ class GSP:
 			minsup: minimum support
 		'''
 		assert (0.0 < minsup) and (minsup <= 1.0)
+		minsup = len(self.transactions) * minsup
 
 		# the set of frequent 1-sequence: all singleton sequences (k-itemsets/k-sequence = 1) - Initially, every item in DB is a candidate
 		candidates = self.unique_candidates
