@@ -14,10 +14,10 @@ def create_transactions(minsize, maxsize, minvalue, maxvalue):
 minsize, maxsize, minvalue, maxvalue = 2, 256, 0, 5
 
 transactions = [create_transactions(
-    minsize, maxsize, minvalue, maxvalue) for _ in range(100)]
+    minsize, maxsize, minvalue, maxvalue) for _ in range(10000)]
 
 # transactions = [
-#     ['Bread', 'Milk'],
+#     ['Bread', 'Milk'],for _ in procs:
 #     ['Bread', 'Diaper', 'Beer', 'Eggs'],
 #     ['Milk', 'Diaper', 'Beer', 'Coke'],
 #     ['Bread', 'Milk', 'Diaper', 'Beer'],

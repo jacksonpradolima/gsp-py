@@ -19,7 +19,9 @@ transactions = [
 """
 
 import logging
+import multiprocessing as mp
 import numpy as np
+import time
 
 from collections import Counter
 from itertools import chain
@@ -49,9 +51,17 @@ class GSP:
         counts = Counter(chain.from_iterable(raw_transactions))
         self.unique_candidates = [tuple([k]) for k, c in counts.items()]
 
-    def is_slice_in_list(self, s, l):
+    def _is_slice_in_list(self, s, l):
         len_s = len(s)  # so we don't recompute length of s on every iteration
         return any(s == l[i:len_s+i] for i in range(len(l) - len_s+1))
+
+    def _calc_frequency(self, results, item, minsup):
+        # The number of times the item appears in the transactions
+        frequency = len(
+            [t for t in self.transactions if self._is_slice_in_list(item, t)])
+        if frequency >= minsup:
+            results[item] = frequency
+        return results
 
     def _support(self, items, minsup=0):
         '''
@@ -65,14 +75,16 @@ class GSP:
                 items: set of items that will be evaluated
                 minsup: minimum support
         '''
-        results = {}
+        results = mp.Manager().dict()
+        pool = mp.Pool(processes=mp.cpu_count())
+
         for item in items:
-            # The number of times the item appears in the transactions
-            frequency = len(
-                [t for t in self.transactions if self.is_slice_in_list(item, t)])
-            if frequency >= minsup:
-                results[item] = frequency
-        return results
+            pool.apply_async(self._calc_frequency,
+                             args=(results, item, minsup))
+        pool.close()
+        pool.join()
+
+        return dict(results)
 
     def _print_status(self, run, candidates):
         logging.debug("""
@@ -116,6 +128,7 @@ class GSP:
             # by minimum support
             items = np.unique(
                 list(set(self.freq_patterns[k_items - 2].keys())))
+
             candidates = list(product(items, repeat=k_items))
 
             # candidate pruning - eliminates candidates who are not potentially
