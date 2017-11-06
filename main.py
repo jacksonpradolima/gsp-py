@@ -1,17 +1,35 @@
 import argparse
-import logging 
+import logging
+import random
 
 from gsp import GSP
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Considers these transactions
-items = [
-			[1, 2],
-			[1, 3, 4, 6],
-			[2, 3, 4, 5],
-			[1, 2, 3, 4],
-			[1, 2, 3, 5]
-		]
 
-print(GSP(items).search(0.3))
+def create_transactions(minsize, maxsize, minvalue, maxvalue):
+    return [random.randint(minvalue, maxvalue)
+            for _ in range(random.randint(minsize, maxsize))]
+
+minsize, maxsize, minvalue, maxvalue = 2, 256, 0, 5
+
+transactions = [create_transactions(
+    minsize, maxsize, minvalue, maxvalue) for _ in range(100)]
+
+# transactions = [
+#     ['Bread', 'Milk'],
+#     ['Bread', 'Diaper', 'Beer', 'Eggs'],
+#     ['Milk', 'Diaper', 'Beer', 'Coke'],
+#     ['Bread', 'Milk', 'Diaper', 'Beer'],
+#     ['Bread', 'Milk', 'Diaper', 'Coke']
+# ]
+
+# transactions = [[3, 5, 2, 0, 4, 4, 1, 1], [2, 5, 5], [5, 3, 2, 4, 4, 0, 4], [4, 3, 0, 0], [
+#     1, 0, 4, 0, 0, 4], [2, 5, 1, 3, 5, 2, 5, 3], [0, 4, 0, 4, 5], [4, 2],
+#     [5], [2, 3, 0, 0, 0, 3, 0, 2, 3]]
+
+result = GSP(transactions).search(0.3)
+
+print("========= Status =========")
+print("Transactions: {}".format(transactions))
+print("GSP: {}".format(result))
