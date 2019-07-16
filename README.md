@@ -9,7 +9,7 @@ If this package contributes to a project which leads to a scientific publication
 
 ```
 @misc{pradolima_gsppy,
-  author       = {Prado Lima, Jackson Antonio do and Godóy, Fernando},
+  author       = {Prado Lima, Jackson Antonio do},
   title        = {{GSP-Py - Generalized Sequence Pattern algorithm in Python}},
   month        = jul,
   year         = 2019,
