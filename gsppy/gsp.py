@@ -20,12 +20,11 @@ transactions = [
 
 import logging
 import multiprocessing as mp
-import numpy as np
-import time
-
 from collections import Counter
 from itertools import chain
 from itertools import product
+
+import numpy as np
 
 __author__ = "Jackson Antonio do Prado Lima"
 __email__ = "jacksonpradolima@gmail.com"
@@ -53,7 +52,7 @@ class GSP:
 
     def _is_slice_in_list(self, s, l):
         len_s = len(s)  # so we don't recompute length of s on every iteration
-        return any(s == l[i:len_s+i] for i in range(len(l) - len_s+1))
+        return any(s == l[i:len_s + i] for i in range(len(l) - len_s + 1))
 
     def _calc_frequency(self, results, item, minsup):
         # The number of times the item appears in the transactions
@@ -93,7 +92,7 @@ class GSP:
         The candidates have been filtered down to {}.\n"""
                       .format(run,
                               len(candidates),
-                              len(self.freq_patterns[run-1])))
+                              len(self.freq_patterns[run - 1])))
 
     def search(self, minsup=0.2):
         '''
