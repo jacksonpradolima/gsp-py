@@ -1,7 +1,0 @@
-language: python
-python:
-  - "3.6"
-
-script: coverage run --source=gsppy setup.py test
-
-after_success: coveralls
