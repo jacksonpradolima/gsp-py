@@ -76,9 +76,9 @@ If this package contributes to a project which leads to a scientific publication
 @misc{pradolima_gsppy,
   author       = {Prado Lima, Jackson Antonio do},
   title        = {{GSP-Py - Generalized Sequence Pattern algorithm in Python}},
-  month        = jul,
-  year         = 2019,
-  doi          = {10.5281/zenodo.3333988},
-  url          = {https://doi.org/10.5281/zenodo.3333988}
+  month        = May,
+  year         = 2020,
+  doi          = {10.5281/zenodo.3333987},
+  url          = {https://doi.org/10.5281/zenodo.3333987}
 }
 ```
