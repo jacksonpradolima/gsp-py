@@ -19,12 +19,31 @@ Pytest is utilized for parametrized testing to improve coverage and reduce redun
 """
 import json
 import os
+import runpy
 import tempfile
+from unittest.mock import patch
 
 import pytest
 
 from gsppy.cli import detect_and_read_file
 from gsppy.gsp import GSP
+
+
+def test_invalid_json_structure():
+    """
+    Test if a JSON file with an invalid structure raises an error.
+    """
+    # Create an invalid JSON structure that does not adhere to the expected format
+    invalid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    invalid_json.write(json.dumps({"invalid": "data"}))  # Invalid JSON: not a list of lists
+    invalid_json.close()
+
+    # Attempt to read the invalid JSON file
+    with pytest.raises(ValueError, match="File should contain a JSON array of transaction lists."):
+        detect_and_read_file(invalid_json.name)
+
+    # Cleanup
+    os.unlink(invalid_json.name)
 
 
 @pytest.fixture
@@ -130,3 +149,177 @@ def test_valid_min_support_gsp(min_support):
     patterns = gsp.search(min_support=min_support)
     assert len(patterns) > 0  # Ensure at least some patterns are found
     assert patterns[0]  # Ensure frequent patterns are not empty
+
+
+def test_main_invalid_json_file(monkeypatch, capfd):
+    """
+    Test `main()` with a JSON file that has an invalid structure.
+    """
+    # Create an invalid JSON file
+    invalid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    invalid_json.write(json.dumps({"invalid": "data"}))  # Invalid JSON: not a list of lists
+    invalid_json.close()
+
+    # Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', invalid_json.name, '--min_support', '0.2']
+    )
+
+    from gsppy.cli import main  # Import the main function from cli.py
+    main()
+
+    # Capture output
+    captured = capfd.readouterr()
+    assert "File should contain a JSON array of transaction lists." in captured.out
+
+    # Cleanup
+    os.unlink(invalid_json.name)
+
+
+def test_main_non_existent_file(monkeypatch, capfd):
+    """
+    Test `main()` with a file that does not exist.
+    """
+    # Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', 'non_existent.json', '--min_support', '0.2']
+    )
+
+    from gsppy.cli import main  # Import the main function from cli.py
+    main()
+
+    # Capture output
+    captured = capfd.readouterr()
+    assert "File 'non_existent.json' does not exist." in captured.out
+
+
+def test_main_valid_json_file(monkeypatch, capfd):
+    """
+    Test `main()` with a valid JSON file.
+    """
+    # Create a valid JSON file
+    valid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], valid_json)
+    valid_json.close()
+
+    # Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', valid_json.name, '--min_support', '0.2']
+    )
+
+    from gsppy.cli import main  # Import the main function from cli.py
+    main()
+
+    # Capture output
+    captured = capfd.readouterr()
+    assert "Frequent Patterns Found:" in captured.out
+
+    # Cleanup
+    os.unlink(valid_json.name)
+
+
+def test_main_invalid_min_support(monkeypatch, capfd):
+    """
+    Test `main()` with an invalid `min_support` value.
+    """
+    # Create a valid JSON file
+    valid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], valid_json)
+    valid_json.close()
+
+    # Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', valid_json.name, '--min_support', '-1.0']  # Invalid min_support
+    )
+
+    from gsppy.cli import main  # Import the main function from cli.py
+    main()
+
+    # Capture output
+    captured = capfd.readouterr()
+    assert "Error: min_support must be in the range (0.0, 1.0]." in captured.out
+
+    # Cleanup
+    os.unlink(valid_json.name)
+
+
+def test_main_entry_point(monkeypatch, capfd):
+    """
+    Test the script entry point (`if __name__ == '__main__': main()`).
+    """
+    # Create a valid JSON file
+    valid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], valid_json)
+    valid_json.close()
+
+    # Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['gsppy.cli', '--file', valid_json.name, '--min_support', '0.2']  # Simulating script call
+    )
+
+    # Use `runpy` to execute the script as if it were run from the command line
+    runpy.run_module('gsppy.cli', run_name='__main__')
+
+    # Capture the output
+    captured = capfd.readouterr()
+    assert "Frequent Patterns Found:" in captured.out
+
+    # Cleanup
+    os.unlink(valid_json.name)
+
+
+def test_main_edge_case_min_support(monkeypatch, capfd):
+    """
+    Test `main()` with edge-case values for `min_support` (valid and invalid).
+    """
+    # Create a valid JSON file
+    valid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], valid_json)
+    valid_json.close()
+
+    # Case 1: `min_support` = 1.0 (Valid Edge Case)
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', valid_json.name, '--min_support', '1.0']
+    )
+    from gsppy.cli import main
+    main()
+    captured = capfd.readouterr()
+    assert "Frequent Patterns Found:" in captured.out
+
+    # Case 2: `min_support` = -1.0 (Invalid Edge Case)
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', valid_json.name, '--min_support', '-1.0']
+    )
+    main()
+    captured = capfd.readouterr()
+    assert "Error: min_support must be in the range (0.0, 1.0]." in captured.out
+
+    # Cleanup
+    os.unlink(valid_json.name)
+
+
+def test_main_gsp_exception(monkeypatch, capfd):
+    """
+    Test `main()` when the GSP algorithm raises an exception.
+    """
+    # Step 1: Create a valid JSON file
+    valid_json = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
+    json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], valid_json)
+    valid_json.close()
+
+    # Step 2: Mock CLI arguments
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', valid_json.name, '--min_support', '0.2']
+    )
+
+    # Step 3: Mock GSP.search to raise an exception
+    with patch('gsppy.gsp.GSP.search', side_effect=Exception("Simulated GSP failure")):
+        from gsppy.cli import main  # Import main
+        main()
+
+    # Step 4: Capture output and assert the error message
+    captured = capfd.readouterr()
+    assert "Error executing GSP algorithm: Simulated GSP failure" in captured.out
+
+    # Step 5: Cleanup
+    os.unlink(valid_json.name)
