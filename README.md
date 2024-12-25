@@ -21,6 +21,7 @@ A **Python implementation** of the Generalized Sequence Pattern (GSP) algorithm 
 - [What is GSP?](#what-is-gsp)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Developer Installation](#developer-installation)
 - [Usage](#usage)
 - [Planned Features](#planned-features)
 - [Contributing](#contributing)
@@ -76,6 +77,17 @@ pip install gsppy
 
 ---
 
+## 🛠️ Developer Installation
+
+For contributors and developers, GSP-Py provides additional dependencies for development purposes (e.g., testing and linting).
+
+To install the package along with development dependencies, use:
+```bash
+pip install .[dev]
+```
+
+The `dev` category includes tools such as `pytest`, `pylint`, and others to ensure code quality and maintainability.
+
 ## 💡 Usage
 
 The library is designed to be easy to use and integrate with your own projects. Below is an example of how you can configure and run GSP-Py.
@@ -96,6 +108,15 @@ transactions = [
 Import the `GSP` class from the `gsppy` package and call the `search` method to find frequent patterns with a support threshold (e.g., `0.3`):
 ```python
 from gsppy.gsp import GSP
+
+# Define the input data
+transactions = [
+    ['Bread', 'Milk'],
+    ['Bread', 'Diaper', 'Beer', 'Eggs'],
+    ['Milk', 'Diaper', 'Beer', 'Coke'],
+    ['Bread', 'Milk', 'Diaper', 'Beer'],
+    ['Bread', 'Milk', 'Diaper', 'Coke']
+]
 
 # Minimum support set to 30%
 min_support = 0.3
@@ -127,6 +148,10 @@ We are actively working to improve GSP-Py. Here are some exciting features plann
 2. **Support for Preprocessing and Postprocessing**:
    - Add hooks to allow users to transform datasets before mining and customize the output results.
 
+3. **Support for Time-Constrained Pattern Mining**:
+   - Extend GSP-Py to handle temporal datasets by allowing users to define time constraints (e.g., maximum time gaps between events, time windows) during the sequence mining process.
+   - Enable candidate pruning and support calculations based on these temporal constraints.
+
 Want to contribute or suggest an improvement? [Open a discussion or issue!](https://github.com/jacksonpradolima/gsp-py/issues)
 
 ---
@@ -134,6 +159,11 @@ Want to contribute or suggest an improvement? [Open a discussion or issue!](http
 ## 🤝 Contributing
 
 We welcome contributions from the community! If you'd like to help improve GSP-Py, read our [CONTRIBUTING.md](CONTRIBUTING.md) guide to get started.
+
+Development dependencies (e.g., testing and linting tools) are included in the `dev` category in `setup.py`. To install these dependencies, run:
+```bash
+pip install .[dev]
+```
 
 ### General Steps:
 1. Fork the repository.

@@ -22,11 +22,16 @@ setup(
     packages=find_packages(exclude=['test_']),
     python_requires='>=3.11',
     install_requires=[
-        'pylint==3.2.6',
-        'pytest==8.3.4',
-        'pytest-benchmark==5.1.0',
-        'pytest-cov==6.0.0',
+        # No additional runtime dependencies are required since the project uses standard library modules only.
     ],
+    extras_require={
+        'dev': [
+            'pylint==3.2.6',
+            'pytest==8.3.4',
+            'pytest-benchmark==5.1.0',
+            'pytest-cov==6.0.0',
+        ],
+    },
     classifiers=[
         'Programming Language :: Python :: 3.11',
         'Operating System :: OS Independent',
