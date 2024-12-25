@@ -162,7 +162,7 @@ def main():
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
-        patterns = gsp.search(minimum_support=args.min_support)
+        patterns = gsp.search(min_support=args.min_support)
         print("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             print(f"\n{i}-Sequence Patterns:")
