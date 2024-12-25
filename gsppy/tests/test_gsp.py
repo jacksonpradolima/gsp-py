@@ -17,9 +17,12 @@ Tests include:
 Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
+import re
 
 import pytest
+
 from gsppy.gsp import GSP
+
 
 @pytest.fixture
 def supermarket_transactions():
@@ -74,6 +77,67 @@ def test_single_transaction():
         GSP(transactions)
 
 
+def test_invalid_transaction_format():
+    """
+    Test the GSP algorithm with invalid transaction formats.
+
+    Asserts:
+        - A ValueError is raised indicating that the transactions must be lists of lists.
+    """
+    invalid_data = ["A", "B"]  # Invalid format: not a list of lists
+    with pytest.raises(ValueError, match="The dataset must be a list of transactions."):
+        GSP(invalid_data)
+
+
+@pytest.mark.parametrize(
+    "min_support, expected_error",
+    [
+        (-0.1, re.escape("Minimum support must be in the range (0.0, 1.0]")),
+        (0.0, re.escape("Minimum support must be in the range (0.0, 1.0]")),
+        (1.1, re.escape("Minimum support must be in the range (0.0, 1.0]")),
+    ]
+)
+def test_invalid_min_support(supermarket_transactions, min_support, expected_error):
+    """
+    Test the GSP algorithm with invalid minimum support values.
+
+    Asserts:
+        - A ValueError is raised if the min_support is outside the valid range.
+    """
+    gsp = GSP(supermarket_transactions)
+    with pytest.raises(ValueError, match=expected_error):
+        gsp.search(min_support=min_support)
+
+
+def test_valid_min_support_edge(supermarket_transactions):
+    """
+    Test the GSP algorithm with a valid edge value for min_support.
+
+    Asserts:
+        - The algorithm runs successfully when min_support is set to 1.0.
+    """
+    gsp = GSP(supermarket_transactions)
+    result = gsp.search(min_support=1.0)  # Only patterns supported by ALL transactions should remain
+    assert not result, "Expected no frequent patterns with min_support = 1.0"
+
+
+def test_min_support_valid(supermarket_transactions):
+    """
+    Test the GSP algorithm with a minimum support set just above 0.0.
+
+    Asserts:
+        - Frequent patterns are generated correctly for a low min_support threshold.
+    """
+    gsp = GSP(supermarket_transactions)
+    result = gsp.search(min_support=0.2)  # At least 1 transaction should support the pattern
+
+    # All items should appear as 1-item patterns
+    level_1_patterns = {('Bread',), ('Milk',), ('Diaper',), ('Beer',), ('Coke',), ('Eggs',)}
+    result_level_1 = set(result[0].keys())  # Extract patterns from Level 1
+
+    assert result_level_1 == level_1_patterns, f"Level 1 patterns mismatch. Got {result_level_1}"
+
+
 def test_no_frequent_items(supermarket_transactions):
     """
     Test the GSP algorithm with a high minimum support value.
@@ -84,6 +148,24 @@ def test_no_frequent_items(supermarket_transactions):
     gsp = GSP(supermarket_transactions)
     result = gsp.search(min_support=0.9)  # High minimum support
     assert not result, "High minimum support should filter out all items."
+
+
+def test_worker_batch_static_method(supermarket_transactions):
+    """
+    Test the _worker_batch method directly for checkpoint validation.
+
+    Asserts:
+        - Candidates below the minimum support are filtered out.
+        - Candidates meeting the minimum support are returned with correct counts.
+    """
+    batch = [('Bread',), ('Milk',), ('Diaper',), ('Eggs',)]  # 1-sequence candidates
+    transactions = [tuple(t) for t in supermarket_transactions]
+    min_support = 3  # Absolute support count
+    expected = [(('Bread',), 4), (('Milk',), 4), (('Diaper',), 4)]
+
+    # Call the '_worker_batch' method
+    results = GSP._worker_batch(batch, transactions, min_support)
+    assert results == expected, f"Expected results {expected}, but got {results}"
 
 
 def test_frequent_patterns(supermarket_transactions):
