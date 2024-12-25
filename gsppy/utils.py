@@ -83,4 +83,3 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple, int]) -> List[T
         for pattern1, pattern2 in product(keys, repeat=2)
         if pattern1[1:] == pattern2[:-1] and not (len(pattern1) == 1 and pattern1 == pattern2)
     ]
-

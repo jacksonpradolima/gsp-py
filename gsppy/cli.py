@@ -56,8 +56,9 @@ def read_transactions_from_json(file_path: str) -> List[List]:
                 raise ValueError("File should contain a JSON array of transaction lists.")
         return transactions
     except Exception as e:
-        logging.error(f"Error reading transaction data from JSON file '{file_path}': {e}")
-        raise ValueError(f"Error reading transaction data from JSON file: {e}")
+        msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg)
 
 
 def read_transactions_from_csv(file_path: str) -> List[List]:
@@ -85,8 +86,9 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
                 transactions.append([item.strip() for item in row if item.strip()])
         return transactions
     except Exception as e:
-        logging.error(f"Error reading transaction data from CSV file '{file_path}': {e}")
-        raise ValueError(f"Error reading transaction data from CSV file: {e}")
+        msg = f"Error reading transaction data from CSV file '{file_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg)
 
 
 def detect_and_read_file(file_path: str) -> List[List]:
@@ -110,10 +112,11 @@ def detect_and_read_file(file_path: str) -> List[List]:
 
     if file_extension == ".json":
         return read_transactions_from_json(file_path)
-    elif file_extension == ".csv":
+
+    if file_extension == ".csv":
         return read_transactions_from_csv(file_path)
-    else:
-        raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
+
+    raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
 
 
 def main():

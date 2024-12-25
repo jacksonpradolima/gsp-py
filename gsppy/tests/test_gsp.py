@@ -83,7 +83,7 @@ def test_no_frequent_items(supermarket_transactions):
     """
     gsp = GSP(supermarket_transactions)
     result = gsp.search(min_support=0.9)  # High minimum support
-    assert result == [], "High minimum support should filter out all items."
+    assert not result, "High minimum support should filter out all items."
 
 
 def test_frequent_patterns(supermarket_transactions):

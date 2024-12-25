@@ -173,7 +173,7 @@ class GSP:
             raise ValueError(msg)
 
         logger.info("Pre-processing transactions...")
-        self.max_size = max([len(item) for item in raw_transactions])
+        self.max_size = max(len(item) for item in raw_transactions)
         self.transactions = [tuple(transaction) for transaction in raw_transactions]
         counts = Counter(chain.from_iterable(raw_transactions))
         self.unique_candidates = [(item,) for item in counts.keys()]
@@ -273,7 +273,7 @@ class GSP:
               and completion.
             - Status updates for each iteration until the algorithm terminates.
         """
-        if not (0.0 < min_support <= 1.0):
+        if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")
 
         min_support = len(self.transactions) * min_support

@@ -12,6 +12,9 @@ from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_can
 
 
 def test_split_into_batches():
+    """
+    Test the `split_into_batches` utility function.
+    """
     # Test with exact batches
     items = [(1,), (2,), (3,), (4,), (5,)]
     batch_size = 2
@@ -32,10 +35,13 @@ def test_split_into_batches():
     items = []
     batch_size = 3
     result = list(split_into_batches(items, batch_size))
-    assert result == [], "Failed empty input"
+    assert not result, "Failed empty input"
 
 
 def test_is_subsequence_in_list():
+    """
+    Test the `is_subsequence_in_list` utility function.
+    """
     # Test when the subsequence is present
     assert is_subsequence_in_list((1, 2), (0, 1, 2, 3)), "Failed to find subsequence"
     assert is_subsequence_in_list((3,), (0, 1, 2, 3)), "Failed single-element subsequence"
@@ -53,6 +59,9 @@ def test_is_subsequence_in_list():
 
 
 def test_generate_candidates_from_previous():
+    """
+    Test the `generate_candidates_from_previous` utility function.
+    """
     # Test if candidates are generated correctly
     prev_patterns = {
         (1, 2): 3,
