@@ -1,5 +1,5 @@
 [![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
-![](https://img.shields.io/badge/python-3.11+-blue.svg)
+![](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
@@ -13,6 +13,9 @@
 
 **GSP-Py**: A Python-powered library to mine sequential patterns in large datasets, based on the robust **Generalized
 Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal mining, and user journey discovery.
+
+> [!IMPORTANT]
+> GSP-Py is compatible with Python 3.8 and later versions!
 
 ---
 
@@ -61,10 +64,6 @@ sudo apt install python3
 ```
 
 For package dependencies of GSP-Py, they will automatically be installed when using `pip`.
-
-> [!IMPORTANT]
-> GSP-Py is compatible with Python 3.11 and later versions.
-> We didn't test it on Python 3.10 or earlier versions.
 
 ---
 

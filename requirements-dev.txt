@@ -3,3 +3,4 @@ pylint==3.3.3
 pytest==8.3.4
 pytest-benchmark==5.1.0
 pytest-cov==6.0.0
+tox==4.23.2

@@ -16,7 +16,7 @@ with open(join(basedir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='gsppy',
-    version='2.0.1',
+    version='2.1.0',
     description='GSP (Generalized Sequence Pattern) algorithm in Python',
     long_description=README,
     long_description_content_type='text/markdown',
@@ -27,7 +27,7 @@ setup(
     license='MIT',
     url='https://github.com/jacksonpradolima/gsp-py',
     packages=find_packages(exclude=['test_']),
-    python_requires='>=3.11',
+    python_requires='>=3.8',
     install_requires=[
         # No additional runtime dependencies are required since the project uses standard library modules only.
     ],
@@ -40,6 +40,9 @@ setup(
         ],
     },
     classifiers=[
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Operating System :: OS Independent',
         'License :: OSI Approved :: MIT License',
