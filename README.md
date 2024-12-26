@@ -1,8 +1,8 @@
-[![GH Sponsors badge]][GH Sponsors URL]
-[![DOI](https://zenodo.org/badge/108451832.svg)](https://zenodo.org/badge/latestdoi/108451832)
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/jacksonpradolima)
 
 [![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
 ![](https://img.shields.io/badge/python-3.11+-blue.svg)
+[![DOI](https://zenodo.org/badge/108451832.svg)](https://zenodo.org/badge/latestdoi/108451832)
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
