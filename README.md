@@ -242,7 +242,7 @@ If GSP-Py contributed to your research or project that led to a publication, we 
 @misc{pradolima_gsppy,
   author       = {Prado Lima, Jackson Antonio do},
   title        = {{GSP-Py - Generalized Sequence Pattern algorithm in Python}},
-  month        = Dece,
+  month        = Dec,
   year         = 2024,
   doi          = {10.5281/zenodo.3333987},
   url          = {https://doi.org/10.5281/zenodo.3333987}
