@@ -177,7 +177,7 @@ class GSP:
         self.transactions = [tuple(transaction) for transaction in raw_transactions]
         counts = Counter(chain.from_iterable(raw_transactions))
         self.unique_candidates = [(item,) for item in counts.keys()]
-        logger.debug(f"Unique candidates: {self.unique_candidates}")
+        logger.debug("Unique candidates: %s", self.unique_candidates)
 
     @staticmethod
     def _worker_batch(batch: List[Tuple], transactions: List[Tuple], min_support: int) -> List[Tuple[Tuple, int]]:
@@ -246,7 +246,8 @@ class GSP:
             run (int): Current k-sequence generation level (e.g., 1 for 1-item sequences).
             candidates (List[Tuple]): Candidate sequences generated at this level.
         """
-        logger.info(f"Run {run}: {len(candidates)} candidates filtered to {len(self.freq_patterns[run - 1])}.")
+        logger.info("Run %d: %d candidates filtered to %d.",
+                    run, len(candidates), len(self.freq_patterns[run - 1]))
 
     def search(self, min_support: float = 0.2) -> List[Dict[Tuple, int]]:
         """
@@ -278,7 +279,7 @@ class GSP:
 
         min_support = len(self.transactions) * min_support
 
-        logger.info(f"Starting GSP algorithm with min_support={min_support:.2f}...")
+        logger.info("Starting GSP algorithm with min_support=%.2f...", min_support)
 
         # the set of frequent 1-sequence: all singleton sequences
         # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a

@@ -24,7 +24,8 @@ Key Features:
 5. Result Presentation:
    - Displays the discovered frequent patterns and their corresponding support counts.
 
-This CLI empowers users to perform sequential pattern mining on transactional data efficiently through a simple command-line interface.
+This CLI empowers users to perform sequential pattern mining on transactional data efficiently through
+a simple command-line interface.
 """
 import argparse
 import csv
@@ -50,7 +51,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
         ValueError: If the file cannot be read or does not contain valid JSON.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             transactions = json.load(f)
             if not isinstance(transactions, list) or not all(isinstance(t, list) for t in transactions):
                 raise ValueError("File should contain a JSON array of transaction lists.")
@@ -88,7 +89,7 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
     except Exception as e:
         msg = f"Error reading transaction data from CSV file '{file_path}': {e}"
         logging.error(msg)
-        raise ValueError(msg)
+        raise ValueError(msg) from e
 
 
 def detect_and_read_file(file_path: str) -> List[List]:
@@ -128,7 +129,8 @@ def main():
         - `--min_support` (float): Minimum support threshold (default: 0.2).
     """
     parser = argparse.ArgumentParser(
-        description="GSP (Generalized Sequential Pattern) Algorithm - Find frequent sequential patterns in transactional data."
+        description="GSP (Generalized Sequential Pattern) Algorithm - "
+                    "Find frequent sequential patterns in transactional data."
     )
 
     # Single file argument
@@ -136,7 +138,8 @@ def main():
         '--file',
         type=str,
         required=True,
-        help='Path to a JSON or CSV file containing transactions (e.g., [["A", "B"], ["B", "C"]] or CSV rows per transaction)'
+        help='Path to a JSON or CSV file containing transactions (e.g., [["A", "B"], ["B", "C"]] '
+             'or CSV rows per transaction)'
     )
 
     # Minimum support argument

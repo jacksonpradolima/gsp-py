@@ -17,6 +17,7 @@ Tests include:
 Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
+import random
 import re
 
 import pytest
@@ -49,7 +50,6 @@ def random_transactions():
     Returns:
         list: A list of transactions with random items and varying lengths.
     """
-    import random
     return [[random.choice(['A', 'B', 'C', 'D', 'E']) for _ in range(random.randint(2, 10))] for _ in range(100)]
 
 
@@ -164,7 +164,8 @@ def test_worker_batch_static_method(supermarket_transactions):
     expected = [(('Bread',), 4), (('Milk',), 4), (('Diaper',), 4)]
 
     # Call the '_worker_batch' method
-    results = GSP._worker_batch(batch, transactions, min_support)
+    # This test accesses `_worker_batch` to test internal functionality
+    results = GSP._worker_batch(batch, transactions, min_support) # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 

@@ -1,10 +1,17 @@
+"""
+Setup configuration file for the GSP (Generalized Sequential Patterns) package.
+
+This script contains metadata and instructions for building, packaging, and distributing
+the GSP Python package. It uses setuptools to define package information, dependencies,
+and other packaging requirements.
+"""
 from os.path import abspath, dirname, join
 
 from setuptools import find_packages, setup
 
 basedir = abspath(dirname(__file__))
 
-with open(join(basedir, 'README.md')) as f:
+with open(join(basedir, 'README.md'), encoding='utf-8') as f:
     README = f.read()
 
 setup(
