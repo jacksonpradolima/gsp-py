@@ -1,8 +1,10 @@
-[![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
-[![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
-![](https://img.shields.io/badge/python-3.11+-blue.svg)
+[![GH Sponsors badge]][GH Sponsors URL]
 [![DOI](https://zenodo.org/badge/108451832.svg)](https://zenodo.org/badge/latestdoi/108451832)
 
+[![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
+![](https://img.shields.io/badge/python-3.11+-blue.svg)
+
+[![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
