@@ -1,5 +1,9 @@
 # Changelog
 
+## [v2.0.1] - 2024-12-25
+- Added **CITATION.cff** file for citation information.
+- Removed the GitHub sponsor badge from the README
+
 ## [v2.0] - 2024-12-25
 
 ### **New Features**
