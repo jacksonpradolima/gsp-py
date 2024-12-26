@@ -316,7 +316,6 @@ def test_main_gsp_exception(monkeypatch, capfd):
 
     # Step 3: Mock GSP.search to raise an exception
     with patch('gsppy.gsp.GSP.search', side_effect=Exception("Simulated GSP failure")):
-        from gsppy.cli import main  # Import main
         main()
 
     # Step 4: Capture output and assert the error message

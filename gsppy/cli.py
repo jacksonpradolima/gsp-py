@@ -59,7 +59,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
         logging.error(msg)
-        raise ValueError(msg)
+        raise ValueError(msg) from e
 
 
 def read_transactions_from_csv(file_path: str) -> List[List]:
