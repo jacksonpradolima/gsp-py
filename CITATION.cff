@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it using the following metadata."
+title: "GSP-Py - Generalized Sequence Pattern algorithm in Python"
+authors:
+  - family-names: "Prado Lima"
+    given-names: "Jackson Antonio do"
+    orcid: "https://orcid.org/10.5281/zenodo.3783699"
+year: 2020
+version: "2.0.0"
+doi: "10.5281/zenodo.3783699"
+url: "https://github.com/jacksonpradolima/gsp-py"
+repository-code: "https://github.com/jacksonpradolima/gsp-py"
+license: "MIT"
+keywords:
+  - "GSP"
+  - "sequential patterns"
+  - "data analysis"
+  - "sequence mining"
+abstract: >
+  GSP-Py is a Python-powered library to mine sequential patterns in large datasets,
+  based on the robust Generalized Sequence Pattern (GSP) algorithm. It is ideal for market
+  basket analysis, temporal mining, and user journey discovery.
