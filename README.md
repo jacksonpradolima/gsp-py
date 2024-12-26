@@ -1,6 +1,6 @@
 [![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
 ![](https://img.shields.io/badge/python-3.11+-blue.svg)
-[![DOI](https://zenodo.org/badge/108451832.svg)](https://zenodo.org/badge/latestdoi/108451832)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
@@ -242,8 +242,8 @@ If GSP-Py contributed to your research or project that led to a publication, we 
 @misc{pradolima_gsppy,
   author       = {Prado Lima, Jackson Antonio do},
   title        = {{GSP-Py - Generalized Sequence Pattern algorithm in Python}},
-  month        = May,
-  year         = 2020,
+  month        = Dece,
+  year         = 2024,
   doi          = {10.5281/zenodo.3333987},
   url          = {https://doi.org/10.5281/zenodo.3333987}
 }
