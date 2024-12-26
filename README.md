@@ -1,76 +1,244 @@
-# GSP-Py
-Generalized Sequence Pattern (GSP) algorithm in Python
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/jacksonpradolima)
 
-[![PyPI License](https://img.shields.io/pypi/l/jMetalPy.svg?style=flat-square)]()
-[![PyPI Python version](https://img.shields.io/pypi/pyversions/jMetalPy.svg?style=flat-square)]()
+[![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
+![](https://img.shields.io/badge/python-3.11+-blue.svg)
 [![DOI](https://zenodo.org/badge/108451832.svg)](https://zenodo.org/badge/latestdoi/108451832)
 
-This package was created to use GSP with Python
-## Table of Contents
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-- [License](#license)
-- [Citation](#citation)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
+[![codecov](https://codecov.io/github/jacksonpradolima/gsp-py/branch/main/graph/badge.svg?token=BW04LB0B5Y)](https://codecov.io/github/jacksonpradolima/gsp-py)
 
-## Requirements
+# GSP-Py
 
-Install Python:
+**GSP-Py**: A Python-powered library to mine sequential patterns in large datasets, based on the robust **Generalized
+Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal mining, and user journey discovery.
 
-```console
+---
+
+## 📚 Table of Contents
+
+1. [🔍 What is GSP?](#what-is-gsp)
+2. [🔧 Requirements](#requirements)
+3. [🚀 Installation](#installation)
+    - [❖ Clone Repository](#option-1-clone-the-repository)
+    - [❖ Install via PyPI](#option-2-install-via-pip)
+4. [🛠️ Developer Installation](#developer-installation)
+5. [💡 Usage](#usage)
+    - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
+    - [📊 Explanation: Support and Results](#explanation-support-and-results)
+6. [🌟 Planned Features](#planned-features)
+7. [🤝 Contributing](#contributing)
+8. [📝 License](#license)
+9. [📖 Citation](#citation)
+
+---
+
+## 🔍 What is GSP?
+
+The **Generalized Sequential Pattern (GSP)** algorithm is a sequential pattern mining technique based on **Apriori
+principles**. Using support thresholds, GSP identifies frequent sequences of items in transaction datasets.
+
+### Key Features:
+
+- **Support-based pruning**: Only retains sequences that meet the minimum support threshold.
+- **Candidate generation**: Iteratively generates candidate sequences of increasing length.
+- **General-purpose**: Useful in retail, web analytics, social networks, temporal sequence mining, and more.
+
+For example:
+
+- In a shopping dataset, GSP can identify patterns like "Customers who buy bread and milk often purchase diapers next."
+- In a website clickstream, GSP might find patterns like "Users visit A, then go to B, and later proceed to C."
+
+---
+
+## 🔧 Requirements
+
+You will need Python installed on your system. On most Linux systems, you can install Python with:
+
+```bash
 sudo apt install python3
 ```
 
-## Installation
-To download GSP-Py just clone the Git repository hosted in GitHub:
+For package dependencies of GSP-Py, they will automatically be installed when using `pip`.
 
-```console
+> [!IMPORTANT]
+> GSP-Py is compatible with Python 3.11 and later versions.
+> We didn't test it on Python 3.10 or earlier versions.
+
+---
+
+## 🚀 Installation
+
+GSP-Py can be easily installed from either the **repository** or PyPI.
+
+### Option 1: Clone the Repository
+
+To manually clone the repository and install:
+
+```bash
 git clone https://github.com/jacksonpradolima/gsp-py.git
+cd gsp-py
 python setup.py install
 ```
 
-Alternatively, you can install it with `pip`:
+### Option 2: Install via `pip`
 
-```console
+Alternatively, install GSP-Py from PyPI with:
+
+```bash
 pip install gsppy
 ```
 
-## Usage
-Examples of configuring and running are located in the *test* folders [gsppy folder](gsppy).
+---
 
-To use it in a project, import it and use the GSP class.
+## 🛠️ Developer Installation
 
-```console
+For contributors and developers, GSP-Py provides additional dependencies for development purposes (e.g., testing and
+linting).
+
+To install the package along with development dependencies, use:
+
+```bash
+pip install .[dev]
+```
+
+The `dev` category includes tools such as `pytest`, `pylint`, and others to ensure code quality and maintainability.
+
+## 💡 Usage
+
+The library is designed to be easy to use and integrate with your own projects. Below is an example of how you can
+configure and run GSP-Py.
+
+### Example Input Data
+
+The input to the algorithm is a sequence of transactions, where each transaction contains a sequence of items:
+
+```python
+transactions = [
+    ['Bread', 'Milk'],
+    ['Bread', 'Diaper', 'Beer', 'Eggs'],
+    ['Milk', 'Diaper', 'Beer', 'Coke'],
+    ['Bread', 'Milk', 'Diaper', 'Beer'],
+    ['Bread', 'Milk', 'Diaper', 'Coke']
+]
+```
+
+### Importing and Initializing the GSP Algorithm
+
+Import the `GSP` class from the `gsppy` package and call the `search` method to find frequent patterns with a support
+threshold (e.g., `0.3`):
+
+```python
 from gsppy.gsp import GSP
+
+# Example transactions: customer purchases
+transactions = [
+    ['Bread', 'Milk'],  # Transaction 1
+    ['Bread', 'Diaper', 'Beer', 'Eggs'],  # Transaction 2
+    ['Milk', 'Diaper', 'Beer', 'Coke'],  # Transaction 3
+    ['Bread', 'Milk', 'Diaper', 'Beer'],  # Transaction 4
+    ['Bread', 'Milk', 'Diaper', 'Coke']  # Transaction 5
+]
+
+# Set minimum support threshold (30%)
+min_support = 0.3
+
+# Find frequent patterns
+result = GSP(transactions).search(min_support)
+
+# Output the results
+print(result)
 ```
 
-It is assumed that your transactions are a sequence of sequences representing items in baskets. 
+### Output
 
-```console
- transactions = [
-            ['Bread', 'Milk'],
-            ['Bread', 'Diaper', 'Beer', 'Eggs'],
-            ['Milk', 'Diaper', 'Beer', 'Coke'],
-            ['Bread', 'Milk', 'Diaper', 'Beer'],
-            ['Bread', 'Milk', 'Diaper', 'Coke']
-        ]
+The algorithm will return a list of patterns with their corresponding support.
+
+Sample Output:
+
+```python
+[
+    {('Bread',): 4, ('Milk',): 4, ('Diaper',): 4, ('Beer',): 3, ('Coke',): 2},
+    {('Bread', 'Milk'): 3, ('Milk', 'Diaper'): 3, ('Diaper', 'Beer'): 3},
+    {('Bread', 'Milk', 'Diaper'): 2, ('Milk', 'Diaper', 'Beer'): 2}
+]
 ```
 
-Init the class to prepare the transactions and to find patterns in baskets that occur over the support threshold (count):
+- The **first dictionary** contains single-item sequences with their frequencies (e.g., `('Bread',): 4` means "Bread"
+  appears in 4 transactions).
+- The **second dictionary** contains 2-item sequential patterns (e.g., `('Bread', 'Milk'): 3` means the sequence "
+  Bread → Milk" appears in 3 transactions).
+- The **third dictionary** contains 3-item sequential patterns (e.g., `('Bread', 'Milk', 'Diaper'): 2` means the
+  sequence "Bread → Milk → Diaper" appears in 2 transactions).
 
-```console
-result = GSP(transactions).search(0.3)
+> [!NOTE]
+> The **support** of a sequence is calculated as the fraction of transactions containing the sequence, e.g.,
+`[Bread, Milk]` appears in 3 out of 5 transactions → Support = `3 / 5 = 0.6` (60%).
+> This insight helps identify frequently occurring sequential patterns in datasets, such as shopping trends or user
+> behavior.
+
+
+> [!TIP]
+> For more complex examples, find example scripts in the [`gsppy/tests`](gsppy/tests) folder.
+
+---
+
+## 🌟 Planned Features
+
+We are actively working to improve GSP-Py. Here are some exciting features planned for future releases:
+
+1. **Custom Filters for Candidate Pruning**:
+    - Enable users to define their own pruning logic during the mining process.
+
+2. **Support for Preprocessing and Postprocessing**:
+    - Add hooks to allow users to transform datasets before mining and customize the output results.
+
+3. **Support for Time-Constrained Pattern Mining**:
+    - Extend GSP-Py to handle temporal datasets by allowing users to define time constraints (e.g., maximum time gaps
+      between events, time windows) during the sequence mining process.
+    - Enable candidate pruning and support calculations based on these temporal constraints.
+
+Want to contribute or suggest an
+improvement? [Open a discussion or issue!](https://github.com/jacksonpradolima/gsp-py/issues)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! If you'd like to help improve GSP-Py, read
+our [CONTRIBUTING.md](CONTRIBUTING.md) guide to get started.
+
+Development dependencies (e.g., testing and linting tools) are included in the `dev` category in `setup.py`. To install
+these dependencies, run:
+
+```bash
+pip install .[dev]
 ```
 
-The support count (or simply support) for a sequence is defined as the fraction of total data-sequences that "contain" this sequence.
-(Although the word "contains" is not strictly accurate once we incorporate taxonomies, it captures the spirt of when a data-sequence contributes to the support of a sequential pattern.)
+### General Steps:
 
-## License
-This project is licensed under the terms of the MIT - see the [LICENSE](LICENSE) file for details.
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/my-feature`.
+3. Commit your changes: `git commit -m "Add my feature."`
+4. Push to your branch: `git push origin feature/my-feature`.
+5. Submit a pull request to the main repository!
 
-# Citation
+Looking for ideas? Check out our [Planned Features](#planned-features) section.
 
-If this package contributes to a project which leads to a scientific publication, I would appreciate a citation.
+---
+
+## 📝 License
+
+This project is licensed under the terms of the **MIT License**. For more details, refer to the [LICENSE](LICENSE) file.
+
+---
+
+## 📖 Citation
+
+If GSP-Py contributed to your research or project that led to a publication, we kindly ask that you cite it as follows:
 
 ```
 @misc{pradolima_gsppy,

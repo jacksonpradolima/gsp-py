@@ -1,0 +1,15 @@
+[MASTER]
+init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
+max-line-length=120
+disable=
+    C0103, # uppercase naming style
+    logging-format-interpolation, # use %s for logging
+    broad-except, # we want to catch all exceptions
+    too-many-locals, # we don't care
+    too-few-public-methods, # enum classes don't normally have methods
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-positional-arguments,
+    import-error,
+    attribute-defined-outside-init,
+    redefined-outer-name

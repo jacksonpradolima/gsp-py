@@ -1,0 +1,39 @@
+name: Run tests and upload coverage and analytics
+
+on:
+    push
+
+jobs:
+    test:
+        name: Run tests and collect coverage
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+
+            -   name: Set up Python
+                uses: actions/setup-python@v5
+                with:
+                    python-version: 3.11
+
+            -   name: Install dependencies
+                run: pip install -r requirements.txt
+
+            -   name: Run tests
+                run: pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
+
+            -   name: Upload coverage to Codecov
+                uses: codecov/codecov-action@v5
+                with:
+                    token: ${{ secrets.CODECOV_TOKEN }}
+                    files: coverage.xml
+                    flags: unittests
+                    name: codecov-coverage-report
+
+            -   name: Upload test results to Codecov
+                if: ${{ !cancelled() }}
+                uses: codecov/test-results-action@v1
+                with:
+                    token: ${{ secrets.CODECOV_TOKEN }}
