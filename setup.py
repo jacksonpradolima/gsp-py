@@ -16,7 +16,7 @@ with open(join(basedir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='gsppy',
-    version='2.0.1',
+    version='2.1.0',
     description='GSP (Generalized Sequence Pattern) algorithm in Python',
     long_description=README,
     long_description_content_type='text/markdown',
