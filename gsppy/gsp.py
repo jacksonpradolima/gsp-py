@@ -86,9 +86,9 @@ Version:
 """
 import logging
 import multiprocessing as mp
-from collections import Counter
+from typing import Dict, List, Tuple
 from itertools import chain
-from typing import List, Dict, Tuple
+from collections import Counter
 
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
 

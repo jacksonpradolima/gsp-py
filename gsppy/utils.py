@@ -20,9 +20,9 @@ Main functionalities:
 These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
-from functools import lru_cache
+from typing import Dict, List, Tuple, Generator
+from functools import cache
 from itertools import product
-from typing import List, Tuple, Generator, Dict
 
 
 def split_into_batches(items: List[Tuple], batch_size: int) -> Generator[List[Tuple], None, None]:
@@ -41,7 +41,7 @@ def split_into_batches(items: List[Tuple], batch_size: int) -> Generator[List[Tu
 
 
 # Cache the results of the slice comparison function to avoid redundant calculations
-@lru_cache(maxsize=None)
+@cache
 def is_subsequence_in_list(subsequence: Tuple, sequence: Tuple) -> bool:
     """
     Check if a subsequence exists within a sequence as a contiguous subsequence.

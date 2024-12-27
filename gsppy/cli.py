@@ -27,14 +27,34 @@ Key Features:
 This CLI empowers users to perform sequential pattern mining on transactional data efficiently through
 a simple command-line interface.
 """
-import argparse
+import os
 import csv
+import sys
 import json
 import logging
-import os
+import argparse
 from typing import List
 
 from gsppy.gsp import GSP
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",  # Simplified to keep CLI output clean
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger(__name__)
+
+
+def setup_logging(verbose: bool) -> None:
+    """
+    Set the logging level based on the verbosity of the CLI output.
+    :param verbose: Whether to enable verbose logging.
+    """
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
 
 def read_transactions_from_json(file_path: str) -> List[List]:
@@ -150,32 +170,42 @@ def main():
         help="Minimum support threshold as a fraction of total transactions (default: 0.2)"
     )
 
+    # Verbose output argument
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable verbose output for debugging purposes.'
+    )
+
     # Parse arguments
     args = parser.parse_args()
+
+    # Setup logging verbosity
+    setup_logging(args.verbose)
 
     # Automatically detect and load transactions
     try:
         transactions = detect_and_read_file(args.file)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         return
 
     # Check min_support
     if args.min_support <= 0.0 or args.min_support > 1.0:
-        print("Error: min_support must be in the range (0.0, 1.0].")
+        logger.error("Error: min_support must be in the range (0.0, 1.0].")
         return
 
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
         patterns = gsp.search(min_support=args.min_support)
-        print("Frequent Patterns Found:")
+        logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
-            print(f"\n{i}-Sequence Patterns:")
+            logger.info(f"\n{i}-Sequence Patterns:")
             for pattern, support in level.items():
-                print(f"Pattern: {pattern}, Support: {support}")
+                logger.info(f"Pattern: {pattern}, Support: {support}")
     except Exception as e:
-        print(f"Error executing GSP algorithm: {e}")
+        logger.error(f"Error executing GSP algorithm: {e}")
 
 
 if __name__ == '__main__':

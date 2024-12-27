@@ -17,8 +17,8 @@ Tests include:
 Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
-import random
 import re
+import random
 
 import pytest
 

@@ -19,16 +19,15 @@ Fixtures are used to create temporary files (valid/invalid JSON and CSV) for rel
 without affecting the file system.
 Pytest is utilized for parametrized testing to improve coverage and reduce redundancy in test cases.
 """
-import json
 import os
-import runpy
-import sys
+import json
 import tempfile
+import subprocess
 from unittest.mock import patch
 
 import pytest
 
-from gsppy.cli import detect_and_read_file, main
+from gsppy.cli import main, detect_and_read_file
 from gsppy.gsp import GSP
 
 
@@ -154,7 +153,7 @@ def test_valid_min_support_gsp(min_support):
     assert patterns[0]  # Ensure frequent patterns are not empty
 
 
-def test_main_invalid_json_file(monkeypatch, capfd):
+def test_main_invalid_json_file(monkeypatch):
     """
     Test `main()` with a JSON file that has an invalid structure.
     """
@@ -168,17 +167,21 @@ def test_main_invalid_json_file(monkeypatch, capfd):
         'sys.argv', ['main', '--file', temp_file_name, '--min_support', '0.2']
     )
 
-    main()
+    # Mock logger.error and test messages directly
+    with patch("gsppy.cli.logger.error") as mock_error:
+        main()
 
-    # Capture output
-    captured = capfd.readouterr()
-    assert "File should contain a JSON array of transaction lists." in captured.out
+        # Assert correct error message was logged
+        mock_error.assert_called_with(
+            f"Error: Error reading transaction data from JSON file '{temp_file_name}': "
+            f"File should contain a JSON array of transaction lists."
+        )
 
     # Cleanup
     os.unlink(temp_file_name)
 
 
-def test_main_non_existent_file(monkeypatch, capfd):
+def test_main_non_existent_file(monkeypatch):
     """
     Test `main()` with a file that does not exist.
     """
@@ -187,14 +190,12 @@ def test_main_non_existent_file(monkeypatch, capfd):
         'sys.argv', ['main', '--file', 'non_existent.json', '--min_support', '0.2']
     )
 
-    main()
-
-    # Capture output
-    captured = capfd.readouterr()
-    assert "File 'non_existent.json' does not exist." in captured.out
+    with patch("gsppy.cli.logger.error") as mock_error:
+        main()
+        mock_error.assert_called_with("Error: File 'non_existent.json' does not exist.")
 
 
-def test_main_valid_json_file(monkeypatch, capfd):
+def test_main_valid_json_file(monkeypatch):
     """
     Test `main()` with a valid JSON file.
     """
@@ -208,17 +209,15 @@ def test_main_valid_json_file(monkeypatch, capfd):
         'sys.argv', ['main', '--file', temp_file_name, '--min_support', '0.2']
     )
 
-    main()
-
-    # Capture output
-    captured = capfd.readouterr()
-    assert "Frequent Patterns Found:" in captured.out
+    with patch("gsppy.cli.logger.info") as mock_info:
+        main()
+        mock_info.assert_any_call("Frequent Patterns Found:")  # Check for expected log message
 
     # Cleanup
     os.unlink(temp_file_name)
 
 
-def test_main_invalid_min_support(monkeypatch, capfd):
+def test_main_invalid_min_support(monkeypatch):
     """
     Test `main()` with an invalid `min_support` value.
     """
@@ -232,17 +231,15 @@ def test_main_invalid_min_support(monkeypatch, capfd):
         'sys.argv', ['main', '--file', temp_file_name, '--min_support', '-1.0']  # Invalid min_support
     )
 
-    main()
-
-    # Capture output
-    captured = capfd.readouterr()
-    assert "Error: min_support must be in the range (0.0, 1.0]." in captured.out
+    with patch("gsppy.cli.logger.error") as mock_error:
+        main()
+        mock_error.assert_called_with("Error: min_support must be in the range (0.0, 1.0].")
 
     # Cleanup
     os.unlink(temp_file_name)
 
 
-def test_main_entry_point(monkeypatch, capfd):
+def test_main_entry_point():
     """
     Test the script entry point (`if __name__ == '__main__': main()`).
     """
@@ -251,27 +248,28 @@ def test_main_entry_point(monkeypatch, capfd):
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
 
-    # Mock CLI arguments - Simulating script call
-    monkeypatch.setattr(
-        'sys.argv', ['gsppy.cli', '--file', temp_file_name, '--min_support', '0.2']
-    )
+    # Get the CLI script path
+    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '../gsppy/cli.py'))
 
-    # Remove the module from sys.modules before running it
-    if 'gsppy.cli' in sys.modules:
-        del sys.modules['gsppy.cli']
+    # Set up the environment with the correct PYTHONPATH
+    env = os.environ.copy()
+    env['PYTHONPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # Add project root to PYTHONPATH
 
-    # Use `runpy` to execute the script as if it were run from the command line
-    runpy.run_module('gsppy.cli', run_name='__main__')
+    # Construct the command to run the script
+    cmd = [os.environ.get('PYTHON', 'python'), cli_script, '--file', temp_file_name, '--min_support', '0.2']
 
-    # Capture the output
-    captured = capfd.readouterr()
-    assert "Frequent Patterns Found:" in captured.out
+    # Run the script using subprocess
+    process = subprocess.run(cmd, text=True, capture_output=True, env=env)
+
+    # Assert that the output contains the expected message
+    assert process.returncode == 0
+    assert "Frequent Patterns Found:" in process.stdout
 
     # Cleanup
     os.unlink(temp_file_name)
 
 
-def test_main_edge_case_min_support(monkeypatch, capfd):
+def test_main_edge_case_min_support(monkeypatch):
     """
     Test `main()` with edge-case values for `min_support` (valid and invalid).
     """
@@ -284,23 +282,23 @@ def test_main_edge_case_min_support(monkeypatch, capfd):
     monkeypatch.setattr(
         'sys.argv', ['main', '--file', temp_file_name, '--min_support', '1.0']
     )
-    main()
-    captured = capfd.readouterr()
-    assert "Frequent Patterns Found:" in captured.out
+    with patch("gsppy.cli.logger.info") as mock_info:
+        main()
+        mock_info.assert_any_call("Frequent Patterns Found:")
 
     # Case 2: `min_support` = -1.0 (Invalid Edge Case)
     monkeypatch.setattr(
         'sys.argv', ['main', '--file', temp_file_name, '--min_support', '-1.0']
     )
-    main()
-    captured = capfd.readouterr()
-    assert "Error: min_support must be in the range (0.0, 1.0]." in captured.out
+    with patch("gsppy.cli.logger.error") as mock_error:
+        main()
+        mock_error.assert_called_with("Error: min_support must be in the range (0.0, 1.0].")
 
     # Cleanup
     os.unlink(temp_file_name)
 
 
-def test_main_gsp_exception(monkeypatch, capfd):
+def test_main_gsp_exception(monkeypatch):
     """
     Test `main()` when the GSP algorithm raises an exception.
     """
@@ -315,12 +313,12 @@ def test_main_gsp_exception(monkeypatch, capfd):
     )
 
     # Step 3: Mock GSP.search to raise an exception
-    with patch('gsppy.gsp.GSP.search', side_effect=Exception("Simulated GSP failure")):
+    with patch('gsppy.gsp.GSP.search', side_effect=Exception("Simulated GSP failure")), \
+        patch("gsppy.cli.logger.error") as mock_error:
         main()
 
-    # Step 4: Capture output and assert the error message
-    captured = capfd.readouterr()
-    assert "Error executing GSP algorithm: Simulated GSP failure" in captured.out
+        # Step 4: Assert the error message was logged
+        mock_error.assert_called_with("Error executing GSP algorithm: Simulated GSP failure")
 
     # Step 5: Cleanup
     os.unlink(temp_file_name)
