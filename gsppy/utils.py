@@ -20,34 +20,33 @@ Main functionalities:
 These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
-from typing import Dict, List, Tuple, Generator
-from functools import cache
+from typing import Dict, List, Tuple, Generator, Sequence
 from itertools import product
 
 
-def split_into_batches(items: List[Tuple], batch_size: int) -> Generator[List[Tuple], None, None]:
+def split_into_batches(
+    items: Sequence[Tuple[str, ...]], batch_size: int
+) -> Generator[Sequence[Tuple[str, ...]], None, None]:
     """
     Split the list of items into smaller batches.
 
     Parameters:
-        items (List[Tuple]): The list of candidate items.
+        items (Sequence[Tuple]): A sequence of items to be batched.
         batch_size (int): The maximum size of each batch.
 
     Returns:
-        List[List[Tuple]]: A list of batches, where each batch contains a subset of candidate items.
+        Generator[Sequence[Tuple], None, None]: A generator yielding batches of items.
     """
     for i in range(0, len(items), batch_size):
         yield items[i:i + batch_size]
 
 
-# Cache the results of the slice comparison function to avoid redundant calculations
-@cache
-def is_subsequence_in_list(subsequence: Tuple, sequence: Tuple) -> bool:
+def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ...]) -> bool:
     """
     Check if a subsequence exists within a sequence as a contiguous subsequence.
 
     Parameters:
-        subsequence: Tuple (tuple): The sequence to search for.
+        subsequence: (tuple): The sequence to search for.
         sequence (tuple): The sequence to search within.
 
     Returns:
@@ -67,12 +66,14 @@ def is_subsequence_in_list(subsequence: Tuple, sequence: Tuple) -> bool:
     return any(sequence[i:i + len_sub] == subsequence for i in range(len_seq - len_sub + 1))
 
 
-def generate_candidates_from_previous(prev_patterns: Dict[Tuple, int]) -> List[Tuple]:
+def generate_candidates_from_previous(
+    prev_patterns: Dict[Tuple[str, ...], int]
+) -> List[Tuple[str, ...]]:
     """
     Generate joined candidates from the previous level's frequent patterns.
 
     Parameters:
-        prev_patterns (Dict[Tuple, int]): Frequent patterns at the previous level.
+        prev_patterns (Dict[Tuple, int]): A dictionary of frequent patterns from the previous level.
 
     Returns:
         List[Tuple]: Candidate patterns for the next level.

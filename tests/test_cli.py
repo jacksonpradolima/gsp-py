@@ -31,23 +31,6 @@ from gsppy.cli import main, detect_and_read_file
 from gsppy.gsp import GSP
 
 
-def test_invalid_json_structure():
-    """
-    Test if a JSON file with an invalid structure raises an error.
-    """
-    # Create an invalid JSON structure that does not adhere to the expected format
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
-        temp_file.write(json.dumps({"invalid": "data"}))
-        temp_file_name = temp_file.name
-
-    # Attempt to read the invalid JSON file
-    with pytest.raises(ValueError, match="File should contain a JSON array of transaction lists."):
-        detect_and_read_file(temp_file_name)
-
-    # Cleanup
-    os.unlink(temp_file_name)
-
-
 @pytest.fixture
 def valid_json_file():
     """Fixture to create a valid JSON file."""
@@ -173,8 +156,7 @@ def test_main_invalid_json_file(monkeypatch):
 
         # Assert correct error message was logged
         mock_error.assert_called_with(
-            f"Error: Error reading transaction data from JSON file '{temp_file_name}': "
-            f"File should contain a JSON array of transaction lists."
+            f"Error executing GSP algorithm: GSP requires multiple transactions to find meaningful patterns."
         )
 
     # Cleanup

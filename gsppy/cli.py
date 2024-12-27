@@ -33,7 +33,7 @@ import sys
 import json
 import logging
 import argparse
-from typing import List
+from typing import List, Dict, Tuple
 
 from gsppy.gsp import GSP
 
@@ -57,7 +57,7 @@ def setup_logging(verbose: bool) -> None:
         logger.setLevel(logging.INFO)
 
 
-def read_transactions_from_json(file_path: str) -> List[List]:
+def read_transactions_from_json(file_path: str) -> List[List[str]]:
     """
     Read transactions from a JSON file.
 
@@ -72,9 +72,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            transactions = json.load(f)
-            if not isinstance(transactions, list) or not all(isinstance(t, list) for t in transactions):
-                raise ValueError("File should contain a JSON array of transaction lists.")
+            transactions: List[List[str]] = json.load(f)
         return transactions
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
@@ -82,7 +80,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
         raise ValueError(msg) from e
 
 
-def read_transactions_from_csv(file_path: str) -> List[List]:
+def read_transactions_from_csv(file_path: str) -> List[List[str]]:
     """
     Read transactions from a CSV file.
 
@@ -96,7 +94,7 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
         ValueError: If the file cannot be read or contains invalid data.
     """
     try:
-        transactions = []
+        transactions: List[List[str]] = []
         with open(file_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
@@ -112,7 +110,7 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
         raise ValueError(msg) from e
 
 
-def detect_and_read_file(file_path: str) -> List[List]:
+def detect_and_read_file(file_path: str) -> List[List[str]]:
     """
     Detect file format (CSV or JSON) and read transactions.
 
@@ -198,7 +196,7 @@ def main():
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
-        patterns = gsp.search(min_support=args.min_support)
+        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=args.min_support)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")

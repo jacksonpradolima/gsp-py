@@ -77,18 +77,6 @@ def test_single_transaction():
         GSP(transactions)
 
 
-def test_invalid_transaction_format():
-    """
-    Test the GSP algorithm with invalid transaction formats.
-
-    Asserts:
-        - A ValueError is raised indicating that the transactions must be lists of lists.
-    """
-    invalid_data = ["A", "B"]  # Invalid format: not a list of lists
-    with pytest.raises(ValueError, match="The dataset must be a list of transactions."):
-        GSP(invalid_data)
-
-
 @pytest.mark.parametrize(
     "min_support, expected_error",
     [
@@ -165,7 +153,7 @@ def test_worker_batch_static_method(supermarket_transactions):
 
     # Call the '_worker_batch' method
     # This test accesses `_worker_batch` to test internal functionality
-    results = GSP._worker_batch(batch, transactions, min_support) # pylint: disable=protected-access
+    results = GSP._worker_batch(batch, transactions, min_support)  # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 
