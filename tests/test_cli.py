@@ -21,6 +21,7 @@ Pytest is utilized for parametrized testing to improve coverage and reduce redun
 """
 import os
 import json
+import logging
 import tempfile
 import subprocess
 from typing import Any, Generator
@@ -306,3 +307,21 @@ def test_main_gsp_exception(monkeypatch: MonkeyPatch):
 
     # Step 5: Cleanup
     os.unlink(temp_file_name)
+
+
+def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
+    """
+    Test `setup_logging` sets logging level to DEBUG when `--verbose` is provided.
+    """
+    # Mock CLI arguments to include the verbose flag
+    monkeypatch.setattr(
+        'sys.argv', ['main', '--file', 'test_data.json', '--min_support', '0.2', '--verbose']
+    )
+
+    with patch('gsppy.cli.logger.setLevel') as mock_setLevel:
+        with patch('gsppy.cli.detect_and_read_file', return_value=[["Bread", "Milk"]]):  # Mock file reading
+            with patch('gsppy.cli.GSP.search', return_value=[{("Bread",): 1}]):  # Mock GSP search
+                main()  # Run the CLI
+
+        # Check that the logger level was set to DEBUG
+        mock_setLevel.assert_called_with(logging.DEBUG)
