@@ -93,16 +93,45 @@ pip install gsppy
 
 ## 🛠️ Developer Installation
 
-For contributors and developers, GSP-Py provides additional dependencies for development purposes (e.g., testing and
-linting).
+This project uses [Rye](https://github.com/mitsuhiko/rye) for managing dependencies, running scripts, and setting up the environment. Follow these steps to install and set up Rye for this project:
 
-To install the package along with development dependencies, use:
+#### 1. Install Rye
+Run the following command to install Rye:
 
 ```bash
-pip install .[dev]
+curl -sSf https://rye.astral.sh/get | bash
 ```
 
-The `dev` category includes tools such as `pytest`, `pylint`, and others to ensure code quality and maintainability.
+If the `~/.rye/bin` directory is not in your PATH, add the following line to your shell configuration file (e.g., `~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+export PATH="$HOME/.rye/bin:$PATH"
+```
+
+Reload your shell configuration file:
+
+```bash
+source ~/.bashrc  # or `source ~/.zshrc`
+```
+
+#### 2. Set Up the Project Environment
+To configure the project environment and install its dependencies, run:
+
+```bash
+rye sync
+```
+
+#### 3. Use Rye Scripts
+Once the environment is set up, you can run the following commands to simplify project tasks:
+
+- Run tests: `rye run test`
+- Format code: `rye run format`
+- Lint code: `rye run lint`
+- Type-check: `rye run typecheck`
+
+#### Notes
+- Rye automatically reads dependencies and scripts from the `pyproject.toml` file.
+- No need for `requirements.txt`, as Rye manages all dependencies!
 
 ## 💡 Usage
 

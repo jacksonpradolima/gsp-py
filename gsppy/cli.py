@@ -27,17 +27,37 @@ Key Features:
 This CLI empowers users to perform sequential pattern mining on transactional data efficiently through
 a simple command-line interface.
 """
-import argparse
+import os
 import csv
+import sys
 import json
 import logging
-import os
-from typing import List
+import argparse
+from typing import Dict, List, Tuple
 
 from gsppy.gsp import GSP
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",  # Simplified to keep CLI output clean
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger(__name__)
 
-def read_transactions_from_json(file_path: str) -> List[List]:
+
+def setup_logging(verbose: bool) -> None:
+    """
+    Set the logging level based on the verbosity of the CLI output.
+    :param verbose: Whether to enable verbose logging.
+    """
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+
+def read_transactions_from_json(file_path: str) -> List[List[str]]:
     """
     Read transactions from a JSON file.
 
@@ -52,9 +72,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            transactions = json.load(f)
-            if not isinstance(transactions, list) or not all(isinstance(t, list) for t in transactions):
-                raise ValueError("File should contain a JSON array of transaction lists.")
+            transactions: List[List[str]] = json.load(f)
         return transactions
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
@@ -62,7 +80,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
         raise ValueError(msg) from e
 
 
-def read_transactions_from_csv(file_path: str) -> List[List]:
+def read_transactions_from_csv(file_path: str) -> List[List[str]]:
     """
     Read transactions from a CSV file.
 
@@ -76,7 +94,7 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
         ValueError: If the file cannot be read or contains invalid data.
     """
     try:
-        transactions = []
+        transactions: List[List[str]] = []
         with open(file_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
@@ -92,7 +110,7 @@ def read_transactions_from_csv(file_path: str) -> List[List]:
         raise ValueError(msg) from e
 
 
-def detect_and_read_file(file_path: str) -> List[List]:
+def detect_and_read_file(file_path: str) -> List[List[str]]:
     """
     Detect file format (CSV or JSON) and read transactions.
 
@@ -120,7 +138,7 @@ def detect_and_read_file(file_path: str) -> List[List]:
     raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
 
 
-def main():
+def main() -> None:
     """
     Main function to handle CLI input and run the GSP algorithm.
 
@@ -150,32 +168,42 @@ def main():
         help="Minimum support threshold as a fraction of total transactions (default: 0.2)"
     )
 
+    # Verbose output argument
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable verbose output for debugging purposes.'
+    )
+
     # Parse arguments
     args = parser.parse_args()
+
+    # Setup logging verbosity
+    setup_logging(args.verbose)
 
     # Automatically detect and load transactions
     try:
         transactions = detect_and_read_file(args.file)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         return
 
     # Check min_support
     if args.min_support <= 0.0 or args.min_support > 1.0:
-        print("Error: min_support must be in the range (0.0, 1.0].")
+        logger.error("Error: min_support must be in the range (0.0, 1.0].")
         return
 
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
-        patterns = gsp.search(min_support=args.min_support)
-        print("Frequent Patterns Found:")
+        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=args.min_support)
+        logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
-            print(f"\n{i}-Sequence Patterns:")
+            logger.info(f"\n{i}-Sequence Patterns:")
             for pattern, support in level.items():
-                print(f"Pattern: {pattern}, Support: {support}")
+                logger.info(f"Pattern: {pattern}, Support: {support}")
     except Exception as e:
-        print(f"Error executing GSP algorithm: {e}")
+        logger.error(f"Error executing GSP algorithm: {e}")
 
 
 if __name__ == '__main__':

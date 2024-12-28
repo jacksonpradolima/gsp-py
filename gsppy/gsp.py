@@ -86,9 +86,9 @@ Version:
 """
 import logging
 import multiprocessing as mp
-from collections import Counter
+from typing import Any, Dict, List, Tuple
 from itertools import chain
-from typing import List, Dict, Tuple
+from collections import Counter
 
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
 
@@ -114,7 +114,7 @@ class GSP:
                         k-sequence for pattern generation.
     """
 
-    def __init__(self, raw_transactions: List[List]):
+    def __init__(self, raw_transactions: List[List[str]]):
         """
         Initialize the GSP algorithm with raw transactional data.
 
@@ -132,10 +132,10 @@ class GSP:
             ValueError: If the input transaction dataset is empty, contains
                         fewer than two transactions, or is not properly formatted.
         """
-        self.freq_patterns = []
+        self.freq_patterns: List[Dict[Tuple[str, ...], int]] = []
         self._pre_processing(raw_transactions)
 
-    def _pre_processing(self, raw_transactions: List[List]):
+    def _pre_processing(self, raw_transactions: List[List[str]]) -> None:
         """
         Validate and preprocess the input transactional dataset.
 
@@ -167,20 +167,19 @@ class GSP:
             logger.error(msg)
             raise ValueError(msg)
 
-        if not all(isinstance(item, list) for item in raw_transactions):
-            msg = "The dataset must be a list of transactions."
-            logger.error(msg)
-            raise ValueError(msg)
-
         logger.info("Pre-processing transactions...")
         self.max_size = max(len(item) for item in raw_transactions)
-        self.transactions = [tuple(transaction) for transaction in raw_transactions]
-        counts = Counter(chain.from_iterable(raw_transactions))
-        self.unique_candidates = [(item,) for item in counts.keys()]
+        self.transactions: List[Tuple[str, ...]] = [tuple(transaction) for transaction in raw_transactions]
+        counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
+        self.unique_candidates: list[tuple[str, Any]] = [(item,) for item in counts.keys()]
         logger.debug("Unique candidates: %s", self.unique_candidates)
 
     @staticmethod
-    def _worker_batch(batch: List[Tuple], transactions: List[Tuple], min_support: int) -> List[Tuple[Tuple, int]]:
+    def _worker_batch(
+        batch: List[Tuple[str, ...]],
+        transactions: List[Tuple[str, ...]],
+        min_support: int
+    ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
 
@@ -198,14 +197,17 @@ class GSP:
                                      - A candidate sequence.
                                      - The candidate's support count.
         """
-        results = []
+        results: List[Tuple[Tuple[str, ...], int]] = []
         for item in batch:
             frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))
             if frequency >= min_support:
                 results.append((item, frequency))
         return results
 
-    def _support(self, items: List[Tuple], min_support: float = 0, batch_size: int = 100) -> Dict[Tuple, int]:
+    def _support(
+        self,
+        items: List[Tuple[str, ...]], min_support: float = 0, batch_size: int = 100
+    ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences, using parallel processing.
 
@@ -235,7 +237,7 @@ class GSP:
         # Flatten the list of results and convert to a dictionary
         return {item: freq for batch in batch_results for item, freq in batch}
 
-    def _print_status(self, run: int, candidates: List[Tuple]):
+    def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
         Log progress information for the current GSP iteration.
 
@@ -249,7 +251,7 @@ class GSP:
         logger.info("Run %d: %d candidates filtered to %d.",
                     run, len(candidates), len(self.freq_patterns[run - 1]))
 
-    def search(self, min_support: float = 0.2) -> List[Dict[Tuple, int]]:
+    def search(self, min_support: float = 0.2) -> List[Dict[Tuple[str, ...], int]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
 
@@ -263,8 +265,9 @@ class GSP:
                                      appears in at least 30% of all transactions.
 
         Returns:
-            List[Dict[Tuple, int]]: A list where each element corresponds to a k-sequence-level
-                                    dictionary, mapping frequent patterns to their support counts.
+            List[Dict[Tuple[str, ...], int]]: A list of dictionaries containing frequent patterns
+                                              at each k-sequence level, with patterns as keys
+                                              and their support counts as values.
 
         Raises:
             ValueError: If the minimum support threshold is not in the range `(0.0, 1.0]`.

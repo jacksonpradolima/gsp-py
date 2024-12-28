@@ -17,16 +17,18 @@ Tests include:
 Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
-import random
 import re
+import random
+from typing import List
 
 import pytest
+from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore
 
 from gsppy.gsp import GSP
 
 
 @pytest.fixture
-def supermarket_transactions():
+def supermarket_transactions() -> List[List[str]]:
     """
     Fixture to provide a dataset representing supermarket transactions.
 
@@ -43,7 +45,7 @@ def supermarket_transactions():
 
 
 @pytest.fixture
-def random_transactions():
+def random_transactions() -> List[List[str]]:
     """
     Fixture to generate a random dataset of transactions.
 
@@ -53,19 +55,19 @@ def random_transactions():
     return [[random.choice(['A', 'B', 'C', 'D', 'E']) for _ in range(random.randint(2, 10))] for _ in range(100)]
 
 
-def test_empty_transactions():
+def test_empty_transactions() -> None:
     """
     Test the GSP algorithm with an empty dataset.
 
     Asserts:
         - A ValueError is raised indicating that the dataset is empty.
     """
-    transactions = []
+    transactions: List[List[str]] = []
     with pytest.raises(ValueError, match="Input transactions are empty"):
         GSP(transactions)
 
 
-def test_single_transaction():
+def test_single_transaction() -> None:
     """
     Test the GSP algorithm with a single transaction.
 
@@ -77,18 +79,6 @@ def test_single_transaction():
         GSP(transactions)
 
 
-def test_invalid_transaction_format():
-    """
-    Test the GSP algorithm with invalid transaction formats.
-
-    Asserts:
-        - A ValueError is raised indicating that the transactions must be lists of lists.
-    """
-    invalid_data = ["A", "B"]  # Invalid format: not a list of lists
-    with pytest.raises(ValueError, match="The dataset must be a list of transactions."):
-        GSP(invalid_data)
-
-
 @pytest.mark.parametrize(
     "min_support, expected_error",
     [
@@ -97,7 +87,8 @@ def test_invalid_transaction_format():
         (1.1, re.escape("Minimum support must be in the range (0.0, 1.0]")),
     ]
 )
-def test_invalid_min_support(supermarket_transactions, min_support, expected_error):
+def test_invalid_min_support(supermarket_transactions: List[List[str]], min_support: float,
+                             expected_error: str) -> None:
     """
     Test the GSP algorithm with invalid minimum support values.
 
@@ -109,7 +100,7 @@ def test_invalid_min_support(supermarket_transactions, min_support, expected_err
         gsp.search(min_support=min_support)
 
 
-def test_valid_min_support_edge(supermarket_transactions):
+def test_valid_min_support_edge(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with a valid edge value for min_support.
 
@@ -121,7 +112,7 @@ def test_valid_min_support_edge(supermarket_transactions):
     assert not result, "Expected no frequent patterns with min_support = 1.0"
 
 
-def test_min_support_valid(supermarket_transactions):
+def test_min_support_valid(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with a minimum support set just above 0.0.
 
@@ -138,7 +129,7 @@ def test_min_support_valid(supermarket_transactions):
     assert result_level_1 == level_1_patterns, f"Level 1 patterns mismatch. Got {result_level_1}"
 
 
-def test_no_frequent_items(supermarket_transactions):
+def test_no_frequent_items(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with a high minimum support value.
 
@@ -150,7 +141,7 @@ def test_no_frequent_items(supermarket_transactions):
     assert not result, "High minimum support should filter out all items."
 
 
-def test_worker_batch_static_method(supermarket_transactions):
+def test_worker_batch_static_method(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the _worker_batch method directly for checkpoint validation.
 
@@ -165,11 +156,11 @@ def test_worker_batch_static_method(supermarket_transactions):
 
     # Call the '_worker_batch' method
     # This test accesses `_worker_batch` to test internal functionality
-    results = GSP._worker_batch(batch, transactions, min_support) # pylint: disable=protected-access
+    results = GSP._worker_batch(batch, transactions, min_support)  # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 
-def test_frequent_patterns(supermarket_transactions):
+def test_frequent_patterns(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with supermarket transactions and a realistic minimum support.
 
@@ -186,7 +177,7 @@ def test_frequent_patterns(supermarket_transactions):
     assert result == expected, "Frequent patterns do not match expected results."
 
 
-def test_random_transactions(random_transactions):
+def test_random_transactions(random_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with a random dataset.
 
@@ -198,7 +189,7 @@ def test_random_transactions(random_transactions):
     assert len(result) > 0, "Random transactions should yield some frequent patterns with low min_support."
 
 
-def test_large_transactions():
+def test_large_transactions() -> None:
     """
     Test the GSP algorithm with a large single transaction.
 
@@ -210,7 +201,7 @@ def test_large_transactions():
         GSP(transactions)
 
 
-def test_partial_match(supermarket_transactions):
+def test_partial_match(supermarket_transactions: List[List[str]]) -> None:
     """
     Test the GSP algorithm with additional partial matches.
 
@@ -239,7 +230,7 @@ def test_partial_match(supermarket_transactions):
 
 
 @pytest.mark.parametrize("min_support", [0.1, 0.2, 0.3, 0.4, 0.5])
-def test_benchmark(benchmark, supermarket_transactions, min_support):
+def test_benchmark(benchmark: BenchmarkFixture, supermarket_transactions: List[List[str]], min_support: float) -> None:
     """
     Benchmark the GSP algorithm's performance using the supermarket dataset.
 

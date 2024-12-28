@@ -1,0 +1,51 @@
+name: Code Quality
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited, ready_for_review ]
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Rye (via Curl)
+      - name: Install Rye
+        uses: eifinger/setup-rye@v4
+        with:
+          version: '0.43.0'
+          enable-cache: 'true'
+
+      # Step 3: Sync dependencies
+      - name: Sync dependencies
+        run: rye sync
+
+      # Step 4: Get changed Python files
+      - name: Get Python changed files
+        id: changed-py-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            *.py
+            **/*.py
+
+      # Step 5: Run Ruff for only changed files
+      - name: Run Ruff (Lint)
+        if: steps.changed-py-files.outputs.any_changed == 'true'
+        run: |
+          echo "Running Ruff on changed files..."
+          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
+          rye run lint ${{ steps.changed-py-files.outputs.all_changed_files }}
+
+      # Step 6: Run Pyright for only changed files
+      - name: Run Pyright (Type Check)
+        if: steps.changed-py-files.outputs.any_changed == 'true'
+        run: |
+          echo "Running Pyright on changed files..."
+          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
+          rye run typecheck ${{ steps.changed-py-files.outputs.all_changed_files }}

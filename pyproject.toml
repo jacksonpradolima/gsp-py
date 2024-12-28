@@ -1,0 +1,166 @@
+[build-system]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gsppy"
+version = "2.2.0"
+description = "GSP (Generalized Sequence Pattern) algorithm in Python"
+keywords = ["GSP", "sequential patterns", "data analysis", "sequence mining"]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+readme = { file = "README.md", content-type = "text/markdown" }
+homepage = "https://github.com/jacksonpradolima/gsp-py"
+repository = "https://github.com/jacksonpradolima/gsp-py"
+authors = [{ name = "Jackson Antonio do Prado Lima", email = "jacksonpradolima@gmail.com" }]
+maintainers = [{ name = "Jackson Antonio do Prado Lima", email = "jacksonpradolima@gmail.com" }]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Natural Language :: English",
+]
+
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/jacksonpradolima/gsp-py"
+
+[project.scripts]
+gsppy = "gsppy.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "cython==3.0.11",
+    "hatch==1.14.0",
+    "hatchling==1.27.0",
+    "mypy==1.14.0",
+    "pylint==3.3.3",
+    "pyright==1.1.391",
+    "pytest==8.3.4",
+    "pytest-benchmark==5.1.0",
+    "pytest-cov==6.0.0",
+    "ruff==0.8.4",
+    "tox==4.23.2",
+]
+
+[tool.hatch.build]
+include = ["gsppy/*"]
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[tool.hatch.build.targets.sdist]
+# Basically everything except hidden files/directories (such as .github, .python-version, etc)
+include = [
+    "/*.toml",
+    "/*.json",
+    "/*.md",
+    "/*.ini",
+    "bin/*",
+    "gsppy/*",
+    "tests/*",
+]
+
+[tool.mypy]
+python_version = "3.8"
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+output-format = "grouped"
+target-version = "py38"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    # isort
+    "I",
+    # bugbear rules
+    "B",
+    # mutable defaults
+    "B006",
+    # remove unused imports
+    "F401",
+    # bare except statements
+    "E722",
+    # unused arguments
+    "ARG",
+    # print statements
+    "T201",
+    "T203",
+    # misuse of typing.TYPE_CHECKING
+    "TCH004",
+    # import rules
+    "TID251",
+]
+ignore = [
+    # mutable defaults
+    "B006",
+]
+unfixable = [
+    # disable auto fix for print statements
+    "T201",
+    "T203",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"functools.lru_cache".msg = "This function does not retain type information for the wrapped function's arguments; The `lru_cache` function from `_utils` should be used instead"
+
+[tool.ruff.lint.isort]
+length-sort = true
+length-sort-straight = true
+combine-as-imports = true
+extra-standard-library = ["typing_extensions"]
+known-first-party = ["gsp", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = ["T201", "T203"]
+"gsppy/utils.py" = ["TID251"]
+
+[tool.pyright]
+# this enables practically every flag given by pyright.
+# there are a couple of flags that are still disabled by
+# default in strict mode as they are experimental and niche.
+typeCheckingMode = "strict"
+pythonVersion = "3.8"
+exclude = []
+reportImplicitOverride = true
+reportImportCycles = false
+reportPrivateUsage = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short -v"
+xfail_strict = true
+filterwarnings = [
+    "error"
+]
+
+[tool.rye]
+dev-dependencies = [
+    "pyright>=1.1.391",
+    "ruff>=0.8.4",
+    "pytest>=8.3.4",
+    "pytest-benchmark>=4.0.0",
+    "tox>=4.23.2",
+    "pylint>=3.2.7",
+]
+
+[tool.rye.scripts]
+test = "pytest"
+format = "ruff check --fix ."
+lint = "ruff check ."
+typecheck = "pyright"
+tox = "tox -r"

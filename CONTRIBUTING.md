@@ -97,27 +97,41 @@ To maintain consistency and code quality, please follow these coding guidelines:
 To get familiar with the existing code, follow these steps:
 
 1. **Setup Environment**:
-   - Create a virtual environment using `venv`:
+   This project uses [Rye](https://github.com/mitsuhiko/rye) for managing dependencies and the virtual environment. Follow these instructions to set it up:
+
+   - Install Rye (if not already installed):
      ```bash
-     python3 -m venv venv
-     source venv/bin/activate  # Activate the virtual environment
+     curl -sSf https://rye.astral.sh/get | bash
      ```
 
-   - Install dependencies:
+     Make sure Rye's binary directory is added to your `PATH`:
      ```bash
-     pip install -r requirements.txt
+     export PATH="$HOME/.rye/bin:$PATH"
      ```
+
+   - Install project dependencies using Rye:
+     ```bash
+     rye sync
+     ```
+
+     This command reads the dependencies specified in the `pyproject.toml` file and installs them into a local environment managed by Rye.
 
 2. **Run Tests**:
-   Use `pytest` to verify the baseline state:
+   Use Rye to run tests and verify the baseline state:
    ```bash
-   pytest
+   rye run test
    ```
 
+   The `test` script is defined in the `pyproject.toml` under `[tool.rye.scripts]` and uses `pytest`.
+
 3. **Explore the Code**:
-   The main entry point for the GSP algorithm is in the `gsppy` module. The libraries for support counting, candidate generation, and additional utility functions are also there.
+   The main entry point for the GSP algorithm is in the `gsppy` module. The libraries for support counting, candidate generation, and additional utility functions are also within this module.
 
 ---
+
+### Notes:
+- No need to create a `venv` or install dependencies manually with `pip`; Rye handles everything based on the `pyproject.toml` file.
+- If you’re unfamiliar with Rye, refer to its [documentation](https://github.com/mitsuhiko/rye).
 
 ## Reporting Issues
 
