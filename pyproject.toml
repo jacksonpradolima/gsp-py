@@ -70,10 +70,15 @@ include = [
     "tests/*",
 ]
 
+[tool.mypy]
+python_version = "3.8"
+check_untyped_defs = true
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 120
 output-format = "grouped"
-target-version = "py37"
+target-version = "py38"
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -149,6 +154,7 @@ dev-dependencies = [
     "ruff>=0.8.4",
     "pytest>=8.3.4",
     "pytest-benchmark>=4.0.0",
+    "tox>=4.23.2",
 ]
 
 [tool.rye.scripts]
@@ -156,3 +162,4 @@ test = "pytest"
 format = "ruff check --fix ."
 lint = "ruff check ."
 typecheck = "pyright"
+tox = "tox -r"

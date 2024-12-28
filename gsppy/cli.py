@@ -138,7 +138,7 @@ def detect_and_read_file(file_path: str) -> List[List[str]]:
     raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
 
 
-def main():
+def main() -> None:
     """
     Main function to handle CLI input and run the GSP algorithm.
 

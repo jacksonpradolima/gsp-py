@@ -10,24 +10,49 @@
 #   universal: false
 
 -e file:.
+cachetools==5.5.0
+    # via tox
+chardet==5.2.0
+    # via tox
+colorama==0.4.6
+    # via tox
+distlib==0.3.9
+    # via virtualenv
 exceptiongroup==1.2.2
     # via pytest
+filelock==3.16.1
+    # via tox
+    # via virtualenv
 iniconfig==2.0.0
     # via pytest
 nodeenv==1.9.1
     # via pyright
 packaging==24.2
+    # via pyproject-api
     # via pytest
+    # via tox
+platformdirs==4.3.6
+    # via tox
+    # via virtualenv
 pluggy==1.5.0
     # via pytest
+    # via tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
+pyproject-api==1.8.0
+    # via tox
 pyright==1.1.391
 pytest==8.3.4
     # via pytest-benchmark
 pytest-benchmark==4.0.0
 ruff==0.8.4
 tomli==2.2.1
+    # via pyproject-api
     # via pytest
+    # via tox
+tox==4.23.2
 typing-extensions==4.12.2
     # via pyright
+    # via tox
+virtualenv==20.28.0
+    # via tox

@@ -12,6 +12,11 @@
 ### **Infrastructure Improvements**
 - Added `SECURITY.md` to define the project's security policy, including supported versions and responsible disclosure practices.
 - Updated `.python-version` to include support for Python versions `3.12.8` and `3.13.1`.
+- **Migrated Dependency and Virtual Environment Management to Rye**:
+  - Introduced [Rye](https://github.com/mitsuhiko/rye) for managing Python dependencies and virtual environments.
+  - Deprecated the `requirements-dev.txt` file in favor of managing dependencies in `pyproject.toml`.
+  - Updated documentation to include instructions for using `rye sync` to set up the project environment.
+  - Updated CI workflows to install and use dependencies directly via Rye.
 
 ### **CLI Enhancements**
 - Improved `gsppy/cli.py`:
@@ -149,6 +154,9 @@
 - **Infrastructure Improvements**:
   - Added Python 3.12.8 and 3.13.1 compatibility in `.python-version`.
   - Migrated to `pyproject.toml` for modern Python packaging, replacing `setup.py` and `setup.cfg`.
+  - Adopted **Rye** for dependency management and virtual environment setup:
+    - Deprecated `requirements-dev.txt` in favor of managing all dependencies in `pyproject.toml`.
+    - Updated workflows and documentation to reflect the use of `rye sync` for environment setu
 
 - **CLI Enhancements**:
   - Improved logging, error handling, and added type annotations in the CLI.
