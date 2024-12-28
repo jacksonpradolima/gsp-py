@@ -86,7 +86,7 @@ Version:
 """
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from itertools import chain
 from collections import Counter
 
@@ -171,7 +171,7 @@ class GSP:
         self.max_size = max(len(item) for item in raw_transactions)
         self.transactions: List[Tuple[str, ...]] = [tuple(transaction) for transaction in raw_transactions]
         counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
-        self.unique_candidates: list[tuple[str, ...]] = [(item,) for item in counts.keys()]
+        self.unique_candidates: list[tuple[str, Any]] = [(item,) for item in counts.keys()]
         logger.debug("Unique candidates: %s", self.unique_candidates)
 
     @staticmethod
