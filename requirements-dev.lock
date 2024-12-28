@@ -10,12 +10,16 @@
 #   universal: false
 
 -e file:.
+astroid==3.2.4
+    # via pylint
 cachetools==5.5.0
     # via tox
 chardet==5.2.0
     # via tox
 colorama==0.4.6
     # via tox
+dill==0.3.9
+    # via pylint
 distlib==0.3.9
     # via virtualenv
 exceptiongroup==1.2.2
@@ -25,6 +29,10 @@ filelock==3.16.1
     # via virtualenv
 iniconfig==2.0.0
     # via pytest
+isort==5.13.2
+    # via pylint
+mccabe==0.7.0
+    # via pylint
 nodeenv==1.9.1
     # via pyright
 packaging==24.2
@@ -32,6 +40,7 @@ packaging==24.2
     # via pytest
     # via tox
 platformdirs==4.3.6
+    # via pylint
     # via tox
     # via virtualenv
 pluggy==1.5.0
@@ -39,6 +48,7 @@ pluggy==1.5.0
     # via tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
+pylint==3.2.7
 pyproject-api==1.8.0
     # via tox
 pyright==1.1.391
@@ -47,11 +57,16 @@ pytest==8.3.4
 pytest-benchmark==4.0.0
 ruff==0.8.4
 tomli==2.2.1
+    # via pylint
     # via pyproject-api
     # via pytest
     # via tox
+tomlkit==0.13.2
+    # via pylint
 tox==4.23.2
 typing-extensions==4.12.2
+    # via astroid
+    # via pylint
     # via pyright
     # via tox
 virtualenv==20.28.0
