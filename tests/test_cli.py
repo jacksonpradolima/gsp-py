@@ -159,7 +159,7 @@ def test_main_invalid_json_file(monkeypatch: MonkeyPatch):
 
         # Assert correct error message was logged
         mock_error.assert_called_with(
-            f"Error executing GSP algorithm: GSP requires multiple transactions to find meaningful patterns."
+            "Error executing GSP algorithm: GSP requires multiple transactions to find meaningful patterns."
         )
 
     # Cleanup
