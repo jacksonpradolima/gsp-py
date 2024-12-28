@@ -19,11 +19,11 @@ Fixtures are used to create temporary files (valid/invalid JSON and CSV) for rel
 without affecting the file system.
 Pytest is utilized for parametrized testing to improve coverage and reduce redundancy in test cases.
 """
-import json
 import os
-import subprocess
+import json
 import tempfile
-from typing import Generator, Any
+import subprocess
+from typing import Any, Generator
 from unittest.mock import patch
 
 import pytest

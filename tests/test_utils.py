@@ -8,7 +8,7 @@ This module tests the following functions:
 
 Each function is tested for standard cases, edge cases, and error handling to ensure robustness.
 """
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
 
