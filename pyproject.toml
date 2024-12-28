@@ -78,6 +78,8 @@ select = [
     "I",
     # bugbear rules
     "B",
+    # mutable defaults
+    "B006",
     # remove unused imports
     "F401",
     # bare except statements
@@ -114,6 +116,7 @@ known-first-party = ["gsp", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = ["T201", "T203"]
+"gsppy/utils.py" = ["TID251"]
 
 [tool.pyright]
 # this enables practically every flag given by pyright.

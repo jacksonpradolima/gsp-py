@@ -20,7 +20,8 @@ Main functionalities:
 These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
-from typing import Dict, List, Tuple, Generator, Sequence
+from typing import Dict, List, Tuple, Sequence, Generator
+from functools import lru_cache
 from itertools import product
 
 
@@ -41,6 +42,7 @@ def split_into_batches(
         yield items[i:i + batch_size]
 
 
+@lru_cache(maxsize=None)
 def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ...]) -> bool:
     """
     Check if a subsequence exists within a sequence as a contiguous subsequence.

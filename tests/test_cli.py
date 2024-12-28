@@ -19,20 +19,22 @@ Fixtures are used to create temporary files (valid/invalid JSON and CSV) for rel
 without affecting the file system.
 Pytest is utilized for parametrized testing to improve coverage and reduce redundancy in test cases.
 """
-import os
 import json
-import tempfile
+import os
 import subprocess
+import tempfile
+from typing import Generator, Any
 from unittest.mock import patch
 
 import pytest
+from pytest import MonkeyPatch
 
 from gsppy.cli import main, detect_and_read_file
 from gsppy.gsp import GSP
 
 
 @pytest.fixture
-def valid_json_file():
+def valid_json_file() -> Generator[Any, Any, Any]:
     """Fixture to create a valid JSON file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
@@ -42,7 +44,7 @@ def valid_json_file():
 
 
 @pytest.fixture
-def valid_csv_file():
+def valid_csv_file() -> Generator[Any, Any, Any]:
     """Fixture to create a valid CSV file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as temp_file:
         temp_file.write(b"Bread,Milk\nMilk,Diaper\nBread,Diaper,Beer\n")
@@ -52,7 +54,7 @@ def valid_csv_file():
 
 
 @pytest.fixture
-def invalid_json_file():
+def invalid_json_file() -> Generator[Any, Any, Any]:
     """Fixture to create an invalid JSON file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
         temp_file.write(b"{invalid_json: true")  # Malformed JSON
@@ -62,7 +64,7 @@ def invalid_json_file():
 
 
 @pytest.fixture
-def invalid_csv_file():
+def invalid_csv_file() -> Generator[Any, Any, Any]:
     """Fixture to create an invalid CSV file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as temp_file:
         temp_file.write(b",,\nBread,,Milk\n")  # Broken format
@@ -72,7 +74,7 @@ def invalid_csv_file():
 
 
 @pytest.fixture
-def unsupported_file():
+def unsupported_file() -> Generator[Any, Any, Any]:
     """Fixture to create an unsupported file."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
         temp_file.write(b"This is a plain text file.")
@@ -81,34 +83,34 @@ def unsupported_file():
     os.unlink(temp_file_name)
 
 
-def test_valid_json_file(valid_json_file):
+def test_valid_json_file(valid_json_file: Generator[Any, Any, Any]):
     """Test if a valid JSON file is correctly read."""
-    transactions = detect_and_read_file(valid_json_file)
+    transactions = detect_and_read_file(str(valid_json_file))
     assert transactions == [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
 
 
-def test_valid_csv_file(valid_csv_file):
+def test_valid_csv_file(valid_csv_file: Generator[Any, Any, Any]):
     """Test if a valid CSV file is correctly read."""
-    transactions = detect_and_read_file(valid_csv_file)
+    transactions = detect_and_read_file(str(valid_csv_file))
     assert transactions == [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
 
 
-def test_invalid_json_file(invalid_json_file):
+def test_invalid_json_file(invalid_json_file: Generator[Any, Any, Any]):
     """Test if an invalid JSON file raises an error."""
     with pytest.raises(ValueError, match="Error reading transaction data from JSON file"):
-        detect_and_read_file(invalid_json_file)
+        detect_and_read_file(str(invalid_json_file))
 
 
-def test_invalid_csv_file(invalid_csv_file):
+def test_invalid_csv_file(invalid_csv_file: Generator[Any, Any, Any]):
     """Test if an invalid CSV file raises an error."""
     with pytest.raises(ValueError, match="Error reading transaction data from CSV file"):
-        detect_and_read_file(invalid_csv_file)
+        detect_and_read_file(str(invalid_csv_file))
 
 
-def test_unsupported_file_format(unsupported_file):
+def test_unsupported_file_format(unsupported_file: Generator[Any, Any, Any]):
     """Test if an unsupported file format raises an error."""
     with pytest.raises(ValueError, match="Unsupported file format"):
-        detect_and_read_file(unsupported_file)
+        detect_and_read_file(str(unsupported_file))
 
 
 def test_non_existent_file():
@@ -118,7 +120,7 @@ def test_non_existent_file():
 
 
 @pytest.mark.parametrize("min_support", [-0.1, 1.1])
-def test_invalid_min_support_gsp(min_support):
+def test_invalid_min_support_gsp(min_support: float):
     """Test if invalid min_support values raise an error."""
     transactions = [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
     gsp = GSP(transactions)
@@ -127,7 +129,7 @@ def test_invalid_min_support_gsp(min_support):
 
 
 @pytest.mark.parametrize("min_support", [0.5])
-def test_valid_min_support_gsp(min_support):
+def test_valid_min_support_gsp(min_support: float):
     """Test if valid min_support values work with the GSP algorithm."""
     transactions = [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
     gsp = GSP(transactions)
@@ -136,7 +138,7 @@ def test_valid_min_support_gsp(min_support):
     assert patterns[0]  # Ensure frequent patterns are not empty
 
 
-def test_main_invalid_json_file(monkeypatch):
+def test_main_invalid_json_file(monkeypatch: MonkeyPatch):
     """
     Test `main()` with a JSON file that has an invalid structure.
     """
@@ -163,7 +165,7 @@ def test_main_invalid_json_file(monkeypatch):
     os.unlink(temp_file_name)
 
 
-def test_main_non_existent_file(monkeypatch):
+def test_main_non_existent_file(monkeypatch: MonkeyPatch):
     """
     Test `main()` with a file that does not exist.
     """
@@ -177,7 +179,7 @@ def test_main_non_existent_file(monkeypatch):
         mock_error.assert_called_with("Error: File 'non_existent.json' does not exist.")
 
 
-def test_main_valid_json_file(monkeypatch):
+def test_main_valid_json_file(monkeypatch: MonkeyPatch):
     """
     Test `main()` with a valid JSON file.
     """
@@ -199,7 +201,7 @@ def test_main_valid_json_file(monkeypatch):
     os.unlink(temp_file_name)
 
 
-def test_main_invalid_min_support(monkeypatch):
+def test_main_invalid_min_support(monkeypatch: MonkeyPatch):
     """
     Test `main()` with an invalid `min_support` value.
     """
@@ -251,7 +253,7 @@ def test_main_entry_point():
     os.unlink(temp_file_name)
 
 
-def test_main_edge_case_min_support(monkeypatch):
+def test_main_edge_case_min_support(monkeypatch: MonkeyPatch):
     """
     Test `main()` with edge-case values for `min_support` (valid and invalid).
     """
@@ -280,7 +282,7 @@ def test_main_edge_case_min_support(monkeypatch):
     os.unlink(temp_file_name)
 
 
-def test_main_gsp_exception(monkeypatch):
+def test_main_gsp_exception(monkeypatch: MonkeyPatch):
     """
     Test `main()` when the GSP algorithm raises an exception.
     """

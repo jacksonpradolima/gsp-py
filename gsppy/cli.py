@@ -33,7 +33,7 @@ import sys
 import json
 import logging
 import argparse
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 from gsppy.gsp import GSP
 
