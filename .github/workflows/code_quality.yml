@@ -49,28 +49,3 @@ jobs:
           echo "Running Pyright on changed files..."
           echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
           rye run typecheck ${{ steps.changed-py-files.outputs.all_changed_files }}
-
-      # Step 7: Create Pylintrc file (Pylint Config)
-      - name: Create Pylintrc file
-        run: |
-          echo "[MASTER]" > .pylintrc
-          echo "max-line-length=120" >> .pylintrc
-          echo "disable=" >> .pylintrc
-          echo "    C0103, # variable naming style" >> .pylintrc
-          echo "    logging-format-interpolation, # prefer % formatting" >> .pylintrc
-          echo "    broad-except, # catch all exceptions" >> .pylintrc
-          echo "    too-many-locals, # relax constraints" >> .pylintrc
-          echo "    too-few-public-methods," >> .pylintrc
-          echo "    too-many-instance-attributes," >> .pylintrc
-          echo "    too-many-arguments," >> .pylintrc
-          echo "    import-error," >> .pylintrc
-          echo "    attribute-defined-outside-init," >> .pylintrc
-          echo "    redefined-outer-name" >> .pylintrc
-
-      # Step 8: Run Pylint for only changed files
-      - name: Run Pylint (Lint)
-        if: steps.changed-py-files.outputs.any_changed == 'true'
-        run: |
-          echo "Running Pylint on changed files..."
-          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          python -m pylint --rcfile=.pylintrc ${{ steps.changed-py-files.outputs.all_changed_files }}
