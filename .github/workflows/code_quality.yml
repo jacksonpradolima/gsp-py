@@ -2,7 +2,7 @@ name: Code Quality
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [ opened, synchronize, reopened, edited, ready_for_review ]
 
 jobs:
   code-quality:
@@ -16,18 +16,14 @@ jobs:
 
       # Step 2: Install Rye (via Curl)
       - name: Install Rye
-        run: |
-          echo "Installing Rye..."
-          curl -sSf https://rye.astral.sh/get | bash
-          echo "Adding Rye to PATH..."
-          echo 'export PATH="$HOME/.rye/bin:$PATH"' >> $GITHUB_ENV
+        uses: eifinger/setup-rye@v4
+        with:
+          version: '0.43.0'
+          enable-cache: 'true'
 
-      # Step 3: Set up Python environment via Rye
-      - name: Set up Rye Project Environment
-        run: |
-          echo "Setting up Rye environment..."
-          source ~/.bashrc
-          ~/.rye/bin/rye sync
+      # Step 3: Sync dependencies
+      - name: Sync dependencies
+        run: rye sync
 
       # Step 4: Get changed Python files
       - name: Get Python changed files
