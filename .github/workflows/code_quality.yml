@@ -50,15 +50,7 @@ jobs:
           echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
           rye run typecheck ${{ steps.changed-py-files.outputs.all_changed_files }}
 
-      # Step 7: Run Mypy for type-checking only changed files
-      - name: Run Mypy (Type Check)
-        if: steps.changed-py-files.outputs.any_changed == 'true'
-        run: |
-          echo "Running Mypy on changed files..."
-          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          python -m mypy --config-file pyproject.toml ${{ steps.changed-py-files.outputs.all_changed_files }}
-
-      # Step 8: Create Pylintrc file (Pylint Config)
+      # Step 7: Create Pylintrc file (Pylint Config)
       - name: Create Pylintrc file
         run: |
           echo "[MASTER]" > .pylintrc
@@ -75,7 +67,7 @@ jobs:
           echo "    attribute-defined-outside-init," >> .pylintrc
           echo "    redefined-outer-name" >> .pylintrc
 
-      # Step 9: Run Pylint for only changed files
+      # Step 8: Run Pylint for only changed files
       - name: Run Pylint (Lint)
         if: steps.changed-py-files.outputs.any_changed == 'true'
         run: |
