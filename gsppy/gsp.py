@@ -86,7 +86,7 @@ Version:
 """
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 from itertools import chain
 from collections import Counter
 
