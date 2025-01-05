@@ -73,12 +73,17 @@ GSP-Py can be easily installed from either the **repository** or PyPI.
 
 ### Option 1: Clone the Repository
 
-To manually clone the repository and install:
+To manually clone the repository and set up the environment:
 
 ```bash
 git clone https://github.com/jacksonpradolima/gsp-py.git
 cd gsp-py
-python setup.py install
+```
+
+Refer to the [Developer Installation](#developer-installation) section and run:
+
+```bash
+rye sync
 ```
 
 ### Option 2: Install via `pip`
@@ -124,10 +129,12 @@ rye sync
 #### 3. Use Rye Scripts
 Once the environment is set up, you can run the following commands to simplify project tasks:
 
-- Run tests: `rye run test`
+- Run tests (in parallel): `rye run test`
 - Format code: `rye run format`
 - Lint code: `rye run lint`
 - Type-check: `rye run typecheck`
+- Add new dependencies: `rye add <package-name>`
+  - Add new dependency to dev dependencies: `rye add --dev <package-name>`
 
 #### Notes
 - Rye automatically reads dependencies and scripts from the `pyproject.toml` file.
@@ -237,12 +244,19 @@ improvement? [Open a discussion or issue!](https://github.com/jacksonpradolima/g
 We welcome contributions from the community! If you'd like to help improve GSP-Py, read
 our [CONTRIBUTING.md](CONTRIBUTING.md) guide to get started.
 
-Development dependencies (e.g., testing and linting tools) are included in the `dev` category in `setup.py`. To install
-these dependencies, run:
+Development dependencies (e.g., testing and linting tools) are automatically managed using Rye. To install
+these dependencies and set up the environment, run:
 
 ```bash
-pip install .[dev]
+rye sync
 ```
+
+After syncing, you can run the following scripts using Rye for development tasks:
+
+- Run tests (in parallel): `rye run test`
+- Lint code: `rye run lint`
+- Type-check: `rye run typecheck`
+- Format code: `rye run format`
 
 ### General Steps:
 
@@ -271,7 +285,7 @@ If GSP-Py contributed to your research or project that led to a publication, we 
   author       = {Prado Lima, Jackson Antonio do},
   title        = {{GSP-Py - Generalized Sequence Pattern algorithm in Python}},
   month        = Dec,
-  year         = 2024,
+  year         = 2025,
   doi          = {10.5281/zenodo.3333987},
   url          = {https://doi.org/10.5281/zenodo.3333987}
 }

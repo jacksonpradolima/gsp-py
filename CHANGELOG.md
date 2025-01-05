@@ -1,5 +1,42 @@
 # Changelog
 
+## [v2.3.0] - 2025-01-05
+
+### **New Features**
+- Introduced parallel test execution using `pytest-xdist` for improved testing efficiency:
+  - Updated `rye run test` script to include parallel execution with `pytest -n auto`.
+- Added new Rye commands for dependency management:
+  - `rye add <package-name>` to add dependencies.
+  - `rye add --dev <package-name>` to add development dependencies.
+
+### **Infrastructure Improvements**
+- Enhanced the development environment setup:
+  - Updated the README to include instructions for setting up the environment with `rye sync` instead of `python setup.py install`.
+  - Deprecated usage of `setup.py` for manual installation.
+- Updated `pyproject.toml`:
+  - Added `pytest-xdist` as a development dependency to enable parallel testing.
+
+### **Testing and Quality**
+- Improved test performance by enabling parallel test execution with `pytest-xdist`.
+- Updated `requirements-dev.lock`:
+  - Added new dependencies: `pytest-xdist` and its related package `execnet`.
+
+### **Documentation Updates**
+- Enhanced the README:
+  - Improved clarity and structure in the **Developer Installation** and **Contributing** sections.
+  - Added new commands under **Use Rye Scripts** to streamline project tasks.
+  - Clarified the process for adding new dependencies.
+
+### **Dependency Management**
+- Updated development dependencies in `pyproject.toml`:
+  - Added `pytest-xdist>=3.6.1` for parallel testing.
+  - Updated `ruff` to `0.8.6` for code formatting and linting.
+
+### **Version Updates**
+- Updated version to `2.3.0` in `pyproject.toml`, `README.md`, and `CITATION.cff`.
+- Updated copyright year to 2025 in the `LICENSE` file.
+---
+
 ## [v2.2.0] - 2024-12-27
 
 ### **New Features**
@@ -48,6 +85,8 @@
   - Fixed PyPI URL in `publish.yml`.
   - Updated build steps to use `python -m build` for consistency.
 
+---
+
 ## [v2.1.0] - 2024-12-26
 
 ### **Compatibility Updates**
@@ -83,6 +122,8 @@
 ## [v2.0.1] - 2024-12-25
 - Added **CITATION.cff** file for citation information.
 - Removed the GitHub sponsor badge from the README.
+
+---
 
 ## [v2.0] - 2024-12-25
 
@@ -146,28 +187,7 @@
 
 ## **Summary of Changes**
 
-### From v2.1.0 to v2.2.0
-- **New Features**:
-  - Added `.github/CODEOWNERS` and issue templates for better pull request and issue management.
-  - Introduced a `SECURITY.md` file to define project security policies.
-
-- **Infrastructure Improvements**:
-  - Added Python 3.12.8 and 3.13.1 compatibility in `.python-version`.
-  - Migrated to `pyproject.toml` for modern Python packaging, replacing `setup.py` and `setup.cfg`.
-  - Adopted **Rye** for dependency management and virtual environment setup:
-    - Deprecated `requirements-dev.txt` in favor of managing all dependencies in `pyproject.toml`.
-    - Updated workflows and documentation to reflect the use of `rye sync` for environment setu
-
-- **CLI Enhancements**:
-  - Improved logging, error handling, and added type annotations in the CLI.
-
-- **Algorithm & Utility Enhancements**:
-  - Refactored the GSP algorithm for better performance and clarity.
-  - Enhanced utility functions with stricter typing and validation.
-
-- **Testing & Quality**:
-  - Reorganized tests into a cleaner structure, added static analysis tools, and improved type-checking configurations.
-
-- **Build & Packaging**:
-  - Streamlined the build process with `hatch` and `hatchling`.
-  - Updated GitHub Actions workflows for improved consistency and functionality.
+### From v2.2.0 to v2.3.0
+- Enhanced test efficiency with parallel execution.
+- Simplified developer setup and dependency management.
+- Improved documentation for clarity and usability.
