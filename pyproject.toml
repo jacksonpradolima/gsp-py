@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gsppy"
-version = "2.2.0"
+version = "2.3.0"
 description = "GSP (Generalized Sequence Pattern) algorithm in Python"
 keywords = ["GSP", "sequential patterns", "data analysis", "sequence mining"]
 license = { file = "LICENSE" }
@@ -156,10 +156,11 @@ dev-dependencies = [
     "pytest-benchmark>=4.0.0",
     "tox>=4.23.2",
     "pylint>=3.2.7",
+    "pytest-xdist>=3.6.1",
 ]
 
 [tool.rye.scripts]
-test = "pytest"
+test = "pytest -n auto"
 format = "ruff check --fix ."
 lint = "ruff check ."
 typecheck = "pyright"

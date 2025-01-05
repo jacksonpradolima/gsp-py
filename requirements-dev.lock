@@ -24,6 +24,8 @@ distlib==0.3.9
     # via virtualenv
 exceptiongroup==1.2.2
     # via pytest
+execnet==2.1.1
+    # via pytest-xdist
 filelock==3.16.1
     # via tox
     # via virtualenv
@@ -54,8 +56,10 @@ pyproject-api==1.8.0
 pyright==1.1.391
 pytest==8.3.4
     # via pytest-benchmark
+    # via pytest-xdist
 pytest-benchmark==4.0.0
-ruff==0.8.4
+pytest-xdist==3.6.1
+ruff==0.8.6
 tomli==2.2.1
     # via pylint
     # via pyproject-api
