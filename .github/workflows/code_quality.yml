@@ -28,7 +28,7 @@ jobs:
       # Step 4: Get changed Python files
       - name: Get Python changed files
         id: changed-py-files
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v46
         with:
           files: |
             *.py
