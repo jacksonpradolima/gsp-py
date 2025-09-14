@@ -278,9 +278,9 @@ class GSP:
         if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")
 
-        min_support = len(self.transactions) * min_support
+        logger.info(f"Starting GSP algorithm with min_support={min_support}...")
 
-        logger.info("Starting GSP algorithm with min_support=%.2f...", min_support)
+        min_support = len(self.transactions) * min_support
 
         # the set of frequent 1-sequence: all singleton sequences
         # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
