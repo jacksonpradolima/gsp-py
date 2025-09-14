@@ -1,0 +1,35 @@
+{
+  "name": "gsp-py",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "containerEnv": {
+    "UV_LINK_MODE": "copy"
+  },
+  "mounts": [
+    "type=cache,target=/home/vscode/.cache/uv",
+    "type=cache,target=/home/vscode/.cache/pip"
+  ],
+  "postCreateCommand": "make setup install pre-commit-install",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["-n", "auto"],
+        "ruff.enable": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-pyright.pyright",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}
