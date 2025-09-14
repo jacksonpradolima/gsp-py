@@ -8,7 +8,7 @@ name = "_gsppy_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
+pyo3 = { version = "0.24", features = ["extension-module", "abi3-py310"] }
 rayon = "1.10"
 
 [profile.release]
