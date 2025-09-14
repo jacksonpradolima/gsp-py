@@ -51,6 +51,9 @@ dev = [
     "ruff==0.13.0",
     "tox==4.30.2",
 ]
+rust = [
+    "maturin==1.6.0"
+]
 
 [tool.hatch.build]
 include = ["gsppy/*"]
@@ -68,6 +71,7 @@ include = [
     "bin/*",
     "gsppy/*",
     "tests/*",
+    "rust/**",
 ]
 
 [tool.mypy]
@@ -157,3 +161,12 @@ xfail_strict = true
 filterwarnings = [
     "error"
 ]
+
+[tool.maturin]
+# Build configuration for the optional Rust extension
+module-name = "_gsppy_rust"
+bindings = "pyo3"
+strip = true
+compatibility = "manylinux_2_28"
+python-packages = ["gsppy"]
+python-source = "."

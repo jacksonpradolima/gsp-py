@@ -115,7 +115,30 @@ uv sync --frozen --extra dev  # uses uv.lock
 uv pip install -e .
 ```
 
-#### 3. Common development tasks
+#### 3. Optional: Enable Rust acceleration
+
+Rust acceleration is optional and provides faster support counting using a PyO3 extension. Python fallback remains available.
+
+Build the extension locally:
+```bash
+make rust-build
+```
+
+Select backend at runtime (auto tries Rust, then falls back to Python):
+```bash
+export GSPPY_BACKEND=rust   # or python, or unset for auto
+```
+
+Run benchmarks (adjust to your machine):
+```bash
+make bench-small
+make bench-big   # may use significant memory/CPU
+# or customize:
+GSPPY_BACKEND=auto uv run --python .venv/bin/python --no-project \
+  python benchmarks/bench_support.py --n_tx 1000000 --tx_len 8 --vocab 50000 --min_support 0.2 --warmup
+```
+
+#### 4. Common development tasks
 After the environment is ready, activate it and run tasks with standard tools:
 
 ```bash
@@ -133,7 +156,7 @@ uv run ruff check .
 uv run pyright
 ```
 
-#### 4. Makefile (shortcuts)
+#### 5. Makefile (shortcuts)
 You can use the Makefile to automate common tasks:
 
 ```bash
@@ -145,6 +168,12 @@ make format              # ruff --fix
 make typecheck           # pyright (and mypy if configured)
 make pre-commit-install  # install the pre-commit hook
 make pre-commit-run      # run pre-commit on all files
+
+# Rust-specific shortcuts
+make rust-setup          # install rustup toolchain
+make rust-build          # build PyO3 extension with maturin
+make bench-small         # run small benchmark
+make bench-big           # run large benchmark
 ```
 
 > [!NOTE]

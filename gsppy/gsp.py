@@ -85,13 +85,15 @@ Version:
 - Current Version: 2.0
 """
 
+import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from itertools import chain
 from collections import Counter
 
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
+from gsppy.accelerate import support_counts as support_counts_accel
 
 logger = logging.getLogger(__name__)
 
@@ -204,19 +206,15 @@ class GSP:
                 results.append((item, frequency))
         return results
 
-    def _support(
-        self, items: List[Tuple[str, ...]], min_support: float = 0, batch_size: int = 100
+    def _support_python(
+        self, items: List[Tuple[str, ...]], min_support: int = 0, batch_size: int = 100
     ) -> Dict[Tuple[str, ...], int]:
         """
-        Calculate support counts for candidate sequences, using parallel processing.
-
-        To improve efficiency, candidate sequences are processed in parallel batches using the
-        `multiprocessing` module. Each sequence is checked against transactions, and its support
-        count is calculated.
+        Calculate support counts for candidate sequences using Python multiprocessing.
 
         Parameters:
             items (List[Tuple]): Candidate sequences to evaluate.
-            min_support (float): Absolute minimum support count required for a sequence to be considered frequent.
+            min_support (int): Absolute minimum support count required for a sequence to be considered frequent.
             batch_size (int): Maximum number of candidates to process per batch.
 
         Returns:
@@ -236,6 +234,20 @@ class GSP:
         # Flatten the list of results and convert to a dictionary
         return {item: freq for batch in batch_results for item, freq in batch}
 
+    def _support(
+        self, items: List[Tuple[str, ...]], min_support: int = 0, batch_size: int = 100
+    ) -> Dict[Tuple[str, ...], int]:
+        """
+        Calculate support counts for candidate sequences using the fastest available backend.
+        This will try the Rust extension if available (and configured), otherwise fall back to
+        the Python multiprocessing implementation.
+        """
+        try:
+            return support_counts_accel(self.transactions, items, min_support, batch_size)
+        except Exception:
+            # Fallback to Python implementation on any acceleration failure
+            return self._support_python(items, min_support, batch_size)
+
     def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
         Log progress information for the current GSP iteration.
@@ -249,7 +261,7 @@ class GSP:
         """
         logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
-    def search(self, min_support: float = 0.2) -> List[Dict[Tuple[str, ...], int]]:
+    def search(self, min_support: float = 0.2, max_k: Optional[int] = None) -> List[Dict[Tuple[str, ...], int]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
 
@@ -280,7 +292,8 @@ class GSP:
 
         logger.info(f"Starting GSP algorithm with min_support={min_support}...")
 
-        min_support = len(self.transactions) * min_support
+        # Convert fractional support to absolute count (ceil to preserve threshold semantics)
+        abs_min_support = int(math.ceil(len(self.transactions) * float(min_support)))
 
         # the set of frequent 1-sequence: all singleton sequences
         # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
@@ -289,7 +302,7 @@ class GSP:
 
         # scan transactions to collect support count for each candidate
         # sequence & filter
-        self.freq_patterns.append(self._support(candidates, min_support))
+        self.freq_patterns.append(self._support(candidates, abs_min_support))
 
         # (k-itemsets/k-sequence = 1)
         k_items = 1
@@ -297,7 +310,10 @@ class GSP:
         self._print_status(k_items, candidates)
 
         # repeat until no frequent sequence or no candidate can be found
-        while self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size:
+        # If max_k is provided, stop generating candidates beyond that length
+        while (
+            self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
+        ):
             k_items += 1
 
             # Generate candidate sets Ck (set of candidate k-sequences) -
@@ -307,7 +323,7 @@ class GSP:
 
             # candidate pruning - eliminates candidates who are not potentially
             # frequent (using support as threshold)
-            self.freq_patterns.append(self._support(candidates, min_support))
+            self.freq_patterns.append(self._support(candidates, abs_min_support))
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")

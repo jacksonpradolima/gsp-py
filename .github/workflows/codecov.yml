@@ -32,7 +32,24 @@ jobs:
                     uv sync --frozen --extra dev
                     uv pip install -e .
 
-            -   name: Run tests with coverage
+            -   name: Install Rust toolchain (optional)
+                continue-on-error: true
+                run: |
+                    curl -Ls https://sh.rustup.rs | bash -s -- -y || true
+                    echo "$HOME/.cargo/bin" >> $GITHUB_PATH || true
+                    source $HOME/.cargo/env || true
+                    rustc --version || true
+
+            -   name: Build Rust extension (optional)
+                continue-on-error: true
+                run: |
+                    source $HOME/.cargo/env || true
+                    uv run --python .venv/bin/python --no-project pip install maturin==1.6.0 || true
+                    cd rust && uv run --python .venv/bin/python --no-project python -m maturin develop --release || true
+
+            -   name: Run tests with coverage (Rust backend)
+                env:
+                    GSPPY_BACKEND: rust
                 run: |
                     uv run pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
 
@@ -49,3 +66,55 @@ jobs:
                 uses: codecov/test-results-action@v1
                 with:
                     token: ${{ secrets.CODECOV_TOKEN }}
+
+    test-rust:
+        name: Run tests with Rust backend (Python ${{ matrix.python-version }})
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ["3.13"]
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+                with:
+                    fetch-depth: 0
+
+            -   name: Install uv
+                run: |
+                    curl -Ls https://astral.sh/uv/install.sh | bash
+                    echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+            -   name: Create venv (Python ${{ matrix.python-version }})
+                run: |
+                    uv python install ${{ matrix.python-version }}
+                    uv venv .venv --python ${{ matrix.python-version }}
+
+            -   name: Install dependencies
+                run: |
+                    uv sync --frozen --extra dev
+                    uv pip install -e .
+
+            -   name: Build Rust extension
+                run: |
+                    make rust-build
+
+            -   name: Run tests with coverage (Rust backend)
+                env:
+                    GSPPY_BACKEND: rust
+                run: |
+                    uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml --junitxml=junit-rust.xml -o junit_family=legacy
+
+            -   name: Upload coverage to Codecov (rust)
+                uses: codecov/codecov-action@v5
+                with:
+                    files: coverage.xml
+                    flags: rust
+                    name: codecov-coverage-report-rust
+
+            -   name: Upload test results to Codecov (rust)
+                if: ${{ !cancelled() }}
+                uses: codecov/test-results-action@v1
+                with:
+                    flags: rust
+                    files: junit-rust.xml
