@@ -1,5 +1,5 @@
 [![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
-![](https://img.shields.io/badge/python-3.8+-blue.svg)
+![](https://img.shields.io/badge/python-3.10+-blue.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
@@ -15,7 +15,7 @@
 Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal mining, and user journey discovery.
 
 > [!IMPORTANT]
-> GSP-Py is compatible with Python 3.8 and later versions!
+> GSP-Py is compatible with Python 3.10 and later versions!
 
 ---
 
@@ -80,11 +80,7 @@ git clone https://github.com/jacksonpradolima/gsp-py.git
 cd gsp-py
 ```
 
-Refer to the [Developer Installation](#developer-installation) section and run:
-
-```bash
-rye sync
-```
+Refer to the [Developer Installation](#developer-installation) section and run the setup with uv.
 
 ### Option 2: Install via `pip`
 
@@ -98,47 +94,61 @@ pip install gsppy
 
 ## 🛠️ Developer Installation
 
-This project uses [Rye](https://github.com/mitsuhiko/rye) for managing dependencies, running scripts, and setting up the environment. Follow these steps to install and set up Rye for this project:
+This project now uses [uv](https://github.com/astral-sh/uv) for dependency management and virtual environments.
 
-#### 1. Install Rye
-Run the following command to install Rye:
-
+#### 1. Install uv
 ```bash
-curl -sSf https://rye.astral.sh/get | bash
+curl -Ls https://astral.sh/uv/install.sh | bash
 ```
 
-If the `~/.rye/bin` directory is not in your PATH, add the following line to your shell configuration file (e.g., `~/.bashrc`, `~/.zshrc`, etc.):
-
+Make sure uv is on your PATH (for most Linux setups):
 ```bash
-export PATH="$HOME/.rye/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Reload your shell configuration file:
+#### 2. Set up the project environment
+Create a local virtual environment and install dependencies from uv.lock (single source of truth):
 
 ```bash
-source ~/.bashrc  # or `source ~/.zshrc`
+uv venv .venv
+uv sync --frozen --extra dev  # uses uv.lock
+uv pip install -e .
 ```
 
-#### 2. Set Up the Project Environment
-To configure the project environment and install its dependencies, run:
+#### 3. Common development tasks
+After the environment is ready, activate it and run tasks with standard tools:
 
 ```bash
-rye sync
+source .venv/bin/activate
+pytest -n auto
+ruff check .
+pyright
 ```
 
-#### 3. Use Rye Scripts
-Once the environment is set up, you can run the following commands to simplify project tasks:
+If you prefer, you can also prefix commands with uv without activating:
 
-- Run tests (in parallel): `rye run test`
-- Format code: `rye run format`
-- Lint code: `rye run lint`
-- Type-check: `rye run typecheck`
-- Add new dependencies: `rye add <package-name>`
-  - Add new dependency to dev dependencies: `rye add --dev <package-name>`
+```bash
+uv run pytest -n auto
+uv run ruff check .
+uv run pyright
+```
 
-#### Notes
-- Rye automatically reads dependencies and scripts from the `pyproject.toml` file.
-- No need for `requirements.txt`, as Rye manages all dependencies!
+#### 4. Makefile (shortcuts)
+You can use the Makefile to automate common tasks:
+
+```bash
+make setup               # create .venv with uv and pin Python
+make install             # sync deps (from uv.lock) + install project (-e .)
+make test                # pytest -n auto
+make lint                # ruff check .
+make format              # ruff --fix
+make typecheck           # pyright (and mypy if configured)
+make pre-commit-install  # install the pre-commit hook
+make pre-commit-run      # run pre-commit on all files
+```
+
+> [!NOTE]
+> Tox in this project uses the "tox-uv" plugin. When running `make tox` or `tox`, missing Python interpreters can be provisioned automatically via uv (no need to pre-install all versions). This makes local setup faster.
 
 ## 💡 Usage
 
@@ -244,19 +254,19 @@ improvement? [Open a discussion or issue!](https://github.com/jacksonpradolima/g
 We welcome contributions from the community! If you'd like to help improve GSP-Py, read
 our [CONTRIBUTING.md](CONTRIBUTING.md) guide to get started.
 
-Development dependencies (e.g., testing and linting tools) are automatically managed using Rye. To install
-these dependencies and set up the environment, run:
+Development dependencies (e.g., testing and linting tools) are handled via uv.
+To set up and run the main tasks:
 
 ```bash
-rye sync
+uv venv .venv
+uv sync --frozen --extra dev
+uv pip install -e .
+
+# Run tasks
+uv run pytest -n auto
+uv run ruff check .
+uv run pyright
 ```
-
-After syncing, you can run the following scripts using Rye for development tasks:
-
-- Run tests (in parallel): `rye run test`
-- Lint code: `rye run lint`
-- Type-check: `rye run typecheck`
-- Format code: `rye run format`
 
 ### General Steps:
 

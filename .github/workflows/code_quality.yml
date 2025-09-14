@@ -14,16 +14,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      # Step 2: Install Rye (via Curl)
-      - name: Install Rye
-        uses: eifinger/setup-rye@v4
-        with:
-          version: '0.43.0'
-          enable-cache: 'true'
+      # Step 2: Install uv
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | bash
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
-      # Step 3: Sync dependencies
-      - name: Sync dependencies
-        run: rye sync
+      # Step 3: Set up environment and install dependencies
+      - name: Install dependencies
+        run: |
+          uv venv .venv
+          uv sync --frozen --extra dev
+          uv pip install -e .
 
       # Step 4: Get changed Python files
       - name: Get Python changed files
@@ -40,7 +42,7 @@ jobs:
         run: |
           echo "Running Ruff on changed files..."
           echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          rye run lint ${{ steps.changed-py-files.outputs.all_changed_files }}
+          uv run ruff check ${{ steps.changed-py-files.outputs.all_changed_files }}
 
       # Step 6: Run Pyright for only changed files
       - name: Run Pyright (Type Check)
@@ -48,4 +50,4 @@ jobs:
         run: |
           echo "Running Pyright on changed files..."
           echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          rye run typecheck ${{ steps.changed-py-files.outputs.all_changed_files }}
+          uv run pyright ${{ steps.changed-py-files.outputs.all_changed_files }}

@@ -97,32 +97,36 @@ To maintain consistency and code quality, please follow these coding guidelines:
 To get familiar with the existing code, follow these steps:
 
 1. **Setup Environment**:
-   This project uses [Rye](https://github.com/mitsuhiko/rye) for managing dependencies and the virtual environment. Follow these instructions to set it up:
+    This project uses [uv](https://github.com/astral-sh/uv) for managing dependencies and the virtual environment. Follow these instructions to set it up:
 
-   - Install Rye (if not already installed):
-     ```bash
-     curl -sSf https://rye.astral.sh/get | bash
-     ```
+    - Install uv (if not already installed):
+       ```bash
+       curl -Ls https://astral.sh/uv/install.sh | bash
+       ```
 
-     Make sure Rye's binary directory is added to your `PATH`:
-     ```bash
-     export PATH="$HOME/.rye/bin:$PATH"
-     ```
+       Make sure uv's binary directory is added to your `PATH`:
+       ```bash
+       export PATH="$HOME/.local/bin:$PATH"
+       ```
 
-   - Install project dependencies using Rye:
-     ```bash
-     rye sync
-     ```
+    - Create the virtual environment and install dependencies from uv.lock:
+       ```bash
+       uv venv .venv
+       uv sync --frozen --extra dev
+       uv pip install -e .
+       ```
 
-     This command reads the dependencies specified in the `pyproject.toml` file and installs them into a local environment managed by Rye.
+       This will create a local `.venv` and install project dependencies.
 
 2. **Run Tests**:
-   Use Rye to run tests and verify the baseline state:
+   Use uv to run tests and verify the baseline state:
    ```bash
-   rye run test
+   uv run pytest -n auto
    ```
 
-   The `test` script is defined in the `pyproject.toml` under `[tool.rye.scripts]` and uses `pytest`.
+   This will execute tests in parallel using pytest-xdist if available.
+
+   Note: This project integrates the "tox-uv" plugin. When running `tox` locally (or `make tox`), missing Python interpreters can be provisioned automatically via uv, so you don't need to have all versions installed ahead of time.
 
 3. **Explore the Code**:
    The main entry point for the GSP algorithm is in the `gsppy` module. The libraries for support counting, candidate generation, and additional utility functions are also within this module.
@@ -130,8 +134,15 @@ To get familiar with the existing code, follow these steps:
 ---
 
 ### Notes:
-- No need to create a `venv` or install dependencies manually with `pip`; Rye handles everything based on the `pyproject.toml` file.
-- If you’re unfamiliar with Rye, refer to its [documentation](https://github.com/mitsuhiko/rye).
+- No need to manage a global virtualenv manually; uv will create and manage `.venv` as desired.
+- If you’re unfamiliar with uv, refer to its [documentation](https://github.com/astral-sh/uv).
+
+### Makefile and pre-commit
+- Useful Makefile targets:
+   - `make setup`, `make install`, `make test`, `make lint`, `make format`, `make typecheck`
+   - `make pre-commit-install` to install the pre-commit hook
+   - `make pre-commit-run` to run on all files
+- To set up pre-commit manually: `uv run pre-commit install`
 
 ## Reporting Issues
 

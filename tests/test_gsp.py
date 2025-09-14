@@ -17,6 +17,7 @@ Tests include:
 Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
+
 import re
 import random
 from typing import List
@@ -36,11 +37,11 @@ def supermarket_transactions() -> List[List[str]]:
         list: A list of transactions, where each transaction is a list of items.
     """
     return [
-        ['Bread', 'Milk'],
-        ['Bread', 'Diaper', 'Beer', 'Eggs'],
-        ['Milk', 'Diaper', 'Beer', 'Coke'],
-        ['Bread', 'Milk', 'Diaper', 'Beer'],
-        ['Bread', 'Milk', 'Diaper', 'Coke']
+        ["Bread", "Milk"],
+        ["Bread", "Diaper", "Beer", "Eggs"],
+        ["Milk", "Diaper", "Beer", "Coke"],
+        ["Bread", "Milk", "Diaper", "Beer"],
+        ["Bread", "Milk", "Diaper", "Coke"],
     ]
 
 
@@ -52,7 +53,7 @@ def random_transactions() -> List[List[str]]:
     Returns:
         list: A list of transactions with random items and varying lengths.
     """
-    return [[random.choice(['A', 'B', 'C', 'D', 'E']) for _ in range(random.randint(2, 10))] for _ in range(100)]
+    return [[random.choice(["A", "B", "C", "D", "E"]) for _ in range(random.randint(2, 10))] for _ in range(100)]
 
 
 def test_empty_transactions() -> None:
@@ -74,7 +75,7 @@ def test_single_transaction() -> None:
     Asserts:
         - A ValueError is raised indicating that GSP requires multiple transactions.
     """
-    transactions = [['A', 'B', 'C']]
+    transactions = [["A", "B", "C"]]
     with pytest.raises(ValueError, match="GSP requires multiple transactions"):
         GSP(transactions)
 
@@ -85,10 +86,11 @@ def test_single_transaction() -> None:
         (-0.1, re.escape("Minimum support must be in the range (0.0, 1.0]")),
         (0.0, re.escape("Minimum support must be in the range (0.0, 1.0]")),
         (1.1, re.escape("Minimum support must be in the range (0.0, 1.0]")),
-    ]
+    ],
 )
-def test_invalid_min_support(supermarket_transactions: List[List[str]], min_support: float,
-                             expected_error: str) -> None:
+def test_invalid_min_support(
+    supermarket_transactions: List[List[str]], min_support: float, expected_error: str
+) -> None:
     """
     Test the GSP algorithm with invalid minimum support values.
 
@@ -123,7 +125,7 @@ def test_min_support_valid(supermarket_transactions: List[List[str]]) -> None:
     result = gsp.search(min_support=0.2)  # At least 1 transaction should support the pattern
 
     # All items should appear as 1-item patterns
-    level_1_patterns = {('Bread',), ('Milk',), ('Diaper',), ('Beer',), ('Coke',), ('Eggs',)}
+    level_1_patterns = {("Bread",), ("Milk",), ("Diaper",), ("Beer",), ("Coke",), ("Eggs",)}
     result_level_1 = set(result[0].keys())  # Extract patterns from Level 1
 
     assert result_level_1 == level_1_patterns, f"Level 1 patterns mismatch. Got {result_level_1}"
@@ -149,10 +151,10 @@ def test_worker_batch_static_method(supermarket_transactions: List[List[str]]) -
         - Candidates below the minimum support are filtered out.
         - Candidates meeting the minimum support are returned with correct counts.
     """
-    batch = [('Bread',), ('Milk',), ('Diaper',), ('Eggs',)]  # 1-sequence candidates
+    batch = [("Bread",), ("Milk",), ("Diaper",), ("Eggs",)]  # 1-sequence candidates
     transactions = [tuple(t) for t in supermarket_transactions]
     min_support = 3  # Absolute support count
-    expected = [(('Bread',), 4), (('Milk',), 4), (('Diaper',), 4)]
+    expected = [(("Bread",), 4), (("Milk",), 4), (("Diaper",), 4)]
 
     # Call the '_worker_batch' method
     # This test accesses `_worker_batch` to test internal functionality
@@ -170,9 +172,9 @@ def test_frequent_patterns(supermarket_transactions: List[List[str]]) -> None:
     gsp = GSP(supermarket_transactions)
     result = gsp.search(min_support=0.3)
     expected = [
-        {('Bread',): 4, ('Milk',): 4, ('Diaper',): 4, ('Beer',): 3, ('Coke',): 2},
-        {('Bread', 'Milk'): 3, ('Milk', 'Diaper'): 3, ('Diaper', 'Beer'): 3},
-        {('Bread', 'Milk', 'Diaper'): 2, ('Milk', 'Diaper', 'Beer'): 2}
+        {("Bread",): 4, ("Milk",): 4, ("Diaper",): 4, ("Beer",): 3, ("Coke",): 2},
+        {("Bread", "Milk"): 3, ("Milk", "Diaper"): 3, ("Diaper", "Beer"): 3},
+        {("Bread", "Milk", "Diaper"): 2, ("Milk", "Diaper", "Beer"): 2},
     ]
     assert result == expected, "Frequent patterns do not match expected results."
 
@@ -196,7 +198,7 @@ def test_large_transactions() -> None:
     Asserts:
         - A ValueError is raised indicating that GSP requires multiple transactions.
     """
-    transactions = [['A'] * 1000]  # Single transaction with 1000 identical items
+    transactions = [["A"] * 1000]  # Single transaction with 1000 identical items
     with pytest.raises(ValueError, match="GSP requires multiple transactions to find meaningful patterns."):
         GSP(transactions)
 
@@ -208,7 +210,7 @@ def test_partial_match(supermarket_transactions: List[List[str]]) -> None:
     Asserts:
         - Frequent patterns are generated correctly for the given transactions.
     """
-    transactions = supermarket_transactions + [['Diaper', 'Milk']]
+    transactions = supermarket_transactions + [["Diaper", "Milk"]]
     gsp = GSP(transactions)
     result = gsp.search(min_support=0.3)  # Adjusted minimum support to match more patterns
 
@@ -216,8 +218,8 @@ def test_partial_match(supermarket_transactions: List[List[str]]) -> None:
     print("Generated frequent patterns:", result)
 
     # Check for the presence of valid frequent patterns
-    expected_patterns_level_1 = {('Bread',), ('Milk',), ('Diaper',), ('Beer',)}
-    expected_patterns_level_2 = {('Bread', 'Milk'), ('Milk', 'Diaper'), ('Diaper', 'Beer')}
+    expected_patterns_level_1 = {("Bread",), ("Milk",), ("Diaper",), ("Beer",)}
+    expected_patterns_level_2 = {("Bread", "Milk"), ("Milk", "Diaper"), ("Diaper", "Beer")}
 
     # Convert results to sets for easier comparison
     result_level_1 = set(result[0].keys())
