@@ -54,6 +54,9 @@ dev = [
 rust = [
     "maturin==1.6.0"
 ]
+gpu = [
+    "cupy>=11,<14"
+]
 
 [tool.hatch.build]
 include = ["gsppy/*"]

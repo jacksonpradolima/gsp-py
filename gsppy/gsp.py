@@ -235,7 +235,11 @@ class GSP:
         return {item: freq for batch in batch_results for item, freq in batch}
 
     def _support(
-        self, items: List[Tuple[str, ...]], min_support: int = 0, batch_size: int = 100
+        self,
+        items: List[Tuple[str, ...]],
+        min_support: int = 0,
+        batch_size: int = 100,
+        backend: Optional[str] = None,
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences using the fastest available backend.
@@ -243,7 +247,7 @@ class GSP:
         the Python multiprocessing implementation.
         """
         try:
-            return support_counts_accel(self.transactions, items, min_support, batch_size)
+            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend)
         except Exception:
             # Fallback to Python implementation on any acceleration failure
             return self._support_python(items, min_support, batch_size)
@@ -261,7 +265,12 @@ class GSP:
         """
         logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
-    def search(self, min_support: float = 0.2, max_k: Optional[int] = None) -> List[Dict[Tuple[str, ...], int]]:
+    def search(
+        self,
+        min_support: float = 0.2,
+        max_k: Optional[int] = None,
+        backend: Optional[str] = None,
+    ) -> List[Dict[Tuple[str, ...], int]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
 
@@ -302,7 +311,7 @@ class GSP:
 
         # scan transactions to collect support count for each candidate
         # sequence & filter
-        self.freq_patterns.append(self._support(candidates, abs_min_support))
+        self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
 
         # (k-itemsets/k-sequence = 1)
         k_items = 1
@@ -323,7 +332,7 @@ class GSP:
 
             # candidate pruning - eliminates candidates who are not potentially
             # frequent (using support as threshold)
-            self.freq_patterns.append(self._support(candidates, abs_min_support))
+            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
