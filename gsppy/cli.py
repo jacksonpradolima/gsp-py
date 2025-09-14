@@ -33,8 +33,9 @@ import csv
 import sys
 import json
 import logging
-import argparse
 from typing import Dict, List, Tuple
+
+import click
 
 from gsppy.gsp import GSP
 
@@ -139,61 +140,45 @@ def detect_and_read_file(file_path: str) -> List[List[str]]:
     raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
 
 
-def main() -> None:
+# Click-based CLI
+@click.command()
+@click.option(
+    "--file",
+    "file_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to a JSON or CSV file containing transactions.",
+)
+@click.option(
+    "--min_support",
+    default=0.2,
+    show_default=True,
+    type=float,
+    help="Minimum support threshold as a fraction of total transactions.",
+)
+@click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
+def main(file_path: str, min_support: float, verbose: bool) -> None:
     """
-    Main function to handle CLI input and run the GSP algorithm.
-
-    Arguments:
-        - `--file` (str): Path to a JSON or CSV file containing transactions.
-        - `--min_support` (float): Minimum support threshold (default: 0.2).
+    Run the GSP algorithm on transactional data from a file.
     """
-    parser = argparse.ArgumentParser(
-        description="GSP (Generalized Sequential Pattern) Algorithm - "
-        "Find frequent sequential patterns in transactional data."
-    )
-
-    # Single file argument
-    parser.add_argument(
-        "--file",
-        type=str,
-        required=True,
-        help='Path to a JSON or CSV file containing transactions (e.g., [["A", "B"], ["B", "C"]] '
-        "or CSV rows per transaction)",
-    )
-
-    # Minimum support argument
-    parser.add_argument(
-        "--min_support",
-        type=float,
-        default=0.2,
-        help="Minimum support threshold as a fraction of total transactions (default: 0.2)",
-    )
-
-    # Verbose output argument
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging purposes.")
-
-    # Parse arguments
-    args = parser.parse_args()
-
-    # Setup logging verbosity
-    setup_logging(args.verbose)
+    setup_logging(verbose)
 
     # Automatically detect and load transactions
     try:
-        transactions = detect_and_read_file(args.file)
+        transactions = detect_and_read_file(file_path)
     except ValueError as e:
         logger.error(f"Error: {e}")
-        return
+        sys.exit(1)
 
     # Check min_support
-    if args.min_support <= 0.0 or args.min_support > 1.0:
+    if min_support <= 0.0 or min_support > 1.0:
         logger.error("Error: min_support must be in the range (0.0, 1.0].")
-        return
+        sys.exit(1)
 
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
-        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=args.min_support)
+        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")
@@ -201,6 +186,7 @@ def main() -> None:
                 logger.info(f"Pattern: {pattern}, Support: {support}")
     except Exception as e:
         logger.error(f"Error executing GSP algorithm: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

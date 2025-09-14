@@ -152,8 +152,121 @@ make pre-commit-run      # run pre-commit on all files
 
 ## 💡 Usage
 
-The library is designed to be easy to use and integrate with your own projects. Below is an example of how you can
-configure and run GSP-Py.
+The library is designed to be easy to use and integrate with your own projects. You can use GSP-Py either programmatically (Python API) or directly from the command line (CLI).
+
+---
+
+## 🚦 Using GSP-Py via CLI
+
+GSP-Py provides a command-line interface (CLI) for running the Generalized Sequential Pattern algorithm on transactional data. This allows you to mine frequent sequential patterns from JSON or CSV files without writing any code.
+
+### Installation
+
+First, install GSP-Py (if not already installed):
+
+```bash
+pip install gsppy
+```
+
+This will make the `gsppy` CLI command available in your environment.
+
+### Preparing Your Data
+
+Your input file should be either:
+
+- **JSON**: A list of transactions, each transaction is a list of items. Example:
+  ```json
+  [
+    ["Bread", "Milk"],
+    ["Bread", "Diaper", "Beer", "Eggs"],
+    ["Milk", "Diaper", "Beer", "Coke"],
+    ["Bread", "Milk", "Diaper", "Beer"],
+    ["Bread", "Milk", "Diaper", "Coke"]
+  ]
+  ```
+
+- **CSV**: Each row is a transaction, items separated by commas. Example:
+  ```csv
+  Bread,Milk
+  Bread,Diaper,Beer,Eggs
+  Milk,Diaper,Beer,Coke
+  Bread,Milk,Diaper,Beer
+  Bread,Milk,Diaper,Coke
+  ```
+
+### Running the CLI
+
+Use the following command to run GSPPy on your data:
+
+```bash
+gsppy --file path/to/transactions.json --min_support 0.3
+```
+
+Or for CSV files:
+
+```bash
+gsppy --file path/to/transactions.csv --min_support 0.3
+```
+
+#### CLI Options
+
+- `--file`: Path to your input file (JSON or CSV). **Required**.
+- `--min_support`: Minimum support threshold as a fraction (e.g., `0.3` for 30%). Default is `0.2`.
+- `--verbose`: (Optional) Enable detailed output for debugging.
+
+#### Example
+
+Suppose you have a file `transactions.json` as shown above. To find patterns with at least 30% support:
+
+```bash
+gsppy --file transactions.json --min_support 0.3
+```
+
+Sample output:
+
+```
+Pre-processing transactions...
+Starting GSP algorithm with min_support=0.3...
+Run 1: 6 candidates filtered to 5.
+Run 2: 20 candidates filtered to 3.
+Run 3: 2 candidates filtered to 2.
+Run 4: 1 candidates filtered to 0.
+GSP algorithm completed.
+Frequent Patterns Found:
+
+1-Sequence Patterns:
+Pattern: ('Bread',), Support: 4
+Pattern: ('Milk',), Support: 4
+Pattern: ('Diaper',), Support: 4
+Pattern: ('Beer',), Support: 3
+Pattern: ('Coke',), Support: 2
+
+2-Sequence Patterns:
+Pattern: ('Bread', 'Milk'), Support: 3
+Pattern: ('Milk', 'Diaper'), Support: 3
+Pattern: ('Diaper', 'Beer'), Support: 3
+
+3-Sequence Patterns:
+Pattern: ('Bread', 'Milk', 'Diaper'), Support: 2
+Pattern: ('Milk', 'Diaper', 'Beer'), Support: 2
+```
+
+#### Error Handling
+
+- If the file does not exist or is in an unsupported format, a clear error message will be shown.
+- The `min_support` value must be between 0.0 and 1.0 (exclusive of 0.0, inclusive of 1.0).
+
+#### Advanced: Verbose Output
+
+To see detailed logs for debugging, add the `--verbose` flag:
+
+```bash
+gsppy --file transactions.json --min_support 0.3 --verbose
+```
+
+---
+
+The following example shows how to use GSP-Py programmatically in Python:
 
 ### Example Input Data
 

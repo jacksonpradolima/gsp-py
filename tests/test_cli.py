@@ -154,9 +154,9 @@ def test_main_invalid_json_file(monkeypatch: MonkeyPatch):
 
     # Mock logger.error and test messages directly
     with patch("gsppy.cli.logger.error") as mock_error:
-        main()
-
-        # Assert correct error message was logged
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 1
         mock_error.assert_called_with(
             "Error executing GSP algorithm: GSP requires multiple transactions to find meaningful patterns."
         )
@@ -172,9 +172,10 @@ def test_main_non_existent_file(monkeypatch: MonkeyPatch):
     # Mock CLI arguments
     monkeypatch.setattr("sys.argv", ["main", "--file", "non_existent.json", "--min_support", "0.2"])
 
-    with patch("gsppy.cli.logger.error") as mock_error:
+    # Click handles file existence before our code runs, so just check SystemExit
+    with pytest.raises(SystemExit) as excinfo:
         main()
-        mock_error.assert_called_with("Error: File 'non_existent.json' does not exist.")
+    assert excinfo.value.code != 0
 
 
 def test_main_valid_json_file(monkeypatch: MonkeyPatch):
@@ -190,7 +191,9 @@ def test_main_valid_json_file(monkeypatch: MonkeyPatch):
     monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2"])
 
     with patch("gsppy.cli.logger.info") as mock_info:
-        main()
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 0
         mock_info.assert_any_call("Frequent Patterns Found:")  # Check for expected log message
 
     # Cleanup
@@ -213,7 +216,9 @@ def test_main_invalid_min_support(monkeypatch: MonkeyPatch):
     )
 
     with patch("gsppy.cli.logger.error") as mock_error:
-        main()
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 1
         mock_error.assert_called_with("Error: min_support must be in the range (0.0, 1.0].")
 
     # Cleanup
@@ -262,13 +267,17 @@ def test_main_edge_case_min_support(monkeypatch: MonkeyPatch):
     # Case 1: `min_support` = 1.0 (Valid Edge Case)
     monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "1.0"])
     with patch("gsppy.cli.logger.info") as mock_info:
-        main()
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 0
         mock_info.assert_any_call("Frequent Patterns Found:")
 
     # Case 2: `min_support` = -1.0 (Invalid Edge Case)
     monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "-1.0"])
     with patch("gsppy.cli.logger.error") as mock_error:
-        main()
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 1
         mock_error.assert_called_with("Error: min_support must be in the range (0.0, 1.0].")
 
     # Cleanup
@@ -292,9 +301,9 @@ def test_main_gsp_exception(monkeypatch: MonkeyPatch):
         patch("gsppy.gsp.GSP.search", side_effect=Exception("Simulated GSP failure")),
         patch("gsppy.cli.logger.error") as mock_error,
     ):
-        main()
-
-        # Step 4: Assert the error message was logged
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 1
         mock_error.assert_called_with("Error executing GSP algorithm: Simulated GSP failure")
 
     # Step 5: Cleanup
@@ -305,13 +314,21 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
     """
     Test `setup_logging` sets logging level to DEBUG when `--verbose` is provided.
     """
-    # Mock CLI arguments to include the verbose flag
-    monkeypatch.setattr("sys.argv", ["main", "--file", "test_data.json", "--min_support", "0.2", "--verbose"])
+    # Create a real temporary file for the CLI argument
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
+        temp_file.write(b'[["Bread", "Milk"], ["Milk", "Diaper"]]')
+        temp_file_name = temp_file.name
 
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2", "--verbose"])
+
+    # Patch file reading and GSP.search so CLI runs and verbosity is set
     with patch("gsppy.cli.logger.setLevel") as mock_setLevel:
-        with patch("gsppy.cli.detect_and_read_file", return_value=[["Bread", "Milk"]]):  # Mock file reading
-            with patch("gsppy.cli.GSP.search", return_value=[{("Bread",): 1}]):  # Mock GSP search
-                main()  # Run the CLI
-
+        with patch("gsppy.cli.detect_and_read_file", return_value=[["Bread", "Milk"], ["Milk", "Diaper"]]):
+            with patch("gsppy.cli.GSP.search", return_value=[{("Bread",): 1}]):
+                with pytest.raises(SystemExit) as excinfo:
+                    main()  # Run the CLI
+                assert excinfo.value.code == 0
         # Check that the logger level was set to DEBUG
         mock_setLevel.assert_called_with(logging.DEBUG)
+
+    os.unlink(temp_file_name)

@@ -27,7 +27,9 @@ classifiers = [
     "Natural Language :: English",
 ]
 
-dependencies = []
+dependencies = [
+    "click>=8.0.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/jacksonpradolima/gsp-py"
