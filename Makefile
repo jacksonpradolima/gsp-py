@@ -30,6 +30,11 @@ help:
 	@echo "  check                  - lint + typecheck + test"
 	@echo "\nEnvironment:"
 	@echo "  UV_LINK_MODE=$(UV_LINK_MODE) (default: copy)"
+	@echo "\nRust acceleration:"
+	@echo "  rust-setup             - Install Rust toolchain (rustup)"
+	@echo "  rust-build             - Build and develop-install Rust extension via maturin (skips if up-to-date)"
+	@echo "  bench-small            - Run small benchmark (default sizes)"
+	@echo "  bench-big              - Run large benchmark (e.g., 1M tx; beware memory/CPU)"
 
 # Ensure uv is installed; install if missing
 ensure-uv:
@@ -132,3 +137,57 @@ check: lint typecheck test
 check-precommit: ensure-uv install
 	$(MAKE) test
 	$(MAKE) typecheck
+
+# --- Rust acceleration helpers ---
+.PHONY: rust-setup rust-build bench-small bench-big
+
+rust-setup:
+	@if ! command -v rustc >/dev/null 2>&1; then \
+	  echo "Installing Rust toolchain..."; \
+	  curl -Ls https://sh.rustup.rs | bash -s -- -y; \
+	  source $$HOME/.cargo/env; \
+	  rustc --version; \
+	else \
+	  rustc --version; \
+	fi
+
+rust-build: ensure-uv rust-setup
+	@# Optionally force rebuild: make rust-build FORCE_RUST_BUILD=1
+	@force_build="$(FORCE_RUST_BUILD)"; \
+	 if [ "$$force_build" = "1" ]; then \
+	   echo "FORCE_RUST_BUILD=1 set; rebuilding Rust extension"; \
+	   source $$HOME/.cargo/env; \
+	   $(UV) pip install --python $(PYTHON) --upgrade pip setuptools wheel maturin==1.6.0 >/dev/null; \
+	   $(UV) run --python $(PYTHON) --no-project python -m maturin develop --release -m rust/Cargo.toml; \
+	   exit $$?; \
+	 fi; \
+	 # Determine if extension is already installed and up-to-date (resolve the .so path) \
+	 so_path="$$( \
+	   $(UV) run --python $(PYTHON) --no-project python -c 'import importlib.util as u; s=u.find_spec("_gsppy_rust._gsppy_rust"); print(s.origin if s and s.origin else(""))' \
+	 )"; \
+	 if [ -n "$$so_path" ] && [ -f "$$so_path" ]; then \
+	   up_to_date=1; \
+	   for src in rust/Cargo.toml $$(find rust/src -type f -name '*.rs'); do \
+	     if [ "$$src" -nt "$$so_path" ]; then up_to_date=0; break; fi; \
+	   done; \
+	   if [ "$$up_to_date" -eq 1 ]; then \
+	     echo "Rust extension is up-to-date at $$so_path; skipping build"; \
+	     exit 0; \
+	   else \
+	     echo "Rust sources changed; rebuilding"; \
+	   fi; \
+	 else \
+	   echo "Rust extension missing; building"; \
+	 fi; \
+	 source $$HOME/.cargo/env; \
+	 $(UV) pip install --python $(PYTHON) --upgrade pip setuptools wheel maturin==1.6.0 >/dev/null; \
+	 $(UV) run --python $(PYTHON) --no-project python -m maturin develop --release -m rust/Cargo.toml
+
+bench-small: rust-build
+	@$(UV) run --python $(PYTHON) --no-project pip install -e . >/dev/null; \
+	 GSPPY_BACKEND=auto $(UV) run --python $(PYTHON) --no-project python benchmarks/bench_support.py --n_tx 100000 --tx_len 8 --vocab 10 --min_support 0.2 --warmup
+
+bench-big: rust-build
+	@echo "WARNING: This may take significant memory/CPU. Adjust sizes to your machine."; \
+	 $(UV) run --python $(PYTHON) --no-project pip install -e . >/dev/null; \
+	 GSPPY_BACKEND=auto $(UV) run --python $(PYTHON) --no-project python benchmarks/bench_support.py --n_tx 1000000 --tx_len 8 --vocab 50000 --min_support 0.2

@@ -128,6 +128,33 @@ To get familiar with the existing code, follow these steps:
 
    Note: This project integrates the "tox-uv" plugin. When running `tox` locally (or `make tox`), missing Python interpreters can be provisioned automatically via uv, so you don't need to have all versions installed ahead of time.
 
+4. **Optional: Rust Acceleration**
+
+Some hot loops can be accelerated with Rust via PyO3. This is entirely optional: the library will fall back to pure Python if the extension is not present.
+
+- Install Rust and build the extension:
+   ```bash
+   make rust-build
+   ```
+
+- Choose backend at runtime (defaults to auto):
+   ```bash
+   export GSPPY_BACKEND=rust   # or python, or unset for auto
+   ```
+
+- Run a benchmark (small):
+   ```bash
+   make bench-small
+   ```
+
+- Run a larger benchmark (adjust to your machine):
+   ```bash
+   make bench-big
+   # or customize:
+   GSPPY_BACKEND=auto uv run --python .venv/bin/python --no-project \
+      python benchmarks/bench_support.py --n_tx 1000000 --tx_len 8 --vocab 50000 --min_support 0.2 --warmup
+   ```
+
 3. **Explore the Code**:
    The main entry point for the GSP algorithm is in the `gsppy` module. The libraries for support counting, candidate generation, and additional utility functions are also within this module.
 
