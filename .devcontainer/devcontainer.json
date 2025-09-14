@@ -2,9 +2,6 @@
   "name": "gsp-py",
   "image": "ghcr.io/astral-sh/uv:python3.13-bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "username": "vscode"
-    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
     }
