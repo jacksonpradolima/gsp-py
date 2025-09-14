@@ -1,7 +1,10 @@
 {
   "name": "gsp-py",
-  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "image": "ghcr.io/astral-sh/uv:python3.13-bookworm",
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode"
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
     }
@@ -10,8 +13,8 @@
     "UV_LINK_MODE": "copy"
   },
   "mounts": [
-    "type=cache,target=/home/vscode/.cache/uv",
-    "type=cache,target=/home/vscode/.cache/pip"
+    "source=uv-cache,target=/home/vscode/.cache/uv,type=volume",
+    "source=pip-cache,target=/home/vscode/.cache/pip,type=volume"
   ],
   "postCreateCommand": "make setup install pre-commit-install",
   "customizations": {
@@ -19,13 +22,13 @@
       "settings": {
         "python.defaultInterpreterPath": ".venv/bin/python",
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestArgs": ["-n", "auto"],
+        "python.testing.pytestArgs": [],
         "ruff.enable": true
       },
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "charliermarsh.ruff",
+        "astral-sh.ruff",
         "ms-pyright.pyright",
         "ms-toolsai.jupyter"
       ]
