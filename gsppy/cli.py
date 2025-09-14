@@ -156,8 +156,15 @@ def detect_and_read_file(file_path: str) -> List[List[str]]:
     type=float,
     help="Minimum support threshold as a fraction of total transactions.",
 )
+@click.option(
+    "--backend",
+    type=click.Choice(["auto", "python", "rust", "gpu"], case_sensitive=False),
+    default="auto",
+    show_default=True,
+    help="Backend to use for support counting.",
+)
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
-def main(file_path: str, min_support: float, verbose: bool) -> None:
+def main(file_path: str, min_support: float, backend: str, verbose: bool) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
     """
@@ -174,6 +181,10 @@ def main(file_path: str, min_support: float, verbose: bool) -> None:
     if min_support <= 0.0 or min_support > 1.0:
         logger.error("Error: min_support must be in the range (0.0, 1.0].")
         sys.exit(1)
+
+    # Select backend for acceleration layer
+    if backend and backend.lower() != "auto":
+        os.environ["GSPPY_BACKEND"] = backend.lower()
 
     # Initialize and run GSP algorithm
     try:

@@ -138,7 +138,26 @@ GSPPY_BACKEND=auto uv run --python .venv/bin/python --no-project \
   python benchmarks/bench_support.py --n_tx 1000000 --tx_len 8 --vocab 50000 --min_support 0.2 --warmup
 ```
 
-#### 4. Common development tasks
+#### 4. Optional: Enable GPU (CuPy) acceleration
+
+GPU acceleration is experimental and currently optimizes singleton (k=1) support counting using CuPy.
+Non-singleton candidates fall back to the Rust/Python backend.
+
+Install the optional extra (choose a CuPy build that matches your CUDA/ROCm setup if needed):
+
+```bash
+uv run pip install -e .[gpu]
+```
+
+Select the GPU backend at runtime:
+
+```bash
+export GSPPY_BACKEND=gpu
+```
+
+If a GPU isn't available, an error will be raised when GSPPY_BACKEND=gpu is set. Otherwise, the default "auto" uses CPU.
+
+#### 5. Common development tasks
 After the environment is ready, activate it and run tasks with standard tools:
 
 ```bash
@@ -228,19 +247,20 @@ Your input file should be either:
 Use the following command to run GSPPy on your data:
 
 ```bash
-gsppy --file path/to/transactions.json --min_support 0.3
+gsppy --file path/to/transactions.json --min_support 0.3 --backend auto
 ```
 
 Or for CSV files:
 
 ```bash
-gsppy --file path/to/transactions.csv --min_support 0.3
+gsppy --file path/to/transactions.csv --min_support 0.3 --backend rust
 ```
 
 #### CLI Options
 
 - `--file`: Path to your input file (JSON or CSV). **Required**.
 - `--min_support`: Minimum support threshold as a fraction (e.g., `0.3` for 30%). Default is `0.2`.
+- `--backend`: Backend to use for support counting. One of `auto` (default), `python`, `rust`, or `gpu`.
 - `--verbose`: (Optional) Enable detailed output for debugging.
 
 #### Example
