@@ -1,5 +1,122 @@
 # Changelog
 
+## [v3.0.0] - 2025-09-14
+
+### **New Features**
+
+* **Acceleration Backends Introduced**:
+
+  * **Rust Backend**: Fast, parallelized subsequence matching using PyO3 + Rayon.
+  * **GPU Backend (Experimental)**: Singleton (`k=1`) support counting accelerated via CuPy.
+* **Unified Backend Selection**:
+
+  * Backend can be selected via:
+
+    * Python API (`backend="auto" | "rust" | "gpu" | "python"`)
+    * CLI (`--backend`)
+    * Environment variable (`GSPPY_BACKEND`)
+  * Default: `auto` (tries Rust, falls back to Python).
+* **Optional GPU Install**:
+
+  * Install with `pip install "gsppy[gpu]"` for CuPy support.
+
+### **CLI and API Enhancements**
+
+* Updated CLI to support `--backend` option.
+* Python API `GSP.search()` accepts `backend=` parameter for runtime selection.
+* Environment variable fallback documented and supported.
+
+### **Documentation Updates**
+
+* **README.md** updated:
+
+  * New “GPU Acceleration” section with installation/usage guidance.
+  * Backend selector documentation for CLI, API, and env var.
+  * Python version compatibility badge updated to 3.10+.
+* **CONTRIBUTING.md**:
+
+  * Rewritten with new setup instructions using `uv` and `Makefile`.
+  * Added pre-commit and `tox-uv` instructions.
+
+### **Tooling and Developer Experience**
+
+* **Migrated Tooling**:
+
+  * Moved from Rye to `uv` for dependency and environment management.
+  * Introduced `uv.lock` for reproducible, cross-version installations.
+* **Makefile**:
+
+  * Common targets added (`make setup`, `make install`, `make lint`, etc.).
+  * One-liner for full dev bootstrap: `make setup && make install && make pre-commit-install`
+* **Pre-commit hooks**:
+
+  * Added `.pre-commit-config.yaml` with `ruff`, `pyright`, and `pytest`.
+* **DevContainer Support**:
+
+  * Added `devcontainer.json` for VS Code one-click environment provisioning.
+
+### **Testing and Quality**
+
+* Test suite fully adapted to new tooling (`uv`, `tox-uv`).
+* Static typing validated with both `mypy` and `pyright`.
+* All 38 tests pass locally and in CI (Python 3.10–3.13).
+
+### **CI/CD and Infrastructure**
+
+* GitHub Actions updated:
+
+  * All jobs use `uv` for setup and execution.
+  * `tox` now powered by `tox-uv`, auto-provisions interpreters.
+* Updated testing matrix in `codecov.yml` to Python 3.13.
+* Simplified CI jobs by consolidating environment setup steps.
+
+### **Packaging & Compatibility**
+
+* Dropped Python 3.8 and 3.9 support:
+
+  * Project now requires Python **3.10+**.
+* `pyproject.toml` updated:
+
+  * `requires-python = ">=3.10"`
+  * Optional `[gpu]` extra defined for CuPy support.
+  * Development dependencies and classifiers modernized.
+
+### **Code Improvements**
+
+* Improved type hints and formatting in:
+
+  * `gsp.py`, `cli.py`, and `utils.py`
+* Lint fixes and logging improvements.
+* Code follows unified `ruff` formatting.
+
+### **Breaking Changes**
+
+* 🔥 Dropped support for Python 3.8 and 3.9.
+
+  * Users must upgrade to Python 3.10 or newer.
+
+### **Migration Guide**
+
+For contributors or CI environments:
+
+```bash
+# Install uv (first time only)
+curl -Ls https://astral.sh/uv/install.sh | bash
+
+# Setup new local dev environment
+make setup
+make install
+make pre-commit-install
+```
+
+### **Performance Notes**
+
+* **GPU acceleration** boosts singleton (k=1) counting using CuPy’s `bincount`.
+* **Rust backend** delivers robust multithreaded subsequence matching.
+* Backend auto-dispatch adapts based on availability and selection.
+
+---
+
 ## [v2.3.0] - 2025-01-05
 
 ### **New Features**
