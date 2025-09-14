@@ -20,6 +20,7 @@ Main functionalities:
 These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
+
 from typing import Dict, List, Tuple, Sequence, Generator
 from functools import lru_cache
 from itertools import product
@@ -39,7 +40,7 @@ def split_into_batches(
         Generator[Sequence[Tuple], None, None]: A generator yielding batches of items.
     """
     for i in range(0, len(items), batch_size):
-        yield items[i:i + batch_size]
+        yield items[i : i + batch_size]
 
 
 @lru_cache(maxsize=None)
@@ -65,12 +66,10 @@ def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ..
         return False
 
     # Use any to check if any slice matches the sequence
-    return any(sequence[i:i + len_sub] == subsequence for i in range(len_seq - len_sub + 1))
+    return any(sequence[i : i + len_sub] == subsequence for i in range(len_seq - len_sub + 1))
 
 
-def generate_candidates_from_previous(
-    prev_patterns: Dict[Tuple[str, ...], int]
-) -> List[Tuple[str, ...]]:
+def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int]) -> List[Tuple[str, ...]]:
     """
     Generate joined candidates from the previous level's frequent patterns.
 

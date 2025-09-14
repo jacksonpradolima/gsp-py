@@ -34,11 +34,11 @@ Example Usage:
 ```python
 # Define the transactional dataset
 transactions = [
-    ['Bread', 'Milk'],
-    ['Bread', 'Diaper', 'Beer', 'Eggs'],
-    ['Milk', 'Diaper', 'Beer', 'Coke'],
-    ['Bread', 'Milk', 'Diaper', 'Beer'],
-    ['Bread', 'Milk', 'Diaper', 'Coke']
+    ["Bread", "Milk"],
+    ["Bread", "Diaper", "Beer", "Eggs"],
+    ["Milk", "Diaper", "Beer", "Coke"],
+    ["Bread", "Milk", "Diaper", "Beer"],
+    ["Bread", "Milk", "Diaper", "Coke"],
 ]
 
 # Initialize GSP with the transactional dataset
@@ -84,9 +84,10 @@ Version:
 --------
 - Current Version: 2.0
 """
+
 import logging
 import multiprocessing as mp
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from itertools import chain
 from collections import Counter
 
@@ -171,14 +172,13 @@ class GSP:
         self.max_size = max(len(item) for item in raw_transactions)
         self.transactions: List[Tuple[str, ...]] = [tuple(transaction) for transaction in raw_transactions]
         counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
-        self.unique_candidates: list[tuple[str, Any]] = [(item,) for item in counts.keys()]
+        # Start with singleton candidates (1-sequences)
+        self.unique_candidates: List[Tuple[str, ...]] = [(item,) for item in counts.keys()]
         logger.debug("Unique candidates: %s", self.unique_candidates)
 
     @staticmethod
     def _worker_batch(
-        batch: List[Tuple[str, ...]],
-        transactions: List[Tuple[str, ...]],
-        min_support: int
+        batch: List[Tuple[str, ...]], transactions: List[Tuple[str, ...]], min_support: int
     ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
@@ -205,8 +205,7 @@ class GSP:
         return results
 
     def _support(
-        self,
-        items: List[Tuple[str, ...]], min_support: float = 0, batch_size: int = 100
+        self, items: List[Tuple[str, ...]], min_support: float = 0, batch_size: int = 100
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences, using parallel processing.
@@ -231,7 +230,7 @@ class GSP:
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [(batch, self.transactions, min_support) for batch in batches]
+                [(batch, self.transactions, min_support) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary
@@ -248,8 +247,7 @@ class GSP:
             run (int): Current k-sequence generation level (e.g., 1 for 1-item sequences).
             candidates (List[Tuple]): Candidate sequences generated at this level.
         """
-        logger.info("Run %d: %d candidates filtered to %d.",
-                    run, len(candidates), len(self.freq_patterns[run - 1]))
+        logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
     def search(self, min_support: float = 0.2) -> List[Dict[Tuple[str, ...], int]]:
         """

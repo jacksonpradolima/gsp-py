@@ -19,6 +19,7 @@ Fixtures are used to create temporary files (valid/invalid JSON and CSV) for rel
 without affecting the file system.
 Pytest is utilized for parametrized testing to improve coverage and reduce redundancy in test cases.
 """
+
 import os
 import json
 import logging
@@ -149,9 +150,7 @@ def test_main_invalid_json_file(monkeypatch: MonkeyPatch):
         temp_file_name = temp_file.name
 
     # Mock CLI arguments
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '0.2']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2"])
 
     # Mock logger.error and test messages directly
     with patch("gsppy.cli.logger.error") as mock_error:
@@ -171,9 +170,7 @@ def test_main_non_existent_file(monkeypatch: MonkeyPatch):
     Test `main()` with a file that does not exist.
     """
     # Mock CLI arguments
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', 'non_existent.json', '--min_support', '0.2']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", "non_existent.json", "--min_support", "0.2"])
 
     with patch("gsppy.cli.logger.error") as mock_error:
         main()
@@ -190,9 +187,7 @@ def test_main_valid_json_file(monkeypatch: MonkeyPatch):
         temp_file_name = temp_file.name
 
     # Mock CLI arguments
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '0.2']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2"])
 
     with patch("gsppy.cli.logger.info") as mock_info:
         main()
@@ -213,7 +208,8 @@ def test_main_invalid_min_support(monkeypatch: MonkeyPatch):
 
     # Mock CLI arguments
     monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '-1.0']  # Invalid min_support
+        "sys.argv",
+        ["main", "--file", temp_file_name, "--min_support", "-1.0"],  # Invalid min_support
     )
 
     with patch("gsppy.cli.logger.error") as mock_error:
@@ -234,14 +230,14 @@ def test_main_entry_point():
         temp_file_name = temp_file.name
 
     # Get the CLI script path
-    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '../gsppy/cli.py'))
+    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
 
     # Set up the environment with the correct PYTHONPATH
     env = os.environ.copy()
-    env['PYTHONPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # Add project root to PYTHONPATH
+    env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # Add project root to PYTHONPATH
 
     # Construct the command to run the script
-    cmd = [os.environ.get('PYTHON', 'python'), cli_script, '--file', temp_file_name, '--min_support', '0.2']
+    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
 
     # Run the script using subprocess
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
@@ -264,17 +260,13 @@ def test_main_edge_case_min_support(monkeypatch: MonkeyPatch):
         temp_file_name = temp_file.name
 
     # Case 1: `min_support` = 1.0 (Valid Edge Case)
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '1.0']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "1.0"])
     with patch("gsppy.cli.logger.info") as mock_info:
         main()
         mock_info.assert_any_call("Frequent Patterns Found:")
 
     # Case 2: `min_support` = -1.0 (Invalid Edge Case)
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '-1.0']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "-1.0"])
     with patch("gsppy.cli.logger.error") as mock_error:
         main()
         mock_error.assert_called_with("Error: min_support must be in the range (0.0, 1.0].")
@@ -293,13 +285,13 @@ def test_main_gsp_exception(monkeypatch: MonkeyPatch):
         temp_file_name = temp_file.name
 
     # Step 2: Mock CLI arguments
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', temp_file_name, '--min_support', '0.2']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2"])
 
     # Step 3: Mock GSP.search to raise an exception
-    with patch('gsppy.gsp.GSP.search', side_effect=Exception("Simulated GSP failure")), \
-        patch("gsppy.cli.logger.error") as mock_error:
+    with (
+        patch("gsppy.gsp.GSP.search", side_effect=Exception("Simulated GSP failure")),
+        patch("gsppy.cli.logger.error") as mock_error,
+    ):
         main()
 
         # Step 4: Assert the error message was logged
@@ -314,13 +306,11 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
     Test `setup_logging` sets logging level to DEBUG when `--verbose` is provided.
     """
     # Mock CLI arguments to include the verbose flag
-    monkeypatch.setattr(
-        'sys.argv', ['main', '--file', 'test_data.json', '--min_support', '0.2', '--verbose']
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", "test_data.json", "--min_support", "0.2", "--verbose"])
 
-    with patch('gsppy.cli.logger.setLevel') as mock_setLevel:
-        with patch('gsppy.cli.detect_and_read_file', return_value=[["Bread", "Milk"]]):  # Mock file reading
-            with patch('gsppy.cli.GSP.search', return_value=[{("Bread",): 1}]):  # Mock GSP search
+    with patch("gsppy.cli.logger.setLevel") as mock_setLevel:
+        with patch("gsppy.cli.detect_and_read_file", return_value=[["Bread", "Milk"]]):  # Mock file reading
+            with patch("gsppy.cli.GSP.search", return_value=[{("Bread",): 1}]):  # Mock GSP search
                 main()  # Run the CLI
 
         # Check that the logger level was set to DEBUG

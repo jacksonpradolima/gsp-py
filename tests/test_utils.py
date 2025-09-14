@@ -8,6 +8,7 @@ This module tests the following functions:
 
 Each function is tested for standard cases, edge cases, and error handling to ensure robustness.
 """
+
 from typing import Dict, List, Tuple
 
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
@@ -69,7 +70,7 @@ def test_generate_candidates_from_previous():
         ("1", "2"): 3,
         ("2", "3"): 4,
         ("3", "4"): 5,
-        ("1", "3"): 2  # Non-joinable with others as a k-1 match
+        ("1", "3"): 2,  # Non-joinable with others as a k-1 match
     }
     result = set(generate_candidates_from_previous(prev_patterns))
 
@@ -78,10 +79,7 @@ def test_generate_candidates_from_previous():
     assert expected.issubset(result), f"Missing expected candidates. Got {result}, expected at least {expected}"
 
     # Test with no joinable patterns
-    prev_patterns = {
-        ("1",): 3,
-        ("2",): 4
-    }
+    prev_patterns = {("1",): 3, ("2",): 4}
     result = set(generate_candidates_from_previous(prev_patterns))
 
     # For single-element disjoint patterns, candidates may still be generated but GSP will filter later

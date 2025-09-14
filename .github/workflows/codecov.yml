@@ -5,27 +5,36 @@ on:
 
 jobs:
     test:
-        name: Run tests and collect coverage
+        name: Run tests and collect coverage (Python ${{ matrix.python-version }})
         runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ["3.13"]
         steps:
             -   name: Checkout
                 uses: actions/checkout@v5
                 with:
                     fetch-depth: 0
 
-            -   name: Set up Python
-                uses: actions/setup-python@v6
-                with:
-                    python-version: 3.11
+            -   name: Install uv
+                run: |
+                    curl -Ls https://astral.sh/uv/install.sh | bash
+                    echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+            -   name: Create venv (Python ${{ matrix.python-version }})
+                run: |
+                    uv python install ${{ matrix.python-version }}
+                    uv venv .venv --python ${{ matrix.python-version }}
 
             -   name: Install dependencies
                 run: |
-                    pip install pytest==8.3.4 \
-                        pytest-benchmark==5.1.0 \
-                        pytest-cov==6.0.0
+                    uv sync --frozen --extra dev
+                    uv pip install -e .
 
-            -   name: Run tests
-                run: pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
+            -   name: Run tests with coverage
+                run: |
+                    uv run pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
 
             -   name: Upload coverage to Codecov
                 uses: codecov/codecov-action@v5

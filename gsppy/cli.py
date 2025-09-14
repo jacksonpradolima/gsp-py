@@ -27,6 +27,7 @@ Key Features:
 This CLI empowers users to perform sequential pattern mining on transactional data efficiently through
 a simple command-line interface.
 """
+
 import os
 import csv
 import sys
@@ -71,7 +72,7 @@ def read_transactions_from_json(file_path: str) -> List[List[str]]:
         ValueError: If the file cannot be read or does not contain valid JSON.
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             transactions: List[List[str]] = json.load(f)
         return transactions
     except Exception as e:
@@ -95,7 +96,7 @@ def read_transactions_from_csv(file_path: str) -> List[List[str]]:
     """
     try:
         transactions: List[List[str]] = []
-        with open(file_path, newline='', encoding='utf-8') as csvfile:
+        with open(file_path, newline="", encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 # Check if the row is empty
@@ -148,32 +149,28 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         description="GSP (Generalized Sequential Pattern) Algorithm - "
-                    "Find frequent sequential patterns in transactional data."
+        "Find frequent sequential patterns in transactional data."
     )
 
     # Single file argument
     parser.add_argument(
-        '--file',
+        "--file",
         type=str,
         required=True,
         help='Path to a JSON or CSV file containing transactions (e.g., [["A", "B"], ["B", "C"]] '
-             'or CSV rows per transaction)'
+        "or CSV rows per transaction)",
     )
 
     # Minimum support argument
     parser.add_argument(
-        '--min_support',
+        "--min_support",
         type=float,
         default=0.2,
-        help="Minimum support threshold as a fraction of total transactions (default: 0.2)"
+        help="Minimum support threshold as a fraction of total transactions (default: 0.2)",
     )
 
     # Verbose output argument
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose output for debugging purposes.'
-    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging purposes.")
 
     # Parse arguments
     args = parser.parse_args()
@@ -206,5 +203,5 @@ def main() -> None:
         logger.error(f"Error executing GSP algorithm: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

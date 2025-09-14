@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+  # Optional: pyright via node (requires node)
+  # - repo: https://github.com/jakebailey/pyright-precommit
+  #   rev: v1.1.391
+  #   hooks:
+  #     - id: pyright
+  #       additional_dependencies: []
+
+  - repo: local
+    hooks:
+      - id: check-precommit
+        name: Run tests and type checks (pyright + mypy)
+        entry: make check-precommit
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
