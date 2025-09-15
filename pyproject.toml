@@ -52,7 +52,7 @@ dev = [
     "tox==4.30.2",
 ]
 rust = [
-    "maturin==1.6.0"
+    "maturin==1.9.4"
 ]
 gpu = [
     "cupy>=11,<14"
