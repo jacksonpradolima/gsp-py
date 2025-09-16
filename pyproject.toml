@@ -43,7 +43,7 @@ dev = [
     "hatch==1.14.1",
     "hatchling==1.27.0",
     "mypy==1.18.1",
-    "pylint==3.2.7",
+    "pylint==3.3.8",
     "pyright==1.1.405",
     "pytest==8.3.4",
     "pytest-benchmark==5.1.0",
