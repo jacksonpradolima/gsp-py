@@ -49,7 +49,7 @@ dev = [
     "pytest-benchmark==5.1.0",
     "pytest-cov==7.0.0",
     "ruff==0.13.2",
-    "tox==4.30.3",
+    "tox==4.31.0",
 ]
 rust = [
     "maturin==1.9.4"
