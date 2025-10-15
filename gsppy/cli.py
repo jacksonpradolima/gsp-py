@@ -163,8 +163,14 @@ def detect_and_read_file(file_path: str) -> List[List[str]]:
     show_default=True,
     help="Backend to use for support counting.",
 )
+@click.option(
+    "--contiguous",
+    is_flag=True,
+    default=False,
+    help="Enable to find only contiguous patterns (e.g., 'a' then 'b'). Default is non-contiguous.",
+)
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
-def main(file_path: str, min_support: float, backend: str, verbose: bool) -> None:
+def main(file_path: str, min_support: float, backend: str,contiguous: bool, verbose: bool) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
     """
@@ -189,7 +195,7 @@ def main(file_path: str, min_support: float, backend: str, verbose: bool) -> Non
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions)
-        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
+        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support,contiguous=contiguous)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")

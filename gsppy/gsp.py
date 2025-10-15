@@ -92,7 +92,7 @@ from typing import Dict, List, Tuple, Optional
 from itertools import chain
 from collections import Counter
 
-from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
+from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous,is_subsequence_non_contiguous
 from gsppy.accelerate import support_counts as support_counts_accel
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class GSP:
 
     @staticmethod
     def _worker_batch(
-        batch: List[Tuple[str, ...]], transactions: List[Tuple[str, ...]], min_support: int
+        batch: List[Tuple[str, ...]], transactions: List[Tuple[str, ...]], min_support: int,contiguous: bool,
     ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
@@ -200,14 +200,16 @@ class GSP:
                                      - The candidate's support count.
         """
         results: List[Tuple[Tuple[str, ...], int]] = []
+        subsequence_checker = is_subsequence_in_list if contiguous else is_subsequence_non_contiguous 
+
         for item in batch:
-            frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))
+            frequency = sum(1 for t in transactions if subsequence_checker(item, t))
             if frequency >= min_support:
                 results.append((item, frequency))
         return results
 
     def _support_python(
-        self, items: List[Tuple[str, ...]], min_support: int = 0, batch_size: int = 100
+        self, items: List[Tuple[str, ...]], min_support: int = 0, batch_size: int = 100,contiguous: bool = False,
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences using Python multiprocessing.
@@ -223,12 +225,13 @@ class GSP:
         """
         # Split candidates into batches
         batches = list(split_into_batches(items, batch_size))
+        subsequence_checker = is_subsequence_in_list if contiguous else is_subsequence_non_contiguous
 
         # Use multiprocessing pool to calculate frequency in parallel, batch-wise
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [(batch, self.transactions, min_support) for batch in batches],
+                [(batch, self.transactions, min_support,subsequence_checker) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary
@@ -240,6 +243,7 @@ class GSP:
         min_support: int = 0,
         batch_size: int = 100,
         backend: Optional[str] = None,
+        contiguous: bool = False,
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences using the fastest available backend.
@@ -247,10 +251,10 @@ class GSP:
         the Python multiprocessing implementation.
         """
         try:
-            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend)
+            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend,contiguous=contiguous)
         except Exception:
             # Fallback to Python implementation on any acceleration failure
-            return self._support_python(items, min_support, batch_size)
+            return self._support_python(items, min_support, batch_size,contiguous=contiguous)
 
     def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
@@ -270,6 +274,7 @@ class GSP:
         min_support: float = 0.2,
         max_k: Optional[int] = None,
         backend: Optional[str] = None,
+        contiguous: bool = False,
     ) -> List[Dict[Tuple[str, ...], int]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
@@ -282,6 +287,8 @@ class GSP:
             min_support (float): Minimum support threshold as a fraction of total transactions.
                                      For example, `0.3` means that a sequence is frequent if it
                                      appears in at least 30% of all transactions.
+            contiguous (bool): If True, finds only contiguous patterns (e.g., ['a', 'b'] in ['a', 'b', 'c']).
+                               If False (default), finds non-contiguous patterns (e.g., ['a', 'c'] in ['a', 'b', 'c']).
 
         Returns:
             List[Dict[Tuple[str, ...], int]]: A list of dictionaries containing frequent patterns
@@ -295,10 +302,11 @@ class GSP:
             - Information about the algorithm's start, intermediate progress (candidates filtered),
               and completion.
             - Status updates for each iteration until the algorithm terminates.
+        
         """
         if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")
-
+        self.freq_patterns=[]
         logger.info(f"Starting GSP algorithm with min_support={min_support}...")
 
         # Convert fractional support to absolute count (ceil to preserve threshold semantics)
@@ -311,7 +319,7 @@ class GSP:
 
         # scan transactions to collect support count for each candidate
         # sequence & filter
-        self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
+        self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend,contiguous=contiguous))
 
         # (k-itemsets/k-sequence = 1)
         k_items = 1
@@ -332,8 +340,8 @@ class GSP:
 
             # candidate pruning - eliminates candidates who are not potentially
             # frequent (using support as threshold)
-            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
+            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend,contiguous=contiguous))
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
-        return self.freq_patterns[:-1]
+        return [level for level in self.freq_patterns if level]
