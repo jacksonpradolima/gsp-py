@@ -92,7 +92,12 @@ from typing import Dict, List, Tuple, Optional
 from itertools import chain
 from collections import Counter
 
-from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous,is_subsequence_non_contiguous
+from gsppy.utils import (
+    split_into_batches,
+    is_subsequence_in_list,
+    is_subsequence_non_contiguous,
+    generate_candidates_from_previous,
+)
 from gsppy.accelerate import support_counts as support_counts_accel
 
 logger = logging.getLogger(__name__)

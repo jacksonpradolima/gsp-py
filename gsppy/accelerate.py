@@ -164,7 +164,7 @@ def support_counts(
         singletons: List[Tuple[int, Tuple[str, ...]]] = []
         others: List[Tuple[List[int], Tuple[str, ...]]] = []
         assert len(candidates) == len(enc_cands), "Encoded candidates length mismatch"
-        for orig, enc in zip(candidates, enc_cands):
+        for orig, enc in zip(candidates, enc_cands, strict=False):
             if len(enc) == 1:
                 singletons.append((enc[0], orig))
             else:
