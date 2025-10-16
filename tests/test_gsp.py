@@ -158,7 +158,7 @@ def test_worker_batch_static_method(supermarket_transactions: List[List[str]]) -
 
     # Call the '_worker_batch' method
     # This test accesses `_worker_batch` to test internal functionality
-    results = GSP._worker_batch(batch, transactions, min_support)  # pylint: disable=protected-access
+    results = GSP._worker_batch(batch, transactions, min_support,contiguous=True)  # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 
@@ -170,12 +170,10 @@ def test_frequent_patterns(supermarket_transactions: List[List[str]]) -> None:
         - The frequent patterns should match the expected result.
     """
     gsp = GSP(supermarket_transactions)
-    result = gsp.search(min_support=0.3)
-    expected = [
-        {("Bread",): 4, ("Milk",): 4, ("Diaper",): 4, ("Beer",): 3, ("Coke",): 2},
-        {("Bread", "Milk"): 3, ("Milk", "Diaper"): 3, ("Diaper", "Beer"): 3},
-        {("Bread", "Milk", "Diaper"): 2, ("Milk", "Diaper", "Beer"): 2},
-    ]
+    result = gsp.search(min_support=0.3,contiguous=False)
+    expected = [{('Bread',): 4, ('Milk',): 4, ('Diaper',): 4, ('Beer',): 3, ('Coke',): 2}, {('Bread', 'Milk'): 3, ('Bread', 'Diaper'): 3, ('Bread', 'Beer'): 2, ('Milk', 'Diaper'): 3, ('Milk', 'Beer'): 2, ('Milk', 'Coke'): 2, ('Diaper', 'Beer'): 3, ('Diaper', 'Coke'): 2}, {('Bread', 'Milk', 'Diaper'): 2, ('Bread', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Coke'): 2}]
+    print("\nActual Result:", result)
+
     assert result == expected, "Frequent patterns do not match expected results."
 
 
@@ -241,3 +239,33 @@ def test_benchmark(benchmark: BenchmarkFixture, supermarket_transactions: List[L
     """
     gsp = GSP(supermarket_transactions)
     benchmark(gsp.search, min_support=min_support)
+def test_gsp_enhancement_contiguous_vs_non_contiguous():
+    """
+    Tests the new parameterization for contiguous vs. non-contiguous matching.
+    This test verifies the exact issue you found.
+    """
+    sequences = [
+        ['a', 'b', 'c'],
+        ['a', 'c'],
+        ['b', 'c', 'a'],
+        ['a', 'b', 'c', 'd']
+    ]
+    gsp = GSP(sequences)
+
+    result_non_contiguous = gsp.search(min_support=0.5)
+    print(result_non_contiguous)
+    # Check that the pattern ('a', 'c') IS found
+    #print()
+   
+    found_ac_non_contiguous = any(('a', 'c') in d for d in result_non_contiguous)
+    assert found_ac_non_contiguous is True, \
+        "The pattern ('a', 'c') SHOULD be found with non-contiguous search."
+    
+    gsp_contiguous = GSP(sequences)  
+    result_contiguous = gsp_contiguous.search(min_support=0.5, contiguous=True)
+    print(result_contiguous)
+
+    # Check that the pattern ('a', 'c') is NOT found
+    found_ac_contiguous = any(('a', 'c') in d for d in result_contiguous)
+    assert found_ac_contiguous is False, \
+        "The pattern ('a', 'c') should NOT be found with a strict contiguous search."
