@@ -41,7 +41,12 @@ _ENCODED_CACHE: Dict[int, Tuple[List[List[int]], Dict[int, str], Dict[str, int],
 def _get_encoded_transactions(
     transactions: List[Tuple[str, ...]],
 ) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
-    """Return encoded transactions using a small in-memory cache."""
+    """Return encoded transactions using a small in-memory cache.
+    Cache key is the id() of the transactions list and we also track the number of
+    transactions to detect trivial changes. This assumes transactions aren't mutated after
+    
+    GSP is constructed (which is the common case).
+    """
     key = id(transactions)
     cached = _ENCODED_CACHE.get(key)
     if cached is not None:
@@ -70,7 +75,17 @@ def _env_backend() -> str:
 
 
 def _encode_transactions(transactions: List[Tuple[str, ...]]) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
-    """Encode transactions of strings into integer IDs."""
+    """Encode transactions of strings into integer IDs.
+    
+    Parameters:
+        transactions: List of transactions where each transaction is a tuple of strings.
+   
+    Returns:
+        A tuple of:
+        - enc_tx: List[List[int]] encoded transactions
+        - inv_vocab: Dict[int, str] mapping back from id to original string
+        - vocab: Dict[str, int] mapping from original string to integer id
+    """
     vocab: Dict[str, int] = {}
     enc_tx: List[List[int]] = []
     for t in transactions:
@@ -95,10 +110,18 @@ def _support_counts_gpu_singletons(
     min_support_abs: int,
     vocab_size: int,
 ) -> List[Tuple[List[int], int]]:
-    """GPU-accelerated support counts for singleton candidates using CuPy."""
+    """GPU-accelerated support counts for singleton candidates using CuPy.
+    
+    This computes the number of transactions containing each candidate item ID.
+    It uniquifies items per transaction on CPU to preserve presence semantics,
+    then performs a single bincount on GPU.
+    """
+    # Ensure one contribution per transaction
     unique_rows: List[List[int]] = [list(set(row)) for row in enc_tx]
     if not unique_rows:
         return []
+
+    # Flatten to a 1D list of item ids, then move to GPU
 
     flat: List[int] = [item for row in unique_rows for item in row]
     if not flat:
@@ -123,7 +146,16 @@ def support_counts_python(
     batch_size: int = 100,
     contiguous: bool=False ,
 ) -> Dict[Tuple[str, ...], int]:
-    """Pure-Python fallback for support counting (single-process)."""
+    """Pure-Python  fallback for support counting (single-process).
+    
+    Evaluates each candidate pattern's frequency across all transactions
+    using the same contiguous-subsequence semantics as the Rust backend.
+    
+    Note: This implementation is single-process and optimized for simplicity.
+    Heavy workloads may benefit from the Rust backend.
+    """
+    # Simple non-multiprocessing version to avoid import cycles.
+
     results: Dict[Tuple[str, ...], int] = {}
     subsequence_checker = is_subsequence_in_list if contiguous else is_subsequence_non_contiguous
 
@@ -143,7 +175,16 @@ def support_counts(
     backend: Optional[str] = None,
     contiguous: bool = False,
 ) -> Dict[Tuple[str, ...], int]:
-    """Choose the best available backend for support counting."""
+    """ Choose the best available backend for support counting.
+    
+    Backend selection is controlled by the `backend` argument when provided,
+    otherwise by the env var GSPPY_BACKEND:
+    - "rust": require Rust extension (raise if missing)
+    - "gpu": try GPU path when available (currently singletons optimized),
+              fall back to CPU for the rest
+    - "python": force pure-Python fallback
+    - otherwise:  try Rust first and fall back to Python
+    """
     if not contiguous:
         return support_counts_python(
             transactions, candidates, min_support_abs, batch_size, contiguous 
@@ -159,17 +200,21 @@ def support_counts(
     if backend_sel == "gpu":
         if not _gpu_available:
             raise RuntimeError("GSPPY_BACKEND=gpu but CuPy GPU is not available")
+        # Encode once
         enc_tx, inv_vocab, vocab = _get_encoded_transactions(transactions)
         enc_cands = _encode_candidates(candidates, vocab)
+        # Partition candidates into singletons and non-singletons
         singletons: List[Tuple[int, Tuple[str, ...]]] = []
         others: List[Tuple[List[int], Tuple[str, ...]]] = []
+        # Pair original and encoded candidates; lengths should match
         assert len(candidates) == len(enc_cands), "Encoded candidates length mismatch"
-        for orig, enc in zip(candidates, enc_cands, strict=False):
+        for orig, enc in zip(candidates, enc_cands, strict=False):   # noqa: B905 - lengths checked above
             if len(enc) == 1:
                 singletons.append((enc[0], orig))
             else:
                 others.append((enc, orig))
         out: Dict[Tuple[str, ...], int] = {}
+        # GPU path for singletons
         if singletons:
             vocab_size = max(vocab.values()) + 1 if vocab else 0
             gpu_res = _support_counts_gpu_singletons(
@@ -178,10 +223,12 @@ def support_counts(
                 min_support_abs=min_support_abs,
                 vocab_size=vocab_size,
             )
+        # Map back to original strings
             cand_by_id: Dict[int, Tuple[str, ...]] = {cid: orig for cid, orig in singletons}
             for enc_cand, freq in gpu_res:
                 cid = enc_cand[0]
                 out[cand_by_id[cid]] = int(freq)
+        # Fallback for others (prefer rust when available)
         if others:
             other_candidates = [orig for _, orig in others]
             if _rust_available:
@@ -193,6 +240,8 @@ def support_counts(
                     for enc_cand, freq in res:
                         out[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
                 except Exception:
+                    # fallback to python
+
                     out.update(support_counts_python(transactions, other_candidates, min_support_abs, batch_size, contiguous ))
             else:
                 out.update(support_counts_python(transactions, other_candidates, min_support_abs, batch_size, contiguous ))
@@ -208,6 +257,7 @@ def support_counts(
         for enc_cand, freq in result:
             out_rust[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
         return out_rust
+    # auto: try rust then fallback
 
     if _rust_available:
         try:
