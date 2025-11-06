@@ -172,7 +172,6 @@ def test_frequent_patterns(supermarket_transactions: List[List[str]]) -> None:
     gsp = GSP(supermarket_transactions)
     result = gsp.search(min_support=0.3,contiguous=False)
     expected = [{('Bread',): 4, ('Milk',): 4, ('Diaper',): 4, ('Beer',): 3, ('Coke',): 2}, {('Bread', 'Milk'): 3, ('Bread', 'Diaper'): 3, ('Bread', 'Beer'): 2, ('Milk', 'Diaper'): 3, ('Milk', 'Beer'): 2, ('Milk', 'Coke'): 2, ('Diaper', 'Beer'): 3, ('Diaper', 'Coke'): 2}, {('Bread', 'Milk', 'Diaper'): 2, ('Bread', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Coke'): 2}]
-    print("\nActual Result:", result)
 
     assert result == expected, "Frequent patterns do not match expected results."
 

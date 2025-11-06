@@ -44,7 +44,7 @@ def _get_encoded_transactions(
     transactions: List[Tuple[str, ...]],
 ) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
     """Return encoded transactions using a small in-memory cache.
-    
+
     Cache key is the id() of the transactions list and we also track the number of
     transactions to detect trivial changes. This assumes transactions aren't mutated after
     GSP is constructed (which is the common case).
@@ -124,7 +124,6 @@ def _support_counts_gpu_singletons(
         return []
 
     # Flatten to a 1D list of item ids, then move to GPU
-
     flat: List[int] = [item for row in unique_rows for item in row]
     if not flat:
         return []
@@ -216,6 +215,7 @@ def support_counts(
             else:
                 others.append((enc, orig))
         out: Dict[Tuple[str, ...], int] = {}
+
         # GPU path for singletons
         if singletons:
             vocab_size = max(vocab.values()) + 1 if vocab else 0
@@ -252,6 +252,7 @@ def support_counts(
     if backend_sel == "rust":
         if not _rust_available:
             raise RuntimeError("GSPPY_BACKEND=rust but Rust extension _gsppy_rust is not available")
+        # use rust
         enc_tx, inv_vocab, vocab = _get_encoded_transactions(transactions)
         enc_cands = _encode_candidates(candidates, vocab)
         result = cast(List[Tuple[List[int], int]], _compute_supports_rust(enc_tx, enc_cands, int(min_support_abs)))
@@ -259,8 +260,8 @@ def support_counts(
         for enc_cand, freq in result:
             out_rust[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
         return out_rust
+    
     # auto: try rust then fallback
-
     if _rust_available:
         try:
             enc_tx, inv_vocab, vocab = _get_encoded_transactions(transactions)
