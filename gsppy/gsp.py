@@ -185,7 +185,7 @@ class GSP:
 
     @staticmethod
     def _worker_batch(
-        batch: List[Tuple[str, ...]], transactions: List[Tuple[str, ...]], min_support: int,contiguous: bool,
+        batch: List[Tuple[str, ...]], transactions: List[Tuple[str, ...]], min_support: int, contiguous: bool,
     ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
@@ -256,10 +256,10 @@ class GSP:
         the Python multiprocessing implementation.
         """
         try:
-            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend,contiguous=contiguous)
+            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend, contiguous=contiguous)
         except Exception:
             # Fallback to Python implementation on any acceleration failure
-            return self._support_python(items, min_support, batch_size,contiguous=contiguous)
+            return self._support_python(items, min_support, batch_size, contiguous=contiguous)
 
     def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
@@ -345,7 +345,7 @@ class GSP:
 
             # candidate pruning - eliminates candidates who are not potentially
             # frequent (using support as threshold)
-            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend,contiguous=contiguous))
+            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend, contiguous=contiguous))
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")

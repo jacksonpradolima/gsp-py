@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Tuple, Optional, cast
 
 from .utils import split_into_batches, is_subsequence_in_list, is_subsequence_non_contiguous
 
+import numpy as np
+
 # Optional GPU (CuPy) support
 _gpu_available = False
 try:  # pragma: no cover - optional dependency path
@@ -42,9 +44,9 @@ def _get_encoded_transactions(
     transactions: List[Tuple[str, ...]],
 ) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
     """Return encoded transactions using a small in-memory cache.
+    
     Cache key is the id() of the transactions list and we also track the number of
     transactions to detect trivial changes. This assumes transactions aren't mutated after
-    
     GSP is constructed (which is the common case).
     """
     key = id(transactions)
@@ -79,7 +81,7 @@ def _encode_transactions(transactions: List[Tuple[str, ...]]) -> Tuple[List[List
     
     Parameters:
         transactions: List of transactions where each transaction is a tuple of strings.
-   
+
     Returns:
         A tuple of:
         - enc_tx: List[List[int]] encoded transactions
@@ -127,9 +129,9 @@ def _support_counts_gpu_singletons(
     if not flat:
         return []
 
-    cp_flat = cp.asarray(flat, dtype=cp.int32)
-    counts = cp.bincount(cp_flat, minlength=vocab_size)
-    counts_host: Any = counts.get()
+    cp_flat = cp.asarray(flat, dtype=cp.int32) # type: ignore[name-defined]
+    counts = cp.bincount(cp_flat, minlength=vocab_size) # type: ignore[name-defined]
+    counts_host: Any = counts.get()  # back to host as a NumPy array
 
     out: List[Tuple[List[int], int]] = []
     for cid in cand_ids:
@@ -146,7 +148,7 @@ def support_counts_python(
     batch_size: int = 100,
     contiguous: bool=False ,
 ) -> Dict[Tuple[str, ...], int]:
-    """Pure-Python  fallback for support counting (single-process).
+    """Pure-Python fallback for support counting (single-process).
     
     Evaluates each candidate pattern's frequency across all transactions
     using the same contiguous-subsequence semantics as the Rust backend.
@@ -175,15 +177,15 @@ def support_counts(
     backend: Optional[str] = None,
     contiguous: bool = False,
 ) -> Dict[Tuple[str, ...], int]:
-    """ Choose the best available backend for support counting.
+    """Choose the best available backend for support counting.
     
     Backend selection is controlled by the `backend` argument when provided,
     otherwise by the env var GSPPY_BACKEND:
     - "rust": require Rust extension (raise if missing)
-    - "gpu": try GPU path when available (currently singletons optimized),
+    - "gpu":  try GPU path when available (currently singletons optimized),
               fall back to CPU for the rest
     - "python": force pure-Python fallback
-    - otherwise:  try Rust first and fall back to Python
+    - otherwise: try Rust first and fall back to Python
     """
     if not contiguous:
         return support_counts_python(
