@@ -19,8 +19,6 @@ from typing import Any, Dict, List, Tuple, Optional, cast
 
 from .utils import split_into_batches, is_subsequence_in_list, is_subsequence_non_contiguous
 
-import numpy as np
-
 # Optional GPU (CuPy) support
 _gpu_available = False
 try:  # pragma: no cover - optional dependency path
