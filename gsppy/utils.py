@@ -68,13 +68,13 @@ def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ..
     # Use any to check if any slice matches the sequence
     return any(sequence[i : i + len_sub] == subsequence for i in range(len_seq - len_sub + 1))
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=32768)
 def is_subsequence_non_contiguous(subsequence: Tuple[str, ...], sequence: Tuple[str, ...]) -> bool:
     """
     Check if a subsequence exists within a sequence, allowing for gaps (non-contiguous).
     """
     if not subsequence:
-        return False
+        return True
     it = iter(sequence)
     return all(item in it for item in subsequence)
 

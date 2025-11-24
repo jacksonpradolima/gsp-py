@@ -230,13 +230,13 @@ class GSP:
         """
         # Split candidates into batches
         batches = list(split_into_batches(items, batch_size))
-        subsequence_checker = is_subsequence_in_list if contiguous else is_subsequence_non_contiguous
+        #subsequence_checker = is_subsequence_in_list if contiguous else is_subsequence_non_contiguous
 
         # Use multiprocessing pool to calculate frequency in parallel, batch-wise
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [(batch, self.transactions, min_support,subsequence_checker) for batch in batches],
+                [(batch, self.transactions, min_support,contiguous) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary
@@ -279,6 +279,7 @@ class GSP:
         min_support: float = 0.2,
         max_k: Optional[int] = None,
         backend: Optional[str] = None,
+        batch_size: int = 100,
         contiguous: bool = False,
     ) -> List[Dict[Tuple[str, ...], int]]:
         """

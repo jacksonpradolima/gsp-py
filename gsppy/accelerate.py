@@ -76,7 +76,7 @@ def _env_backend() -> str:
 
 def _encode_transactions(transactions: List[Tuple[str, ...]]) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
     """Encode transactions of strings into integer IDs.
-    
+
     Parameters:
         transactions: List of transactions where each transaction is a tuple of strings.
 
@@ -184,6 +184,9 @@ def support_counts(
     - "python": force pure-Python fallback
     - otherwise: try Rust first and fall back to Python
     """
+    # Intentionally fallback to Python for non-contiguous queries.
+    # The acceleration path is currently disabled for non-contiguous cases 
+    # to facilitate testing and validation of the contiguous logic.
     if not contiguous:
         return support_counts_python(
             transactions, candidates, min_support_abs, batch_size, contiguous 
@@ -258,7 +261,6 @@ def support_counts(
         for enc_cand, freq in result:
             out_rust[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
         return out_rust
-    
     # auto: try rust then fallback
     if _rust_available:
         try:

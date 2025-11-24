@@ -268,3 +268,25 @@ def test_gsp_enhancement_contiguous_vs_non_contiguous():
     found_ac_contiguous = any(('a', 'c') in d for d in result_contiguous)
     assert found_ac_contiguous is False, \
         "The pattern ('a', 'c') should NOT be found with a strict contiguous search."
+
+def test_non_contiguous_multiprocessing():
+    # Dataset where ('a','c') is a non‑contiguous subsequence but not a contiguous one.
+    sequences = [
+        ['a', 'b', 'c'],
+        ['a', 'c'],
+        ['b', 'c', 'a'],
+        ['a', 'b', 'c', 'd'],
+    ]
+    gsp = GSP(sequences)
+
+    # Use a tiny batch size to force multiple batches and trigger multiprocessing.
+    result_non_contig = gsp.search(min_support=0.5, contiguous=False, backend='python', batch_size=1)
+    # In non‑contiguous mode, ('a','c') should be considered frequent (support = 3/4).
+    assert any(('a', 'c') in level for level in result_non_contig), \
+        "Expected to find ('a','c') as a non‑contiguous frequent subsequence"
+    print(result_non_contig)
+    # Also verify that contiguous search does not report ('a','c').
+    result_contig = gsp.search(min_support=0.5, contiguous=True, backend='python', batch_size=1)
+    print(result_contig)
+    assert not any(('a', 'c') in level for level in result_contig), \
+        "('a','c') should not appear in a strict contiguous search"
