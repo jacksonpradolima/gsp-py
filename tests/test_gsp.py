@@ -168,13 +168,28 @@ def test_frequent_patterns(supermarket_transactions: List[List[str]]) -> None:
 
     Asserts:
         - The frequent patterns should match the expected result.
+        - Non-contiguous patterns are correctly detected.
     """
     gsp = GSP(supermarket_transactions)
     result = gsp.search(min_support=0.3)
     expected = [
         {("Bread",): 4, ("Milk",): 4, ("Diaper",): 4, ("Beer",): 3, ("Coke",): 2},
-        {("Bread", "Milk"): 3, ("Milk", "Diaper"): 3, ("Diaper", "Beer"): 3},
-        {("Bread", "Milk", "Diaper"): 2, ("Milk", "Diaper", "Beer"): 2},
+        {
+            ("Bread", "Milk"): 3,
+            ("Bread", "Diaper"): 3,
+            ("Bread", "Beer"): 2,
+            ("Milk", "Diaper"): 3,
+            ("Milk", "Beer"): 2,
+            ("Milk", "Coke"): 2,
+            ("Diaper", "Beer"): 3,
+            ("Diaper", "Coke"): 2,
+        },
+        {
+            ("Bread", "Milk", "Diaper"): 2,
+            ("Bread", "Diaper", "Beer"): 2,
+            ("Milk", "Diaper", "Beer"): 2,
+            ("Milk", "Diaper", "Coke"): 2,
+        },
     ]
     assert result == expected, "Frequent patterns do not match expected results."
 
@@ -229,6 +244,35 @@ def test_partial_match(supermarket_transactions: List[List[str]]) -> None:
     if len(result) > 1:
         result_level_2 = set(result[1].keys())
         assert result_level_2 >= expected_patterns_level_2, f"Level 2 patterns mismatch. Got {result_level_2}"
+
+
+def test_non_contiguous_subsequences() -> None:
+    """
+    Test the GSP algorithm correctly detects non-contiguous subsequences (Issue #115).
+
+    This test validates that patterns like ('a', 'c') are detected even when
+    they appear with gaps in sequences like ['a', 'b', 'c'].
+
+    Asserts:
+        - Non-contiguous patterns are correctly identified with proper support.
+    """
+    sequences = [
+        ["a", "b", "c"],
+        ["a", "c"],
+        ["b", "c", "a"],
+        ["a", "b", "c", "d"],
+    ]
+
+    gsp = GSP(sequences)
+    result = gsp.search(min_support=0.5)
+
+    # Expected: ('a', 'c') should be found with support = 3
+    # It appears in: ['a', 'b', 'c'], ['a', 'c'], ['a', 'b', 'c', 'd']
+    assert len(result) >= 2, "Expected at least 2 levels of patterns"
+
+    level_2_patterns = result[1]
+    assert ("a", "c") in level_2_patterns, f"Pattern ('a', 'c') not found in level 2. Got {level_2_patterns}"
+    assert level_2_patterns[("a", "c")] == 3, f"Expected support 3 for ('a', 'c'), got {level_2_patterns[('a', 'c')]}"
 
 
 @pytest.mark.parametrize("min_support", [0.1, 0.2, 0.3, 0.4, 0.5])
