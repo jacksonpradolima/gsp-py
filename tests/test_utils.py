@@ -45,13 +45,19 @@ def test_is_subsequence_in_list():
     """
     Test the `is_subsequence_in_list` utility function.
     """
-    # Test when the subsequence is present
-    assert is_subsequence_in_list((1, 2), (0, 1, 2, 3)), "Failed to find subsequence"
+    # Test when the subsequence is present (contiguous)
+    assert is_subsequence_in_list((1, 2), (0, 1, 2, 3)), "Failed to find contiguous subsequence"
     assert is_subsequence_in_list((3,), (0, 1, 2, 3)), "Failed single-element subsequence"
 
-    # Test when the subsequence is not present
-    assert not is_subsequence_in_list((1, 3), (0, 1, 2, 3)), "Incorrectly found non-contiguous subsequence"
+    # Test when the subsequence is present (non-contiguous)
+    assert is_subsequence_in_list((1, 3), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+    assert is_subsequence_in_list((0, 2), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+    assert is_subsequence_in_list((0, 3), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+
+    # Test when the subsequence is not present (wrong order or missing elements)
+    assert not is_subsequence_in_list((3, 1), (0, 1, 2, 3)), "Incorrectly found reversed subsequence"
     assert not is_subsequence_in_list((4,), (0, 1, 2, 3)), "Incorrectly found non-existent subsequence"
+    assert not is_subsequence_in_list((2, 1), (0, 1, 2, 3)), "Incorrectly found out-of-order subsequence"
 
     # Test when input sequence or subsequence is empty
     assert not is_subsequence_in_list((), (0, 1, 2, 3)), "Incorrect positive result for empty subsequence"
