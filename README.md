@@ -44,14 +44,15 @@ principles**. Using support thresholds, GSP identifies frequent sequences of ite
 
 ### Key Features:
 
+- **Ordered (non-contiguous) matching**: Detects patterns where items appear in order but not necessarily adjacent, following standard GSP semantics. For example, the pattern `('A', 'C')` is found in the sequence `['A', 'B', 'C']`.
 - **Support-based pruning**: Only retains sequences that meet the minimum support threshold.
 - **Candidate generation**: Iteratively generates candidate sequences of increasing length.
 - **General-purpose**: Useful in retail, web analytics, social networks, temporal sequence mining, and more.
 
 For example:
 
-- In a shopping dataset, GSP can identify patterns like "Customers who buy bread and milk often purchase diapers next."
-- In a website clickstream, GSP might find patterns like "Users visit A, then go to B, and later proceed to C."
+- In a shopping dataset, GSP can identify patterns like "Customers who buy bread and milk often purchase diapers next" - even if other items appear between bread and milk.
+- In a website clickstream, GSP might find patterns like "Users visit A, then eventually go to C" - capturing user journeys with intermediate steps.
 
 ---
 
@@ -367,23 +368,56 @@ Sample Output:
 ```python
 [
     {('Bread',): 4, ('Milk',): 4, ('Diaper',): 4, ('Beer',): 3, ('Coke',): 2},
-    {('Bread', 'Milk'): 3, ('Milk', 'Diaper'): 3, ('Diaper', 'Beer'): 3},
-    {('Bread', 'Milk', 'Diaper'): 2, ('Milk', 'Diaper', 'Beer'): 2}
+    {('Bread', 'Milk'): 3, ('Bread', 'Diaper'): 3, ('Bread', 'Beer'): 2, ('Milk', 'Diaper'): 3, ('Milk', 'Beer'): 2, ('Milk', 'Coke'): 2, ('Diaper', 'Beer'): 3, ('Diaper', 'Coke'): 2},
+    {('Bread', 'Milk', 'Diaper'): 2, ('Bread', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Beer'): 2, ('Milk', 'Diaper', 'Coke'): 2}
 ]
 ```
 
 - The **first dictionary** contains single-item sequences with their frequencies (e.g., `('Bread',): 4` means "Bread"
   appears in 4 transactions).
 - The **second dictionary** contains 2-item sequential patterns (e.g., `('Bread', 'Milk'): 3` means the sequence "
-  Bread → Milk" appears in 3 transactions).
+  Bread → Milk" appears in 3 transactions). Note that patterns like `('Bread', 'Beer')` are detected even when they don't appear adjacent in transactions - they just need to appear in order.
 - The **third dictionary** contains 3-item sequential patterns (e.g., `('Bread', 'Milk', 'Diaper'): 2` means the
   sequence "Bread → Milk → Diaper" appears in 2 transactions).
 
 > [!NOTE]
-> The **support** of a sequence is calculated as the fraction of transactions containing the sequence, e.g.,
-`[Bread, Milk]` appears in 3 out of 5 transactions → Support = `3 / 5 = 0.6` (60%).
+> The **support** of a sequence is calculated as the fraction of transactions containing the sequence **in order** (not necessarily contiguously), e.g.,
+`('Bread', 'Milk')` appears in 3 out of 5 transactions → Support = `3 / 5 = 0.6` (60%).
 > This insight helps identify frequently occurring sequential patterns in datasets, such as shopping trends or user
 > behavior.
+
+> [!IMPORTANT]
+> **Non-contiguous (ordered) matching**: GSP-Py detects patterns where items appear in the specified order but not necessarily adjacent. For example, the pattern `('Bread', 'Beer')` matches the transaction `['Bread', 'Milk', 'Diaper', 'Beer']` because Bread appears before Beer, even though they are not adjacent. This follows the standard GSP algorithm semantics for sequential pattern mining.
+
+### Understanding Non-Contiguous Pattern Matching
+
+GSP-Py follows the standard GSP algorithm semantics by detecting **ordered (non-contiguous)** subsequences. This means:
+
+- ✅ **Order matters**: Items must appear in the specified sequence order
+- ✅ **Gaps allowed**: Items don't need to be adjacent
+- ❌ **Wrong order rejected**: Items appearing in different order won't match
+
+**Example:**
+
+```python
+from gsppy.gsp import GSP
+
+sequences = [
+    ['a', 'b', 'c'],  # Contains: (a,b), (a,c), (b,c), (a,b,c)
+    ['a', 'c'],       # Contains: (a,c)
+    ['b', 'c', 'a'],  # Contains: (b,c), (b,a), (c,a)
+    ['a', 'b', 'c', 'd'],  # Contains: (a,b), (a,c), (a,d), (b,c), (b,d), (c,d), etc.
+]
+
+gsp = GSP(sequences)
+result = gsp.search(min_support=0.5)  # Need at least 2/4 sequences
+
+# Pattern ('a', 'c') is found with support=3 because:
+# - It appears in ['a', 'b', 'c'] (with 'b' in between)
+# - It appears in ['a', 'c'] (adjacent)
+# - It appears in ['a', 'b', 'c', 'd'] (with 'b' in between)
+# Total: 3 out of 4 sequences = 75% support ✅
+```
 
 
 > [!TIP]

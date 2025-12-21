@@ -45,13 +45,19 @@ def test_is_subsequence_in_list():
     """
     Test the `is_subsequence_in_list` utility function.
     """
-    # Test when the subsequence is present
-    assert is_subsequence_in_list((1, 2), (0, 1, 2, 3)), "Failed to find subsequence"
+    # Test when the subsequence is present (contiguous)
+    assert is_subsequence_in_list((1, 2), (0, 1, 2, 3)), "Failed to find contiguous subsequence"
     assert is_subsequence_in_list((3,), (0, 1, 2, 3)), "Failed single-element subsequence"
 
-    # Test when the subsequence is not present
-    assert not is_subsequence_in_list((1, 3), (0, 1, 2, 3)), "Incorrectly found non-contiguous subsequence"
+    # Test when the subsequence is present (non-contiguous)
+    assert is_subsequence_in_list((1, 3), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+    assert is_subsequence_in_list((0, 2), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+    assert is_subsequence_in_list((0, 3), (0, 1, 2, 3)), "Failed to find non-contiguous subsequence"
+
+    # Test when the subsequence is not present (wrong order or missing elements)
+    assert not is_subsequence_in_list((3, 1), (0, 1, 2, 3)), "Incorrectly found reversed subsequence"
     assert not is_subsequence_in_list((4,), (0, 1, 2, 3)), "Incorrectly found non-existent subsequence"
+    assert not is_subsequence_in_list((2, 1), (0, 1, 2, 3)), "Incorrectly found out-of-order subsequence"
 
     # Test when input sequence or subsequence is empty
     assert not is_subsequence_in_list((), (0, 1, 2, 3)), "Incorrect positive result for empty subsequence"
@@ -59,6 +65,64 @@ def test_is_subsequence_in_list():
 
     # Test when subsequence length exceeds sequence
     assert not is_subsequence_in_list((1, 2, 3, 4), (1, 2, 3)), "Failed to reject long subsequence"
+
+
+def test_is_subsequence_contiguous_vs_non_contiguous():
+    """
+    Test cases that demonstrate the difference between contiguous and non-contiguous matching.
+
+    The current implementation uses non-contiguous (ordered) matching.
+    This test documents patterns that would differ between the two approaches.
+    """
+    # Pattern that appears with gaps (non-contiguous)
+    # In contiguous mode: would NOT match
+    # In non-contiguous mode: DOES match
+    assert is_subsequence_in_list(("a", "c"), ("a", "b", "c")), (
+        "Non-contiguous: ('a', 'c') should match in ('a', 'b', 'c')"
+    )
+    assert is_subsequence_in_list(("a", "d"), ("a", "b", "c", "d")), (
+        "Non-contiguous: ('a', 'd') should match in ('a', 'b', 'c', 'd')"
+    )
+    assert is_subsequence_in_list((1, 4), (1, 2, 3, 4, 5)), (
+        "Non-contiguous: (1, 4) should match in (1, 2, 3, 4, 5)"
+    )
+
+    # Pattern that appears contiguously (would match in both modes)
+    assert is_subsequence_in_list(("a", "b"), ("a", "b", "c")), (
+        "Contiguous: ('a', 'b') should match in ('a', 'b', 'c')"
+    )
+    assert is_subsequence_in_list((2, 3), (1, 2, 3, 4)), (
+        "Contiguous: (2, 3) should match in (1, 2, 3, 4)"
+    )
+
+    # Pattern with wrong order (would NOT match in either mode)
+    assert not is_subsequence_in_list(("c", "a"), ("a", "b", "c")), (
+        "Wrong order: ('c', 'a') should NOT match in ('a', 'b', 'c')"
+    )
+    assert not is_subsequence_in_list((3, 1), (1, 2, 3, 4)), (
+        "Wrong order: (3, 1) should NOT match in (1, 2, 3, 4)"
+    )
+
+
+def test_is_subsequence_with_gaps():
+    """
+    Test non-contiguous matching with various gap sizes.
+    """
+    # Small gap
+    assert is_subsequence_in_list(("x", "z"), ("x", "y", "z")), "Failed with 1 element gap"
+
+    # Medium gap
+    assert is_subsequence_in_list(("a", "e"), ("a", "b", "c", "d", "e")), "Failed with 3 element gap"
+
+    # Large gap
+    assert is_subsequence_in_list((1, 10), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)), "Failed with 8 element gap"
+
+    # Multiple gaps in longer pattern
+    assert is_subsequence_in_list((1, 3, 5), (1, 2, 3, 4, 5)), "Failed with multiple gaps"
+    assert is_subsequence_in_list(("a", "c", "e"), ("a", "b", "c", "d", "e")), "Failed with multiple gaps"
+
+    # No gap (adjacent elements still work)
+    assert is_subsequence_in_list((1, 2), (1, 2, 3)), "Failed with no gap (contiguous)"
 
 
 def test_generate_candidates_from_previous():
