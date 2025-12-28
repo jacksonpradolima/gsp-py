@@ -295,6 +295,22 @@ class GSP:
             - Information about the algorithm's start, intermediate progress (candidates filtered),
               and completion.
             - Status updates for each iteration until the algorithm terminates.
+
+        Example:
+            Basic usage with the default backend:
+
+            ```python
+            from gsppy.gsp import GSP
+
+            transactions = [
+                ["Bread", "Milk"],
+                ["Bread", "Diaper", "Beer", "Eggs"],
+                ["Milk", "Diaper", "Beer", "Coke"],
+            ]
+
+            gsp = GSP(transactions)
+            patterns = gsp.search(min_support=0.3)
+            ```
         """
         if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")

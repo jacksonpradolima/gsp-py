@@ -179,6 +179,17 @@ def support_counts(
               fall back to CPU for the rest
     - "python": force pure-Python fallback
     - otherwise: try Rust first and fall back to Python
+
+    Example:
+        Running a search with an explicit backend:
+
+        ```python
+        from gsppy.accelerate import support_counts
+
+        transactions = [("A", "B"), ("A", "C")]
+        candidates = [("A",), ("B",), ("A", "B")]
+        counts = support_counts(transactions, candidates, min_support_abs=1, backend="python")
+        ```
     """
     backend_sel = (backend or _env_backend()).lower()
 
