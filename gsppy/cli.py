@@ -45,7 +45,7 @@ logging.basicConfig(
     format="%(message)s",  # Simplified to keep CLI output clean
     handlers=[logging.StreamHandler(sys.stdout)],
 )
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def setup_logging(verbose: bool) -> None:
