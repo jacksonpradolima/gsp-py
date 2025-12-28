@@ -30,10 +30,11 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
 5. [💡 Usage](#usage)
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
-6. [🌟 Planned Features](#planned-features)
-7. [🤝 Contributing](#contributing)
-8. [📝 License](#license)
-9. [📖 Citation](#citation)
+6. [⌨️ Typing](#typing)
+7. [🌟 Planned Features](#planned-features)
+8. [🤝 Contributing](#contributing)
+9. [📝 License](#license)
+10. [📖 Citation](#citation)
 
 ---
 
@@ -422,6 +423,15 @@ result = gsp.search(min_support=0.5)  # Need at least 2/4 sequences
 
 > [!TIP]
 > For more complex examples, find example scripts in the [`gsppy/tests`](gsppy/tests) folder.
+
+---
+
+## ⌨️ Typing
+
+`gsppy` ships inline type information (PEP 561) via a bundled `py.typed` marker. The public API is re-exported from
+`gsppy` directly—import `GSP` for programmatic use or reuse the CLI helpers (`detect_and_read_file`,
+`read_transactions_from_json`, `read_transactions_from_csv`, and `setup_logging`) when embedding the tool in
+larger applications.
 
 ---
 

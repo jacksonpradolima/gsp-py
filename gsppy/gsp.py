@@ -95,7 +95,7 @@ from collections import Counter
 from gsppy.utils import split_into_batches, is_subsequence_in_list, generate_candidates_from_previous
 from gsppy.accelerate import support_counts as support_counts_accel
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GSP:
@@ -171,7 +171,7 @@ class GSP:
             raise ValueError(msg)
 
         logger.info("Pre-processing transactions...")
-        self.max_size = max(len(item) for item in raw_transactions)
+        self.max_size: int = max(len(item) for item in raw_transactions)
         self.transactions: List[Tuple[str, ...]] = [tuple(transaction) for transaction in raw_transactions]
         counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
         # Start with singleton candidates (1-sequences)

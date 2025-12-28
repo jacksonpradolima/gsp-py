@@ -59,7 +59,10 @@ gpu = [
 ]
 
 [tool.hatch.build]
-include = ["gsppy/*"]
+include = [
+    "gsppy/*",
+    "gsppy/py.typed",
+]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
@@ -73,6 +76,7 @@ include = [
     "/*.ini",
     "bin/*",
     "gsppy/*",
+    "gsppy/py.typed",
     "tests/*",
     "rust/**",
 ]

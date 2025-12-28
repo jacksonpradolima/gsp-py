@@ -21,6 +21,7 @@ from .utils import split_into_batches, is_subsequence_in_list
 
 # Optional GPU (CuPy) support
 _gpu_available = False
+cp: Any | None = None
 try:  # pragma: no cover - optional dependency path
     import cupy as _cp_mod  # type: ignore[import-not-found]
 
