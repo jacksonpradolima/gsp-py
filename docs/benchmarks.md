@@ -1,10 +1,10 @@
 # Benchmarks workflow
 
-The **Benchmarks** GitHub Actions workflow runs a reduced-size benchmark to sanity-check the Rust acceleration and (optionally) capture a Python-only baseline.
+The **Benchmarks** GitHub Actions workflow runs a reduced-size benchmark to sanity-check the Rust acceleration and, on demand, capture a Python-only baseline.
 
 ## Triggers
-- Scheduled: `0 6 * * 1` (Mondays at 06:00 UTC).
-- Manual: `workflow_dispatch`, with a toggle to include the Python backend baseline.
+- Scheduled: `0 6 * * 1` (Mondays at 06:00 UTC). Runs the Rust backend sanity check only; the Python baseline job is **not** executed on scheduled runs.
+- Manual: `workflow_dispatch`, with a toggle to include the Python backend baseline. The Python-only baseline job runs **only** on these manual executions when the toggle is enabled.
 
 ## What it runs
 - Sets up Python 3.13 and installs dependencies with `uv`.
