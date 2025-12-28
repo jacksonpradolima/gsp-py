@@ -106,7 +106,6 @@ jobs:
 
   python-benchmark:
     name: Python baseline
-    needs: rust-benchmark
     if: github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true
     runs-on: ubuntu-latest
 
