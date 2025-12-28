@@ -51,6 +51,13 @@ dev = [
     "ruff==0.14.10",
     "tox==4.32.0",
 ]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-gen-files>=0.5,<1",
+    "mkdocs-literate-nav>=0.6,<1",
+    "mkdocs-material>=9.5,<10",
+    "mkdocstrings[python]>=0.26,<0.27",
+]
 rust = [
     "maturin==1.10.2"
 ]
