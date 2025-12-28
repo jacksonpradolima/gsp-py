@@ -68,7 +68,13 @@ jobs:
           uv pip install -e .
 
       - name: Build Rust extension
-        run: make rust-build
+        run: |
+          # Ensure a cargo env file exists so that Makefile's `source "$HOME/.cargo/env"` does not fail
+          if [ ! -f "$HOME/.cargo/env" ]; then
+            mkdir -p "$HOME/.cargo"
+            printf '# no-op cargo env for CI; Rust is already available in PATH\n' > "$HOME/.cargo/env"nv"
+          fi
+          make rust-build
 
       - name: Run tests (Rust backend)
         env:
