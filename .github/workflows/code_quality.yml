@@ -70,7 +70,7 @@ jobs:
           # Ensure a cargo env file exists so that Makefile's `source "$HOME/.cargo/env"` does not fail
           if [ ! -f "$HOME/.cargo/env" ]; then
             mkdir -p "$HOME/.cargo"
-            printf '# no-op cargo env for CI; Rust is already available in PATH\n' > "$HOME/.cargo/env"nv"
+            printf '# no-op cargo env for CI; Rust is already available in PATH\n' > "$HOME/.cargo/env"
           fi
           make rust-build
 
