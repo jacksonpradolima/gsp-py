@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches:
-      - main
+      - master
   release:
     types: [created]
   workflow_dispatch:
@@ -33,13 +33,13 @@ jobs:
         run: uv run mkdocs build --strict
 
       - name: Upload Pages artifact
-        if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy-docs:
-    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
     name: Deploy to GitHub Pages
     needs: build-docs
     runs-on: ubuntu-latest
