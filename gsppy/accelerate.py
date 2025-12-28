@@ -127,8 +127,8 @@ def _support_counts_gpu_singletons(
     if not flat:
         return []
 
-    cp_flat = cp.asarray(flat, dtype=cp.int32)  # type: ignore[name-defined]
-    counts = cp.bincount(cp_flat, minlength=vocab_size)  # type: ignore[attr-defined]
+    cp_flat = cp.asarray(flat, dtype=cp.int32)  # type: ignore[name-defined, union-attr]
+    counts = cp.bincount(cp_flat, minlength=vocab_size)  # type: ignore[attr-defined, union-attr]
     counts_host: Any = counts.get()  # back to host as a NumPy array
 
     out: List[Tuple[List[int], int]] = []
