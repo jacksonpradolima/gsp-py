@@ -6,48 +6,71 @@ on:
 
 jobs:
   code-quality:
-    name: Code Quality Checks
+    name: Code Quality (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
 
     steps:
-      # Step 1: Checkout the repository code
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      # Step 2: Install uv
-      - name: Install uv
-        run: |
-          curl -Ls https://astral.sh/uv/install.sh | bash
-          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      # Step 3: Set up environment and install dependencies
       - name: Install dependencies
         run: |
-          uv venv .venv
           uv sync --frozen --extra dev
           uv pip install -e .
 
-      # Step 4: Get changed Python files
-      - name: Get Python changed files
-        id: changed-py-files
-        uses: tj-actions/changed-files@v47
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml
+
+      - name: Run mypy
+        run: uv run mypy .
+
+      - name: Run pyright
+        run: uv run pyright
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            *.py
-            **/*.py
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: ignore
 
-      # Step 5: Run Ruff for only changed files
-      - name: Run Ruff (Lint)
-        if: steps.changed-py-files.outputs.any_changed == 'true'
-        run: |
-          echo "Running Ruff on changed files..."
-          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          uv run ruff check ${{ steps.changed-py-files.outputs.all_changed_files }}
+  rust-backend:
+    name: Rust Backend (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Step 6: Run Pyright for only changed files
-      - name: Run Pyright (Type Check)
-        if: steps.changed-py-files.outputs.any_changed == 'true'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
         run: |
-          echo "Running Pyright on changed files..."
-          echo "Changed files: ${{ steps.changed-py-files.outputs.all_changed_files }}"
-          uv run pyright ${{ steps.changed-py-files.outputs.all_changed_files }}
+          uv sync --frozen --extra dev
+          uv pip install -e .
+
+      - name: Build Rust extension
+        run: make rust-build
+
+      - name: Run tests (Rust backend)
+        env:
+          GSPPY_BACKEND: rust
+        run: uv run pytest
