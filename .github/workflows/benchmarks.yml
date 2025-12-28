@@ -106,7 +106,7 @@ jobs:
 
   python-benchmark:
     name: Python baseline
-    if: github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true == true) || github.event_name == 'schedule'
     runs-on: ubuntu-latest
 
     steps:
