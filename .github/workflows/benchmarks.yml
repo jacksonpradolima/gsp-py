@@ -91,7 +91,10 @@ jobs:
               rs_time = float(rs_match.group(1))
               if rs_time > 0:
                   data["speedup_x"] = py_time / rs_time
-              data["improvement_pct"] = ((py_time - rs_time) / py_time * 100) if py_time else None
+              if py_time > 0: 0:
+                  data["improvement_pct"] = (py_time - rs_time) / py_time * 100
+              else:
+                  data["improvement_pct"] = None
 
           pathlib.Path("benchmark_rust.json").write_text(json.dumps(data, indent=2))
           PY
