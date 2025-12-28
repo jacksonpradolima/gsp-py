@@ -27,6 +27,10 @@ jobs:
           uv sync --frozen --extra dev
           uv pip install -e .
 
+      # Step 3.5: Ensure uv.lock is up-to-date
+      - name: Check lockfile freshness
+        run: uv lock --check --locked
+
       # Step 4: Get changed Python files
       - name: Get Python changed files
         id: changed-py-files

@@ -199,6 +199,28 @@ make bench-big           # run large benchmark
 > [!NOTE]
 > Tox in this project uses the "tox-uv" plugin. When running `make tox` or `tox`, missing Python interpreters can be provisioned automatically via uv (no need to pre-install all versions). This makes local setup faster.
 
+## 🔏 Release assets and verification
+
+Every GitHub release bundles artifacts to help you validate what you download:
+
+- Built wheels and source distributions produced by the automated publish workflow.
+- `sbom.json` (CycloneDX) generated with [Syft](https://github.com/anchore/syft).
+- Sigstore-generated `.sig` and `.pem` files for each artifact, created using GitHub OIDC identity.
+
+To verify a downloaded artifact from a release:
+
+```bash
+python -m pip install sigstore  # installs the CLI
+sigstore verify identity \
+  --certificate gsppy-<version>-py3-none-any.whl.pem \
+  --signature gsppy-<version>-py3-none-any.whl.sig \
+  --cert-identity "https://github.com/jacksonpradolima/gsp-py/.github/workflows/publish.yml@refs/tags/v<version>" \
+  --cert-oidc-issuer https://token.actions.githubusercontent.com \
+  gsppy-<version>-py3-none-any.whl
+```
+
+Replace `<version>` with the release tag and adjust the filenames for the sdist (`.tar.gz`) if preferred. The same release page also hosts `sbom.json` for supply-chain inspection.
+
 ## 💡 Usage
 
 The library is designed to be easy to use and integrate with your own projects. You can use GSP-Py either programmatically (Python API) or directly from the command line (CLI).
