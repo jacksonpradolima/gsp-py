@@ -100,7 +100,7 @@ jobs:
           PY
 
       - name: Upload benchmark artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rust-benchmark
           path: |
@@ -175,7 +175,7 @@ jobs:
           PY
 
       - name: Upload benchmark artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-benchmark
           path: |
