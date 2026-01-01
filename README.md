@@ -1,9 +1,10 @@
 [![PyPI License](https://img.shields.io/pypi/l/gsppy.svg?style=flat-square)]()
+[![PyPI version](https://badge.fury.io/py/gsppy.svg)](https://pypi.org/project/gsppy)
 ![](https://img.shields.io/badge/python-3.10+-blue.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 
-[![Docs](https://img.shields.io/badge/Docs-GSP--Py%20Site-3D9970?style=flat-square)](https://jacksonpradolima.github.io/gsp-py/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
+[![Docs](https://img.shields.io/badge/Docs-GSP--Py%20Site-3D9970?style=flat-square)](https://jacksonpradolima.github.io/gsp-py/)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
