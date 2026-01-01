@@ -38,7 +38,7 @@ jobs:
         run: syft packages dist -o cyclonedx-json=dist/sbom.json
 
       - name: Install sigstore
-        run: python -m pip install sigstore==3.5.1
+        run: python -m pip install "cryptography<42" sigstore==3.5.1
 
       - name: Sign distributions
         run: |
