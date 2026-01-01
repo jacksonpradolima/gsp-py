@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### **Tooling and Developer Experience**
+
+* **Type Checking**: Replaced `mypy` with `ty`, Astral's fast Rust-based type checker.
+  * Updated all configurations, workflows, and documentation.
+  * `ty` automatically infers Python version from `project.requires-python` in `pyproject.toml`.
+
 ## [v3.0.0] - 2025-09-14
 
 ### **New Features**
@@ -58,7 +66,7 @@
 ### **Testing and Quality**
 
 * Test suite fully adapted to new tooling (`uv`, `tox-uv`).
-* Static typing validated with both `mypy` and `pyright`.
+* Static typing validated with both `ty` and `pyright`.
 * All 38 tests pass locally and in CI (Python 3.10–3.13).
 
 ### **CI/CD and Infrastructure**
