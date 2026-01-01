@@ -7,7 +7,8 @@
 ![](https://img.shields.io/badge/python-3.10+-blue.svg)
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/jacksonpradolima/gsp-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/jacksonpradolima/gsp-py)
-[![SLSA provenance](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml/badge.svg?branch=master)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml)
+[![SLSA provenance](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml/badge.svg)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml)
+
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11684/badge)](https://www.bestpractices.dev/projects/11684)
 
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
