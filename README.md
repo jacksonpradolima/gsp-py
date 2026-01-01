@@ -2,7 +2,7 @@
 [![PyPI version](https://badge.fury.io/py/gsppy.svg)](https://pypi.org/project/gsppy)
 ![](https://img.shields.io/badge/python-3.10+-blue.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sigstore/sigstore-python/badge)](https://securityscorecards.dev/viewer/?uri=github.com/jacksonpradolima/gsp-py)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/jacksonpradolima/gsp-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/jacksonpradolima/gsp-py)
 [![SLSA provenance](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml/badge.svg?branch=master)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml)
 [![Dependency Review](https://github.com/jacksonpradolima/gsp-py/actions/workflows/dependency-review.yml/badge.svg?branch=master)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/dependency-review.yml)
 
