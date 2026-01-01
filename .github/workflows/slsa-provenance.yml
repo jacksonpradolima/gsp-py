@@ -37,7 +37,12 @@ jobs:
         id: hash
         run: |
           cd dist
-          HASHES=$(sha256sum * | base64 -w0)
+          files=$(find . -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | sort)
+          if [ -z "$files" ]; then
+            echo "No Python package artifacts (*.whl, *.tar.gz) found in dist" >&2
+            exit 1
+          fi
+          HASHES=$(printf '%s\n' "$files" | xargs sha256sum | base64 -w0)
           echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts
