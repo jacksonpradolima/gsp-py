@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gsppy"
-version = "3.2.5"
+version = "3.2.6"
 description = "GSP (Generalized Sequence Pattern) algorithm in Python"
 keywords = ["GSP", "sequential patterns", "data analysis", "sequence mining"]
 license = { file = "LICENSE" }
