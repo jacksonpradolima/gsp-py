@@ -12,6 +12,8 @@ jobs:
   build:
     name: Build Python packages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
