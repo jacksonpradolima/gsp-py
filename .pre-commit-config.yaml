@@ -23,7 +23,7 @@ repos:
   - repo: local
     hooks:
       - id: check-precommit
-        name: Run tests and type checks (pyright + mypy)
+        name: Run tests and type checks (pyright + ty)
         entry: make check-precommit
         language: system
         pass_filenames: false

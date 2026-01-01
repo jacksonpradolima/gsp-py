@@ -188,7 +188,7 @@ make install             # sync deps (from uv.lock) + install project (-e .)
 make test                # pytest -n auto
 make lint                # ruff check .
 make format              # ruff --fix
-make typecheck           # pyright (and mypy if configured)
+make typecheck           # pyright + ty
 make pre-commit-install  # install the pre-commit hook
 make pre-commit-run      # run pre-commit on all files
 
