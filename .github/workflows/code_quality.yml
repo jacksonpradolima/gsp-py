@@ -27,8 +27,18 @@ jobs:
         run: |
           uv sync --frozen --extra dev
 
+      - name: Update lockfile
+        run: uv lock
+
       - name: Check lockfile freshness
-        run: uv lock --check
+        run: |
+          if ! git diff --quiet uv.lock; then
+            echo "::error::uv.lock is out of sync with pyproject.toml"
+            echo "Please run 'uv lock' locally and commit the changes"
+            git --no-pager diff uv.lock
+            exit 1
+          fi
+          echo "✓ Lockfile is up to date"
 
       - name: Run tests with coverage
         run: |
