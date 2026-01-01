@@ -42,7 +42,6 @@ dev = [
     "cython==3.2.3",
     "hatch==1.16.2",
     "hatchling==1.28.0",
-    "mypy==1.19.1",
     "pylint==4.0.4",
     "pyright==1.1.407",
     "pytest==9.0.2",
@@ -50,6 +49,7 @@ dev = [
     "pytest-cov==7.0.0",
     "ruff==0.14.10",
     "tox==4.32.0",
+    "ty==0.0.8",
 ]
 docs = [
     "mkdocs>=1.6,<2",
@@ -88,12 +88,9 @@ include = [
     "rust/**",
 ]
 
-[tool.mypy]
-python_version = "3.10"
-check_untyped_defs = true
-ignore_missing_imports = true
-incremental = true
-cache_dir = ".mypy_cache"
+[tool.ty]
+# ty is Astral's fast type checker written in Rust
+# Python version is automatically inferred from project.requires-python
 
 [tool.ruff]
 line-length = 120

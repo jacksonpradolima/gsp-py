@@ -100,7 +100,7 @@ format: ensure-uv
 typecheck: ensure-uv
 	# Run both static type checkers
 	$(UV) run --python $(PYTHON) --no-project pyright gsppy
-	$(UV) run --python $(PYTHON) --no-project mypy .
+	$(UV) run --python $(PYTHON) --no-project ty check .
 
 tox: dev-install
 	# Use the project venv and avoid re-resolving the project
@@ -129,7 +129,7 @@ pre-commit-autoupdate: dev-install
 
 clean:
 	rm -rf build/ dist/ *.egg-info
-	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/ .tox/ .nox/ coverage.xml htmlcov/
+	rm -rf .pytest_cache/ .ruff_cache/ .tox/ .nox/ coverage.xml htmlcov/
 
 check: lint typecheck test
 
