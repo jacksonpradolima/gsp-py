@@ -91,7 +91,7 @@ jobs:
               rs_time = float(rs_match.group(1))
               if rs_time > 0:
                   data["speedup_x"] = py_time / rs_time
-              if py_time > 0: 0:
+              if py_time > 0:
                   data["improvement_pct"] = (py_time - rs_time) / py_time * 100
               else:
                   data["improvement_pct"] = None
@@ -109,7 +109,7 @@ jobs:
 
   python-benchmark:
     name: Python baseline
-    if: (github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true == true) || github.event_name == 'schedule'
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true) || github.event_name == 'schedule'
     runs-on: ubuntu-latest
 
     steps:
