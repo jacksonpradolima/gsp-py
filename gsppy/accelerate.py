@@ -234,7 +234,8 @@ def support_counts(
                 try:
                     other_enc = [enc for enc, _ in others]
                     res = cast(
-                        List[Tuple[List[int], int]], _compute_supports_rust(enc_tx, other_enc, int(min_support_abs))
+                        List[Tuple[List[int], int]],
+                        _compute_supports_rust(enc_tx, other_enc, int(min_support_abs)),  # ty:ignore[call-non-callable]
                     )
                     for enc_cand, freq in res:
                         out[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
@@ -259,7 +260,10 @@ def support_counts(
         # use rust
         enc_tx, inv_vocab, vocab = _get_encoded_transactions(transactions)
         enc_cands = _encode_candidates(candidates, vocab)
-        result = cast(List[Tuple[List[int], int]], _compute_supports_rust(enc_tx, enc_cands, int(min_support_abs)))
+        result = cast(
+            List[Tuple[List[int], int]],
+            _compute_supports_rust(enc_tx, enc_cands, int(min_support_abs)),  # ty:ignore[call-non-callable]
+        )
         out_rust: Dict[Tuple[str, ...], int] = {}
         for enc_cand, freq in result:
             out_rust[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
@@ -270,7 +274,10 @@ def support_counts(
         enc_tx, inv_vocab, vocab = _get_encoded_transactions(transactions)
         enc_cands = _encode_candidates(candidates, vocab)
         try:
-            result = cast(List[Tuple[List[int], int]], _compute_supports_rust(enc_tx, enc_cands, int(min_support_abs)))
+            result = cast(
+                List[Tuple[List[int], int]],
+                _compute_supports_rust(enc_tx, enc_cands, int(min_support_abs)),  # ty:ignore[call-non-callable]
+            )
             out2: Dict[Tuple[str, ...], int] = {}
             for enc_cand, freq in result:
                 out2[tuple(inv_vocab[i] for i in enc_cand)] = int(freq)
