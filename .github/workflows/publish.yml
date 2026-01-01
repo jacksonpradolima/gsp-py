@@ -47,7 +47,9 @@ jobs:
       - name: Move Sigstore attestations out of dist
         run: |
           mkdir -p attestations
-          mv dist/*.sigstore.json attestations/ 2>/dev/null || true
+          if ls dist/*.sigstore.json 1> /dev/null 2>&1; then
+            mv dist/*.sigstore.json attestations/
+          fi
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
