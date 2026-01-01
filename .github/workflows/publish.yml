@@ -41,7 +41,9 @@ jobs:
         run: python -m pip install sigstore==3.5.1
 
       - name: Sign distributions
-        run: sigstore sign dist/*.whl dist/*.tar.gz
+        run: |
+          cd dist
+          sigstore sign *.whl *.tar.gz
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
