@@ -4,7 +4,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/jacksonpradolima/gsp-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/jacksonpradolima/gsp-py)
 [![SLSA provenance](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml/badge.svg?branch=master)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml)
-[![Dependency Review](https://github.com/jacksonpradolima/gsp-py/actions/workflows/dependency-review.yml/badge.svg?branch=master)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/dependency-review.yml)
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![Docs](https://img.shields.io/badge/Docs-GSP--Py%20Site-3D9970?style=flat-square)](https://jacksonpradolima.github.io/gsp-py/)
