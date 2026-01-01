@@ -37,13 +37,12 @@ jobs:
       - name: Generate SBOM (CycloneDX)
         run: syft packages dist -o cyclonedx-json=dist/sbom.json
 
-      - name: Install sigstore
-        run: python -m pip install sigstore==4.1.0
-
-      - name: Sign distributions
-        run: |
-          cd dist
-          sigstore sign *.whl *.tar.gz
+      - name: Sign distributions with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: >-
+            dist/*.whl
+            dist/*.tar.gz
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
