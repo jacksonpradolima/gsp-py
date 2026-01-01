@@ -1,0 +1,47 @@
+site_name: GSP-Py
+site_description: Documentation for the GSP-Py library
+site_url: https://jacksonpradolima.github.io/gsp-py/
+repo_url: https://github.com/jacksonpradolima/gsp-py
+repo_name: jacksonpradolima/gsp-py
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - CLI: cli.md
+  - API: api.md
+  - Acceleration: acceleration.md
+  - Benchmarks: benchmarks.md
+  - Contributing: contributing.md
+  - Typing: typing.md
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - content.code.copy
+    - content.tabs.link
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_root_heading: true
+            heading_level: 2
+            separate_signature: true
+            show_source: false
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jacksonpradolima/gsp-py
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - toc:
+      permalink: true

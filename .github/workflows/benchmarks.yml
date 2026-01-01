@@ -1,0 +1,183 @@
+name: Benchmarks
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      run_python_backend:
+        description: "Run Python backend baseline (skips Rust build)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  rust-benchmark:
+    name: Rust backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/uv-action@v3
+        with:
+          version: "latest"
+          python-version: "3.13"
+
+      - name: Sync dependencies
+        run: |
+          set -euo pipefail
+          uv venv .venv --python 3.13 --allow-existing
+          uv sync --frozen --extra dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust backend
+        run: make rust-build
+
+      - name: Run benchmark (Rust backend)
+        env:
+          GSPPY_BACKEND: rust
+        run: |
+          set -euo pipefail
+          uv run python benchmarks/bench_support.py \
+            --n_tx 5000 \
+            --tx_len 6 \
+            --vocab 200 \
+            --min_support 0.2 \
+            --warmup \
+            | tee benchmark_rust.log
+
+      - name: Extract metrics
+        id: metrics_rust
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import pathlib
+          import re
+          import time
+
+          log_path = pathlib.Path("benchmark_rust.log")
+          log = log_path.read_text()
+
+          py_match = re.search(r"Python:\s*([0-9.]+)s", log)
+          rs_match = re.search(r"Rust:\s*([0-9.]+)s", log)
+
+          data = {
+              "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+              "backend": "rust",
+              "n_tx": 5000,
+              "tx_len": 6,
+              "vocab": 200,
+              "min_support": 0.2,
+          }
+
+          if py_match:
+              data["python_time_s"] = float(py_match.group(1))
+          if rs_match:
+              data["rust_time_s"] = float(rs_match.group(1))
+
+          if py_match and rs_match:
+              py_time = float(py_match.group(1))
+              rs_time = float(rs_match.group(1))
+              if rs_time > 0:
+                  data["speedup_x"] = py_time / rs_time
+              if py_time > 0: 0:
+                  data["improvement_pct"] = (py_time - rs_time) / py_time * 100
+              else:
+                  data["improvement_pct"] = None
+
+          pathlib.Path("benchmark_rust.json").write_text(json.dumps(data, indent=2))
+          PY
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-benchmark
+          path: |
+            benchmark_rust.log
+            benchmark_rust.json
+
+  python-benchmark:
+    name: Python baseline
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_python_backend == true == true) || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/uv-action@v3
+        with:
+          version: "latest"
+          python-version: "3.13"
+
+      - name: Sync dependencies
+        run: |
+          set -euo pipefail
+          uv venv .venv --python 3.13 --allow-existing
+          uv sync --frozen --extra dev
+
+      - name: Run benchmark (Python backend)
+        env:
+          GSPPY_BACKEND: python
+        run: |
+          set -euo pipefail
+          uv run python benchmarks/bench_support.py \
+            --n_tx 5000 \
+            --tx_len 6 \
+            --vocab 200 \
+            --min_support 0.2 \
+            --warmup \
+            | tee benchmark_python.log
+
+      - name: Extract metrics
+        id: metrics_python
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import pathlib
+          import re
+          import time
+
+          log = pathlib.Path("benchmark_python.log").read_text()
+          py_match = re.search(r"Python:\s*([0-9.]+)s", log)
+
+          data = {
+              "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+              "backend": "python",
+              "n_tx": 5000,
+              "tx_len": 6,
+              "vocab": 200,
+              "min_support": 0.2,
+          }
+
+          if py_match:
+              data["python_time_s"] = float(py_match.group(1))
+
+          pathlib.Path("benchmark_python.json").write_text(json.dumps(data, indent=2))
+          PY
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-benchmark
+          path: |
+            benchmark_python.log
+            benchmark_python.json

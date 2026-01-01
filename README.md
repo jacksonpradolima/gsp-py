@@ -2,6 +2,7 @@
 ![](https://img.shields.io/badge/python-3.10+-blue.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3333987.svg)](https://doi.org/10.5281/zenodo.3333987)
 
+[![Docs](https://img.shields.io/badge/Docs-GSP--Py%20Site-3D9970?style=flat-square)](https://jacksonpradolima.github.io/gsp-py/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jacksonpradolima_gsp-py&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jacksonpradolima_gsp-py)
@@ -27,13 +28,15 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
     - [❖ Clone Repository](#option-1-clone-the-repository)
     - [❖ Install via PyPI](#option-2-install-via-pip)
 4. [🛠️ Developer Installation](#developer-installation)
-5. [💡 Usage](#usage)
+5. [📖 Documentation](#documentation)
+6. [💡 Usage](#usage)
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
-6. [🌟 Planned Features](#planned-features)
-7. [🤝 Contributing](#contributing)
-8. [📝 License](#license)
-9. [📖 Citation](#citation)
+7. [⌨️ Typing](#typing)
+8. [🌟 Planned Features](#planned-features)
+9. [🤝 Contributing](#contributing)
+10. [📝 License](#license)
+11. [📖 Citation](#citation)
 
 ---
 
@@ -219,7 +222,20 @@ sigstore verify identity \
   gsppy-<version>-py3-none-any.whl
 ```
 
-Replace `<version>` with the release tag and adjust the filenames for the sdist (`.tar.gz`) if preferred. The same release page also hosts `sbom.json` for supply-chain inspection.
+Replace `<version>` with the numeric package version (for example, `3.1.1`) in the filenames; in `--cert-identity`, this becomes `v<version>` (for example, `v3.1.1`). Adjust the filenames for the sdist (`.tar.gz`) if preferred. The same release page also hosts `sbom.json` for supply-chain inspection.
+
+## 📖 Documentation
+
+- **Live site:** https://jacksonpradolima.github.io/gsp-py/
+- **Build locally:**
+
+  ```bash
+  uv venv .venv
+  uv sync --extra docs
+  uv run mkdocs serve
+  ```
+
+The docs use MkDocs with the Material theme and mkdocstrings to render the Python API directly from docstrings.
 
 ## 💡 Usage
 
@@ -444,6 +460,15 @@ result = gsp.search(min_support=0.5)  # Need at least 2/4 sequences
 
 > [!TIP]
 > For more complex examples, find example scripts in the [`gsppy/tests`](gsppy/tests) folder.
+
+---
+
+## ⌨️ Typing
+
+`gsppy` ships inline type information (PEP 561) via a bundled `py.typed` marker. The public API is re-exported from
+`gsppy` directly—import `GSP` for programmatic use or reuse the CLI helpers (`detect_and_read_file`,
+`read_transactions_from_json`, `read_transactions_from_csv`, and `setup_logging`) when embedding the tool in
+larger applications.
 
 ---
 
