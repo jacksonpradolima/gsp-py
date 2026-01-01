@@ -44,11 +44,14 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
 
-      - name: Move Sigstore attestations out of dist
+      - name: Move Sigstore attestations and SBOM out of dist
         run: |
           mkdir -p attestations
           if ls dist/*.sigstore.json 1> /dev/null 2>&1; then
             mv dist/*.sigstore.json attestations/
+          fi
+          if [ -f dist/sbom.json ]; then
+            mv dist/sbom.json attestations/
           fi
 
       - name: Upload release assets
@@ -58,7 +61,7 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             attestations/*.sigstore.json
-            dist/sbom.json
+            attestations/sbom.json
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.13.0
