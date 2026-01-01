@@ -55,7 +55,7 @@ jobs:
   provenance:
     name: Generate SLSA provenance
     needs: [build]
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     permissions:
       actions: read
       contents: write
