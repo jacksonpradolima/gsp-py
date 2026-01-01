@@ -44,16 +44,18 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
 
+      - name: Move Sigstore attestations out of dist
+        run: |
+          mkdir -p attestations
+          mv dist/*.sigstore.json attestations/ 2>/dev/null || true
+
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.whl
             dist/*.tar.gz
-            dist/*.whl.sig
-            dist/*.tar.gz.sig
-            dist/*.whl.pem
-            dist/*.tar.gz.pem
+            attestations/*.sigstore.json
             dist/sbom.json
 
       - name: Publish package distributions to PyPI
