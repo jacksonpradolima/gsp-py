@@ -27,6 +27,9 @@ jobs:
         run: |
           uv sync --frozen --extra dev
 
+      - name: Check lockfile freshness
+        run: uv lock --check
+
       - name: Run tests with coverage
         run: |
           uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml
