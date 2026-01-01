@@ -29,6 +29,7 @@ jobs:
 
       - name: Check lockfile freshness
         run: |
+          set -e
           if ! uv lock --check; then
             echo "::error::uv.lock is out of sync with pyproject.toml"
             echo "Running 'uv lock' to show what needs to be updated..."
