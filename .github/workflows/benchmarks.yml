@@ -26,10 +26,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/uv-action@v3
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
           python-version: "3.13"
+          enable-cache: true
 
       - name: Sync dependencies
         run: |
@@ -122,10 +122,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/uv-action@v3
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
           python-version: "3.13"
+          enable-cache: true
 
       - name: Sync dependencies
         run: |
