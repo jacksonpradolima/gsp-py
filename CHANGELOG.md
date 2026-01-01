@@ -1,12 +1,59 @@
 # Changelog
 
-## [Unreleased]
+## [v3.2.0] - Unreleased
 
 ### **Tooling and Developer Experience**
 
 * **Type Checking**: Replaced `mypy` with `ty`, Astral's fast Rust-based type checker.
   * Updated all configurations, workflows, and documentation.
   * `ty` automatically infers Python version from `project.requires-python` in `pyproject.toml`.
+
+### **Dependency Management**
+
+* Updated `uv.lock` to sync with latest dependency versions.
+
+## [v3.1.1] - 2024-12-21
+
+### **Bug Fixes**
+
+* **Pattern Matching**: Fixed `is_subsequence_in_list` to correctly detect non-contiguous (ordered) subsequences.
+  * Updated to use two-pointer approach for ordered pattern matching.
+  * Patterns are now matched in order but do not require contiguous elements.
+  * Example: Pattern `('A', 'C')` now correctly matches in sequence `['A', 'B', 'C']`.
+
+### **Documentation Updates**
+
+* **README.md**: Added comprehensive documentation for non-contiguous pattern matching behavior.
+  * Added "ordered (non-contiguous) matching" to Key Features section.
+  * Added detailed "Understanding Non-Contiguous Pattern Matching" section with examples.
+  * Updated sample outputs to reflect additional patterns detected.
+
+### **Testing Improvements**
+
+* Added comprehensive test suite for contiguous vs non-contiguous pattern matching:
+  * `test_contiguous_vs_non_contiguous_patterns`: Demonstrates patterns found in both modes.
+  * `test_non_contiguous_with_longer_gaps`: Tests matching with large gaps between elements.
+  * `test_order_sensitivity`: Verifies order requirements in pattern matching.
+  * `test_is_subsequence_contiguous_vs_non_contiguous`: Tests utility function behavior.
+  * `test_is_subsequence_with_gaps`: Tests various gap sizes in pattern matching.
+
+### **Dependency Updates**
+
+* Updated development dependencies:
+  * `mypy` from 1.18.1 to 1.18.2
+  * `ruff` from 0.13.0 to 0.13.3 (multiple incremental updates)
+  * `pyright` from 1.1.405 to 1.1.406
+  * `pylint` from 3.3.8 to 4.0.2
+  * `hatch` from 1.14.1 to 1.15.1
+  * `tox` from 4.30.2 to 4.32.0
+  * `cython` from 3.1.3 to 3.1.4
+  * `maturin` from 1.6.0 to 1.9.6 (multiple incremental updates)
+  * `pytest` from 8.3.4 to 8.4.2
+  * `pytest-cov` from 5.0.0 to 7.0.0
+
+### **CI/CD Updates**
+
+* Updated `actions/checkout` from v5 to v6 in GitHub Actions workflows.
 
 ## [v3.0.0] - 2025-09-14
 
@@ -66,7 +113,7 @@
 ### **Testing and Quality**
 
 * Test suite fully adapted to new tooling (`uv`, `tox-uv`).
-* Static typing validated with both `ty` and `pyright`.
+* Static typing validated with both `mypy` and `pyright`.
 * All 38 tests pass locally and in CI (Python 3.10–3.13).
 
 ### **CI/CD and Infrastructure**
