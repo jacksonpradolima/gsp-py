@@ -48,7 +48,7 @@ dev = [
     "pytest-benchmark==5.2.3",
     "pytest-cov==7.0.0",
     "ruff==0.14.10",
-    "tox==4.32.0",
+    "tox==4.33.0",
     "ty==0.0.8",
 ]
 docs = [
