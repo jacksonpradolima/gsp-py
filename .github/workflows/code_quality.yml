@@ -28,6 +28,7 @@ jobs:
           uv sync --frozen --extra dev
 
       - name: Check lockfile freshness
+        if: matrix.python-version == '3.12'
         run: |
           set -e
           if ! uv lock --check; then
