@@ -39,7 +39,7 @@ gsppy = "gsppy.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "cython==3.2.3",
+    "cython==3.2.4",
     "hatch==1.16.2",
     "hatchling==1.28.0",
     "pylint==4.0.4",
