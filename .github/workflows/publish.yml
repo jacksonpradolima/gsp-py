@@ -32,7 +32,7 @@ jobs:
           python -m build
 
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0.17.0
+        uses: anchore/sbom-action/download-syft@v0.21.1
 
       - name: Generate SBOM (CycloneDX)
         run: syft packages dist -o cyclonedx-json=dist/sbom.json
