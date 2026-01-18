@@ -59,7 +59,7 @@ docs = [
     "mkdocstrings[python]>=0.26,<0.27",
 ]
 rust = [
-    "maturin==1.10.2"
+    "maturin==1.11.5"
 ]
 gpu = [
     "cupy>=11,<14"
