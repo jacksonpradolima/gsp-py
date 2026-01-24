@@ -1,0 +1,77 @@
+# Configuration for the labeler action
+# https://github.com/actions/labeler
+
+# Python source code changes
+'type/code':
+  - changed-files:
+    - any-glob-to-any-file: 'gsppy/**/*.py'
+
+# Test changes
+'type/tests':
+  - changed-files:
+    - any-glob-to-any-file: 'tests/**/*.py'
+
+# Documentation changes
+'type/docs':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'docs/**/*'
+      - '*.md'
+      - 'mkdocs.yml'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'CHANGELOG.md'
+
+# GitHub workflows / CI changes
+'type/ci':
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**/*.yml'
+      - '.github/workflows/**/*.yaml'
+
+# Dependencies changes
+'type/dependencies':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'requirements*.txt'
+      - 'tox.ini'
+
+# Rust backend changes
+'type/rust':
+  - changed-files:
+    - any-glob-to-any-file: 'rust/**/*'
+
+# Configuration changes
+'type/config':
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.editorconfig'
+      - '.pylintrc'
+      - '.pre-commit-config.yaml'
+      - 'pyproject.toml'
+      - '.python-version'
+
+# Benchmark changes
+'type/benchmarks':
+  - changed-files:
+    - any-glob-to-any-file: 'benchmarks/**/*'
+
+# Build/packaging changes
+'type/build':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Makefile'
+      - 'pyproject.toml'
+      - '.github/workflows/publish.yml'
+      - '.github/workflows/release.yml'
+
+# Security-related changes
+'security':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'SECURITY.md'
+      - '.github/workflows/scorecards-analysis.yml'
+      - '.github/workflows/dependency-review.yml'
