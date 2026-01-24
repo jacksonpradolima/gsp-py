@@ -171,21 +171,39 @@ jobs:
               return;
             }
 
-            // Get all comments on the PR (issue comments)
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pullNumber,
-              per_page: 100
-            });
+            // Get all comments on the PR (issue comments) with pagination
+            let allComments = [];
+            let page = 1;
+            let hasMore = true;
+            while (hasMore) {
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pullNumber,
+                per_page: 100,
+                page: page
+              });
+              allComments = allComments.concat(comments.data);
+              hasMore = comments.data.length === 100;
+              page++;
+            }
 
-            // Get review comments
-            const reviewComments = await github.rest.pulls.listReviewComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pullNumber,
-              per_page: 100
-            });
+            // Get review comments with pagination
+            let allReviewComments = [];
+            page = 1;
+            hasMore = true;
+            while (hasMore) {
+              const reviewComments = await github.rest.pulls.listReviewComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+                per_page: 100,
+                page: page
+              });
+              allReviewComments = allReviewComments.concat(reviewComments.data);
+              hasMore = reviewComments.data.length === 100;
+              page++;
+            }
 
             // Get PR details for body and title
             const pr = await github.rest.pulls.get({
@@ -198,8 +216,8 @@ jobs:
             const allText = [
               pr.data.title.toLowerCase(),
               pr.data.body?.toLowerCase() || '',
-              ...comments.data.map(c => c.body?.toLowerCase() || ''),
-              ...reviewComments.data.map(c => c.body?.toLowerCase() || '')
+              ...allComments.map(c => c.body?.toLowerCase() || ''),
+              ...allReviewComments.map(c => c.body?.toLowerCase() || '')
             ].join(' ');
 
             // Helper function to escape regex special characters
@@ -302,9 +320,9 @@ jobs:
 
             // Get the latest review per reviewer, excluding dismissed reviews
             const latestReviewsByUser = {};
-            for (const review of reviews.data) {
-              if (review.state === 'DISMISSED') continue;
-              
+            const activeReviews = reviews.data.filter(review => review.state !== 'DISMISSED');
+            
+            for (const review of activeReviews) {
               const userId = review.user.id;
               if (!latestReviewsByUser[userId] || 
                   new Date(review.submitted_at) > new Date(latestReviewsByUser[userId].submitted_at)) {
