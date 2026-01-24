@@ -137,17 +137,16 @@ jobs:
               'waiting for',
               'depends on',
               'blocked by',
-              'on hold',
-              'hold',
               'do not merge',
               'dnm'
             ];
 
             const onHoldKeywords = [
               'on hold',
-              'hold',
+              'put on hold',
               'waiting for decision',
-              'needs discussion'
+              'needs discussion',
+              'awaiting decision'
             ];
 
             let pullNumber;
