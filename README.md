@@ -538,7 +538,8 @@ Looking for ideas? Check out our [Planned Features](#planned-features) section.
 ### Release Management
 
 GSP-Py uses automated release management with [Conventional Commits](https://www.conventionalcommits.org/). When commits are merged to `main`:
-- Version numbers are automatically bumped based on commit types (`fix:` = patch, `feat:` = minor, `BREAKING CHANGE:` = major)
+- **Releases are triggered** by: `fix:` (patch), `feat:` (minor), `perf:` (patch), or `BREAKING CHANGE:` (major)
+- **No release** for: `docs:`, `style:`, `refactor:`, `test:`, `build:`, `ci:`, `chore:`
 - CHANGELOG.md is automatically updated with structured release notes
 - Git tags and GitHub releases are created automatically
 
