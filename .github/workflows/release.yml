@@ -77,7 +77,7 @@ jobs:
           TAG="v${{ steps.release_data.outputs.version }}"
           echo "Verifying tag ${TAG} exists on remote..."
           for i in {1..10}; do
-            if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+            if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
               echo "Tag ${TAG} found on remote"
               exit 0
             fi
