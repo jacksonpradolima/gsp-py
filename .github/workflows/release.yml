@@ -33,7 +33,7 @@ jobs:
       - name: Install Python Semantic Release
         run: |
           python -m pip install --upgrade pip
-          pip install python-semantic-release==9.17.0
+          pip install python-semantic-release==9.17.0 build
 
       - name: Python Semantic Release
         env:
