@@ -71,6 +71,22 @@ jobs:
               output.write(f"version={version}\\n")
           PY
 
+      - name: Verify tag exists on remote
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          TAG="v${{ steps.release_data.outputs.version }}"
+          echo "Verifying tag ${TAG} exists on remote..."
+          for i in {1..10}; do
+            if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+              echo "Tag ${TAG} found on remote"
+              exit 0
+            fi
+            echo "Attempt $i: Tag not yet visible on remote, waiting..."
+            sleep 3
+          done
+          echo "Error: Tag ${TAG} not found on remote after 30 seconds"
+          exit 1
+
       - name: Create GitHub release
         if: steps.bump.outputs.changed == 'true'
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.1
