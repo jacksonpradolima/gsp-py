@@ -11,15 +11,15 @@ on:
     # Run every day at 00:00 UTC to check for stale PRs
     - cron: '0 0 * * *'
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
+permissions: {}
 
 jobs:
   label-by-files:
     name: Label by Changed Files
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
@@ -35,6 +35,8 @@ jobs:
   label-by-size:
     name: Label by PR Size
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PR by size
@@ -61,6 +63,8 @@ jobs:
   label-pr-status:
     name: Label PR Status
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
       - name: Check for merge conflicts
@@ -101,6 +105,9 @@ jobs:
   label-stale-prs:
     name: Label Stale PRs
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
     if: github.event_name == 'schedule' || github.event_name == 'pull_request'
     steps:
       - name: Mark stale PRs
@@ -125,6 +132,9 @@ jobs:
   check-blocked-status:
     name: Check for Blocked Status
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: read
     if: github.event_name == 'pull_request' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
     steps:
       - name: Check for blocked keywords in comments
@@ -250,6 +260,8 @@ jobs:
   check-needs-review:
     name: Check Needs Review Status
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PRs needing review
