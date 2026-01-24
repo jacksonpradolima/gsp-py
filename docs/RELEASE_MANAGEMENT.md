@@ -115,7 +115,9 @@ The automated release workflow (`.github/workflows/release.yml`) performs these 
 4. **Changelog** - Generates/updates `CHANGELOG.md`
 5. **Commit** - Commits version and changelog changes
 6. **Tag** - Creates an annotated Git tag
-7. **Publish** - Creates a GitHub Release with release notes
+7. **Release** - Creates a GitHub Release with release notes (no assets)
+
+The existing `publish.yml` workflow then triggers on release creation to build and upload distribution assets.
 
 ## Configuration
 
@@ -125,7 +127,7 @@ Release automation is configured in `pyproject.toml`:
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
-upload_to_vcs_release = true
+upload_to_vcs_release = false  # Assets uploaded by publish.yml
 upload_to_pypi = false  # PyPI publishing handled separately
 build_command = "python -m build"
 tag_format = "v{version}"
@@ -140,8 +142,13 @@ patch_tags = ["fix", "perf"]
 
 The automated release workflow complements the existing `publish.yml` workflow:
 
-1. **release.yml** - Creates releases automatically from conventional commits
-2. **publish.yml** - Publishes to PyPI when a GitHub release is created
+1. **release.yml** - Creates GitHub releases with tags from conventional commits
+2. **publish.yml** - Builds package, uploads assets to release, and publishes to PyPI
+
+This separation allows:
+- Automated version management and release notes
+- Controlled PyPI publishing with SBOM generation and Sigstore signing
+- No duplicate asset uploads
 
 This separation allows:
 - Automated releases on every significant commit to `main`
