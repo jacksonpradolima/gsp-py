@@ -100,14 +100,18 @@ def test_gsp_support_monotonicity(transactions: List[List[str]]) -> None:
     If we decrease the minimum support threshold, we should get
     at least as many patterns (or more) than with a higher threshold.
     """
-    gsp = GSP(transactions)
+    # Use separate GSP instances to avoid state accumulation between searches
+    # on different min_support thresholds.
     
     # Test with two different support levels
     high_support = 0.5
     low_support = 0.2
     
-    result_high = gsp.search(min_support=high_support)
-    result_low = gsp.search(min_support=low_support)
+    gsp_high = GSP(transactions)
+    gsp_low = GSP(transactions)
+    
+    result_high = gsp_high.search(min_support=high_support)
+    result_low = gsp_low.search(min_support=low_support)
     
     # Count total patterns at each support level
     patterns_high = sum(len(level) for level in result_high)
