@@ -77,9 +77,15 @@ To maintain consistency and code quality, please follow these coding guidelines:
      ```
 
 2. **Commit Messages**:
-   - Write clear and concise commit messages.
-   - Begin your commit message with an action verb, such as "Add," "Fix," "Improve," "Update," etc.
-   - For example: `Fix candidate pruning for short sequences`.
+   - Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+   - Use the format: `<type>(<scope>): <description>`
+   - Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+   - Examples:
+     - `feat(cli): add export format option`
+     - `fix: correct off-by-one error in pattern matching`
+     - `docs: update installation instructions`
+   - For breaking changes, add `!` after type/scope or include `BREAKING CHANGE:` in the footer
+   - See [Release Management Guide](docs/RELEASE_MANAGEMENT.md) for details
 
 3. **Tests**:
    - Write tests for new features or bug fixes.
