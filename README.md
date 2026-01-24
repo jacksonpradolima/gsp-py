@@ -529,11 +529,20 @@ uv run pytest tests/test_gsp_fuzzing.py -v
 
 1. Fork the repository.
 2. Create a feature branch: `git checkout -b feature/my-feature`.
-3. Commit your changes: `git commit -m "Add my feature."`
+3. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/) format: `git commit -m "feat: add my feature"`.
 4. Push to your branch: `git push origin feature/my-feature`.
 5. Submit a pull request to the main repository!
 
 Looking for ideas? Check out our [Planned Features](#planned-features) section.
+
+### Release Management
+
+GSP-Py uses automated release management with [Conventional Commits](https://www.conventionalcommits.org/). When commits are merged to `main`:
+- Version numbers are automatically bumped based on commit types (`fix:` = patch, `feat:` = minor, `BREAKING CHANGE:` = major)
+- CHANGELOG.md is automatically updated with structured release notes
+- Git tags and GitHub releases are created automatically
+
+See [Release Management Guide](docs/RELEASE_MANAGEMENT.md) for details on commit message format and release process.
 
 ---
 

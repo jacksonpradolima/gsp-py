@@ -13,6 +13,12 @@ repos:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
   # Optional: pyright via node (requires node)
   # - repo: https://github.com/jakebailey/pyright-precommit
   #   rev: v1.1.391

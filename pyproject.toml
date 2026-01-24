@@ -182,3 +182,40 @@ strip = true
 compatibility = "manylinux_2_28"
 python-packages = ["gsppy"]
 python-source = "."
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = []
+branch = "main"
+upload_to_vcs_release = true
+upload_to_pypi = false
+build_command = "python -m build"
+major_on_zero = true
+tag_format = "v{version}"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge pull request",
+    "^Merge branch"
+]
+
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease_token = "rc"
+prerelease = false
+
+[tool.semantic_release.remote]
+name = "origin"
+type = "github"
+ignore_token_for_push = false
+
+[tool.semantic_release.publish]
+dist_glob_patterns = ["dist/*"]
+upload_to_vcs_release = true
