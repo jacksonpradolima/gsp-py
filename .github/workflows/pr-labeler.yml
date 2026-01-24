@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PR by size
-        uses: codelytv/pr-size-labeler@56f6f0fc35c7cc0f72963b8467729e1c20bb9d25 # v1.10.1
+        uses: codelytv/pr-size-labeler@4ec67706cd878fbc1c8db0a5dcd28b6bb412e85a # v1.10.3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'
@@ -66,7 +66,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Check for merge conflicts
-        uses: eps1lon/actions-label-merge-conflict@dc09f69b3e828692e80e7c30c6ccce82a0ab0d72 # v3.1.0
+        uses: eps1lon/actions-label-merge-conflict@1df065ebe6e3310545d4f4c4e862e43bdca146f0 # v3.0.3
         with:
           dirtyLabel: 'status/conflicts'
           repoToken: ${{ secrets.GITHUB_TOKEN }}
