@@ -121,41 +121,35 @@ The existing `publish.yml` workflow then triggers on release creation to build a
 
 ## Configuration
 
-### Repository Secrets Setup
+### Branch Protection Configuration
 
-To work with branch protection rules that require:
-- Changes through pull requests
-- Verified commit signatures
-- Code scanning completion
+To enable the automated release workflow to work with branch protection rules, you need to configure the protection rules to allow the workflow to push:
 
-The workflow requires the following secrets to be configured in the repository:
+#### Option 1: Allow GitHub Actions (Recommended)
 
-#### Required: PAT_TOKEN (Personal Access Token)
+1. Go to repository Settings → Branches → Branch protection rules for `master`
+2. Under "Restrict who can push to matching branches":
+   - Enable "Restrict pushes that create matching branches"
+   - Add "github-actions" as an allowed actor
+   - Or uncheck "Include administrators" to allow bypassing
 
-Create a Personal Access Token with the following permissions:
-1. Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
-2. Create a new token with:
+3. For "Require signed commits":
+   - Disable this requirement for automated releases, OR
+   - Configure the workflow with GPG signing (see below)
+
+4. For "Require status checks to pass":
+   - Ensure the release workflow itself is not listed as a required check
+   - This prevents circular dependencies
+
+#### Option 2: Use a Personal Access Token (Advanced)
+
+If you need stricter control, create a PAT with bypass permissions:
+1. Create a fine-grained Personal Access Token with:
    - Repository access: This repository only
-   - Permissions:
-     - Contents: Read and write
-     - Metadata: Read-only
-     - Workflows: Read and write
+   - Permissions: Contents (read/write), Workflows (read/write)
    - Enable "Allow bypassing branch protection"
-3. Add the token as a repository secret named `PAT_TOKEN`
-
-Alternatively, use a GitHub App with equivalent permissions.
-
-#### Optional: GPG Commit Signing
-
-If branch protection requires verified signatures, add these secrets:
-- `GPG_PRIVATE_KEY`: Your GPG private key (export with `gpg --armor --export-secret-key YOUR_KEY_ID`)
-- `GPG_PASSPHRASE`: The passphrase for your GPG key (if set)
-
-To create a GPG key for the bot:
-```bash
-gpg --quick-gen-key "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" rsa4096
-gpg --armor --export-secret-key YOUR_KEY_ID
-```
+2. Add as repository secret: `RELEASE_TOKEN`
+3. Update workflow to use: `token: ${{ secrets.RELEASE_TOKEN }}`
 
 ### Semantic Release Configuration
 
@@ -217,14 +211,19 @@ This separation allows:
 
 **Error**: `remote: error: GH013: Repository rule violations found`
 
-This occurs when the repository has branch protection rules enabled. The fix:
+This occurs when the repository has branch protection rules that block the workflow. Solutions:
 
-1. **Create a PAT Token**: Generate a Personal Access Token or GitHub App token with bypass permissions
-2. **Add the token as a secret**: Store it as `PAT_TOKEN` in repository secrets
-3. **Enable GPG signing** (if required): Add `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets
-4. The workflow is already configured to use these tokens automatically
+1. **Allow GitHub Actions to bypass protection** (Recommended):
+   - Go to Settings → Branches → Edit branch protection rule for `master`
+   - Under "Restrict who can push to matching branches", add "github-actions" as allowed
+   - Ensure "Require signed commits" is disabled or configure GPG signing
 
-See the "Repository Secrets Setup" section above for detailed instructions.
+2. **Adjust required status checks**:
+   - Don't require the release workflow itself as a status check
+   - This prevents circular dependencies
+
+3. **Use a PAT with bypass permissions** (if stricter control needed):
+   - See "Branch Protection Configuration" section above
 
 ### "No release will be made"
 
