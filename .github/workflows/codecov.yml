@@ -13,7 +13,7 @@ jobs:
                 python-version: ["3.13"]
         steps:
             -   name: Checkout
-                uses: actions/checkout@v6
+                uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
                 with:
                     fetch-depth: 0
 
@@ -54,7 +54,7 @@ jobs:
                     uv run pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
 
             -   name: Upload coverage to Codecov
-                uses: codecov/codecov-action@v5
+                uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.3.2
                 with:
                     token: ${{ secrets.CODECOV_TOKEN }}
                     files: coverage.xml
@@ -63,7 +63,7 @@ jobs:
 
             -   name: Upload test results to Codecov
                 if: ${{ !cancelled() }}
-                uses: codecov/test-results-action@v1
+                uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.0.0
                 with:
                     token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -76,7 +76,7 @@ jobs:
                 python-version: ["3.13"]
         steps:
             -   name: Checkout
-                uses: actions/checkout@v6
+                uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
                 with:
                     fetch-depth: 0
 
@@ -106,7 +106,7 @@ jobs:
                     uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml --junitxml=junit-rust.xml -o junit_family=legacy
 
             -   name: Upload coverage to Codecov (rust)
-                uses: codecov/codecov-action@v5
+                uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.3.2
                 with:
                     files: coverage.xml
                     flags: rust
@@ -114,7 +114,7 @@ jobs:
 
             -   name: Upload test results to Codecov (rust)
                 if: ${{ !cancelled() }}
-                uses: codecov/test-results-action@v1
+                uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.0.0
                 with:
                     flags: rust
                     files: junit-rust.xml
