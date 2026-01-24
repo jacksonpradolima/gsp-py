@@ -13,10 +13,9 @@ Email: jacksonpradolima@gmail.com
 """
 
 import math
-from typing import List, Dict, Tuple
+from typing import List
 
-import pytest
-from hypothesis import given, strategies as st, settings, assume, HealthCheck
+from hypothesis import given, strategies as st, settings, HealthCheck
 
 from gsppy.gsp import GSP
 
