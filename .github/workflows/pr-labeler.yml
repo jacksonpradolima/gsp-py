@@ -185,11 +185,11 @@ jobs:
             ].join(' ');
 
             const isBlocked = blockedKeywords.some(keyword => 
-              allText.includes(keyword.toLowerCase())
+              allText.includes(keyword)
             );
 
             const isOnHold = onHoldKeywords.some(keyword => 
-              allText.includes(keyword.toLowerCase())
+              allText.includes(keyword)
             );
 
             // Get current labels
