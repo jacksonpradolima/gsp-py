@@ -9,11 +9,16 @@ import sys
 from pathlib import Path
 
 
-def run_command(cmd: str, capture: bool = True) -> str:
+def run_command(cmd: list[str] | str, capture: bool = True) -> str:
     """Run a shell command and return output."""
+    if isinstance(cmd, str):
+        # Split simple commands into list
+        cmd_list = cmd.split()
+    else:
+        cmd_list = cmd
+    
     result = subprocess.run(
-        cmd,
-        shell=True,
+        cmd_list,
         capture_output=capture,
         text=True,
         cwd=Path(__file__).parent.parent,
@@ -25,8 +30,13 @@ def run_command(cmd: str, capture: bool = True) -> str:
 
 def get_current_version() -> str:
     """Get current version from pyproject.toml."""
-    cmd = "grep '^version = ' pyproject.toml | cut -d'\"' -f2"
-    return run_command(cmd)
+    import re
+    pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
+    content = pyproject_path.read_text()
+    match = re.search(r'^version = "([^"]+)"', content, re.MULTILINE)
+    if match:
+        return match.group(1)
+    return "unknown"
 
 
 def test_semantic_release_config():
@@ -36,7 +46,7 @@ def test_semantic_release_config():
 
     # Check if semantic-release is installed
     try:
-        version = run_command("semantic-release --version")
+        version = run_command(["semantic-release", "--version"])
         print(f"✅ Python Semantic Release installed: {version}")
     except Exception as e:
         print(f"❌ Error: semantic-release not installed: {e}")
@@ -51,8 +61,7 @@ def test_semantic_release_config():
     # Test configuration validity
     print("📋 Testing configuration validity...")
     result = subprocess.run(
-        "semantic-release version --print",
-        shell=True,
+        ["semantic-release", "version", "--print"],
         capture_output=True,
         text=True,
         cwd=Path(__file__).parent.parent,
@@ -87,7 +96,9 @@ def test_semantic_release_config():
             "perf": "⚡",
         }.get(commit_type, "📌")
         
-        print(f"{icon} {commit_msg.split(chr(10))[0]}")
+        # Get the first line of the commit message
+        first_line = commit_msg.split("\n")[0]
+        print(f"{icon} {first_line}")
         print(f"   → {bump_type}\n")
 
     print("=" * 70)
