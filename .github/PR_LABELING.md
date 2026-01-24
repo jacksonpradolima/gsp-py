@@ -91,9 +91,10 @@ The system scans PR titles, descriptions, and comments for blocking keywords:
 
 **On-Hold Keywords:**
 - "on hold"
-- "hold"
+- "place on hold"
 - "waiting for decision"
 - "needs discussion"
+- "awaiting decision"
 
 When these keywords are detected, appropriate labels (`status/blocked` or `status/on-hold`) are applied automatically.
 
