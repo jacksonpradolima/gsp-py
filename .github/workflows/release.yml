@@ -1,0 +1,79 @@
+name: Create release from conventional commits
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Bump version, tag, and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
+        with:
+          python-version: "3.x"
+
+      - name: Install Commitizen
+        run: |
+          python -m pip install --upgrade pip
+          pip install commitizen
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version and update changelog
+        id: bump
+        run: |
+          cz bump --yes --changelog
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push version bump and tags
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          git push --follow-tags
+
+      - name: Collect release metadata
+        if: steps.bump.outputs.changed == 'true'
+        id: release_data
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          changelog = Path("CHANGELOG.md").read_text()
+          pattern = re.compile(rf"^## \\[v{re.escape(version)}\\].*?$\\n(?P<body>.*?)(?=^## \\[v|\\Z)", re.M | re.S)
+          match = pattern.search(changelog)
+          body = match.group("body").strip() if match else f"Release v{version}"
+          release_notes = f"## v{version}\\n\\n{body}\\n"
+          Path("release_notes.md").write_text(release_notes)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"version={version}\\n")
+          PY
+
+      - name: Create GitHub release
+        if: steps.bump.outputs.changed == 'true'
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.1
+        with:
+          tag_name: v${{ steps.release_data.outputs.version }}
+          body_path: release_notes.md

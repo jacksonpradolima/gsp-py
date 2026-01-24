@@ -182,3 +182,13 @@ strip = true
 compatibility = "manylinux_2_28"
 python-packages = ["gsppy"]
 python-source = "."
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "3.3.0"
+tag_format = "v$version"
+changelog_file = "CHANGELOG.md"
+update_changelog_on_bump = true
+version_files = [
+    "pyproject.toml:version",
+]
