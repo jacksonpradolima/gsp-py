@@ -150,7 +150,7 @@ jobs:
             ];
 
             let pullNumber;
-            
+
             // Get the PR number depending on the event type
             if (context.eventName === 'pull_request') {
               pullNumber = context.payload.pull_request.number;
@@ -184,11 +184,11 @@ jobs:
               ...comments.data.map(c => c.body?.toLowerCase() || '')
             ].join(' ');
 
-            const isBlocked = blockedKeywords.some(keyword => 
+            const isBlocked = blockedKeywords.some(keyword =>
               allText.includes(keyword)
             );
 
-            const isOnHold = onHoldKeywords.some(keyword => 
+            const isOnHold = onHoldKeywords.some(keyword =>
               allText.includes(keyword)
             );
 
@@ -257,7 +257,7 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            
+
             // Skip draft PRs
             if (pr.draft) {
               console.log('PR is draft, skipping review check');
