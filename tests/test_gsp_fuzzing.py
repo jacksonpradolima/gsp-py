@@ -12,6 +12,7 @@ Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
 
+import math
 from typing import List, Dict, Tuple
 
 import pytest
@@ -299,9 +300,6 @@ def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> No
         f"With min_support=0.95, expected very few or no patterns, "
         f"but found {total_patterns} patterns"
     )
-
-
-import math
 
 
 @given(

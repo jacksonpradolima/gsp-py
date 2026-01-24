@@ -517,6 +517,14 @@ uv run ruff check .
 uv run pyright
 ```
 
+### Testing & Fuzzing
+
+GSP-Py includes comprehensive test coverage, including property-based fuzzing tests using [Hypothesis](https://hypothesis.readthedocs.io/). These fuzzing tests automatically generate random inputs to verify algorithm invariants and discover edge cases. Run the fuzzing tests with:
+
+```bash
+uv run pytest tests/test_gsp_fuzzing.py -v
+```
+
 ### General Steps:
 
 1. Fork the repository.
