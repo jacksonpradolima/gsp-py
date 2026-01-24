@@ -121,6 +121,44 @@ The existing `publish.yml` workflow then triggers on release creation to build a
 
 ## Configuration
 
+### Repository Secrets Setup
+
+To work with branch protection rules that require:
+- Changes through pull requests
+- Verified commit signatures
+- Code scanning completion
+
+The workflow requires the following secrets to be configured in the repository:
+
+#### Required: PAT_TOKEN (Personal Access Token)
+
+Create a Personal Access Token with the following permissions:
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. Create a new token with:
+   - Repository access: This repository only
+   - Permissions:
+     - Contents: Read and write
+     - Metadata: Read-only
+     - Workflows: Read and write
+   - Enable "Allow bypassing branch protection"
+3. Add the token as a repository secret named `PAT_TOKEN`
+
+Alternatively, use a GitHub App with equivalent permissions.
+
+#### Optional: GPG Commit Signing
+
+If branch protection requires verified signatures, add these secrets:
+- `GPG_PRIVATE_KEY`: Your GPG private key (export with `gpg --armor --export-secret-key YOUR_KEY_ID`)
+- `GPG_PASSPHRASE`: The passphrase for your GPG key (if set)
+
+To create a GPG key for the bot:
+```bash
+gpg --quick-gen-key "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" rsa4096
+gpg --armor --export-secret-key YOUR_KEY_ID
+```
+
+### Semantic Release Configuration
+
 Release automation is configured in `pyproject.toml`:
 
 ```toml
@@ -174,6 +212,19 @@ This separation allows:
 5. **Update documentation** when releasing breaking changes
 
 ## Troubleshooting
+
+### "Repository rule violations" - Push declined
+
+**Error**: `remote: error: GH013: Repository rule violations found`
+
+This occurs when the repository has branch protection rules enabled. The fix:
+
+1. **Create a PAT Token**: Generate a Personal Access Token or GitHub App token with bypass permissions
+2. **Add the token as a secret**: Store it as `PAT_TOKEN` in repository secrets
+3. **Enable GPG signing** (if required): Add `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets
+4. The workflow is already configured to use these tokens automatically
+
+See the "Repository Secrets Setup" section above for detailed instructions.
 
 ### "No release will be made"
 
