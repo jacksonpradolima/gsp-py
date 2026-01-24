@@ -15,10 +15,10 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
         with:
           python-version: "3.x"
 
@@ -32,13 +32,13 @@ jobs:
           python -m build
 
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0.22.0
+        uses: anchore/sbom-action/download-syft@62ad5284b8ced813296287a0b63906cb364b73ee # v0.22.0
 
       - name: Generate SBOM (CycloneDX)
         run: syft packages dist -o cyclonedx-json=dist/sbom.json
 
       - name: Sign distributions with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        uses: sigstore/gh-action-sigstore-python@f514d46b907ebcd5bedc05145c03b69c1edd8b46 # v3.0.0
         with:
           inputs: >-
             dist/*.whl
@@ -55,7 +55,7 @@ jobs:
           fi
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.1
         with:
           files: |
             dist/*.whl
@@ -64,6 +64,6 @@ jobs:
             attestations/sbom.json
 
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598 # v1.13.0
         with:
           attestations: false
