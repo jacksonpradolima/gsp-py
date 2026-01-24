@@ -187,7 +187,7 @@ python-source = "."
 version_toml = ["pyproject.toml:project.version"]
 version_variables = []
 branch = "main"
-upload_to_vcs_release = true
+upload_to_vcs_release = false
 upload_to_pypi = false
 build_command = "python -m build"
 major_on_zero = true
@@ -217,7 +217,3 @@ prerelease = false
 name = "origin"
 type = "github"
 ignore_token_for_push = false
-
-[tool.semantic_release.publish]
-dist_glob_patterns = ["dist/*"]
-upload_to_vcs_release = true
