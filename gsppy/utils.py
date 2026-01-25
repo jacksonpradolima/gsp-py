@@ -21,7 +21,7 @@ These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
 
-from typing import Dict, List, Tuple, Sequence, Generator
+from typing import Dict, List, Tuple, Sequence, Generator, Optional, Union
 from functools import lru_cache
 from itertools import product
 
@@ -83,6 +83,132 @@ def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ..
             sub_idx += 1
             if sub_idx == len_sub:
                 return True
+    return False
+
+
+def is_subsequence_in_list_with_time_constraints(
+    subsequence: Tuple[str, ...],
+    sequence: Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]],
+    mingap: Optional[float] = None,
+    maxgap: Optional[float] = None,
+    maxspan: Optional[float] = None,
+) -> bool:
+    """
+    Check if a subsequence exists within a sequence with optional temporal constraints.
+
+    This function extends the standard subsequence check to support temporal constraints
+    for time-constrained sequential pattern mining. It handles both simple sequences
+    (items only) and timestamped sequences (item-timestamp pairs).
+
+    Temporal Constraints:
+        - mingap: Minimum time gap required between consecutive items in the pattern.
+        - maxgap: Maximum time gap allowed between consecutive items in the pattern.
+        - maxspan: Maximum time span from the first to last item in the pattern.
+
+    Parameters:
+        subsequence (Tuple[str, ...]): The pattern to search for (items only, no timestamps).
+        sequence (Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]): 
+            The sequence to search within. Can be:
+            - Simple: Tuple of items (e.g., ('A', 'B', 'C'))
+            - Timestamped: Tuple of (item, timestamp) pairs (e.g., (('A', 1.0), ('B', 3.0)))
+        mingap (Optional[float]): Minimum time between consecutive pattern elements.
+        maxgap (Optional[float]): Maximum time between consecutive pattern elements.
+        maxspan (Optional[float]): Maximum time from first to last pattern element.
+
+    Returns:
+        bool: True if the subsequence is found respecting temporal constraints, False otherwise.
+
+    Examples:
+        >>> # Without timestamps (backward compatible)
+        >>> is_subsequence_in_list_with_time_constraints(('A', 'C'), ('A', 'B', 'C'))
+        True
+        
+        >>> # With timestamps and maxgap constraint
+        >>> seq = (('A', 1), ('B', 3), ('C', 10))
+        >>> is_subsequence_in_list_with_time_constraints(('A', 'C'), seq, maxgap=5)
+        False  # Gap between A and C is 9, exceeds maxgap=5
+        
+        >>> # With timestamps and mingap constraint
+        >>> seq = (('A', 1), ('B', 2), ('C', 3))
+        >>> is_subsequence_in_list_with_time_constraints(('A', 'C'), seq, mingap=3)
+        False  # Gap between A and C is 2, less than mingap=3
+        
+        >>> # With timestamps and maxspan constraint
+        >>> seq = (('A', 1), ('B', 5), ('C', 12))
+        >>> is_subsequence_in_list_with_time_constraints(('A', 'C'), seq, maxspan=10)
+        False  # Span from A to C is 11, exceeds maxspan=10
+    """
+    # Handle empty subsequence
+    if not subsequence:
+        return False
+
+    # Return False if the subsequence is longer than the sequence
+    if len(subsequence) > len(sequence):
+        return False
+
+    # Determine if sequence has timestamps
+    has_timestamps = sequence and isinstance(sequence[0], tuple) and len(sequence[0]) == 2
+    
+    # If no temporal constraints and no timestamps, use the optimized cached version
+    if not has_timestamps and mingap is None and maxgap is None and maxspan is None:
+        return is_subsequence_in_list(subsequence, sequence)  # type: ignore
+
+    # Extract items and timestamps from sequence
+    if has_timestamps:
+        seq_items = tuple(item for item, _ in sequence)  # type: ignore
+        seq_times = tuple(time for _, time in sequence)  # type: ignore
+    else:
+        seq_items = sequence  # type: ignore
+        seq_times = None
+
+    len_sub = len(subsequence)
+    len_seq = len(seq_items)
+    
+    # Use two-pointer approach with temporal constraint checking
+    sub_idx = 0
+    matched_indices = []
+    
+    for seq_idx in range(len_seq):
+        if seq_items[seq_idx] == subsequence[sub_idx]:
+            # Check temporal constraints if we have timestamps
+            if seq_times is not None and len(matched_indices) > 0:
+                prev_idx = matched_indices[-1]
+                time_gap = seq_times[seq_idx] - seq_times[prev_idx]
+                
+                # Check mingap constraint
+                if mingap is not None and time_gap < mingap:
+                    continue
+                
+                # Check maxgap constraint
+                if maxgap is not None and time_gap > maxgap:
+                    # If maxgap is violated, we need to restart from the beginning
+                    # because the current match chain is broken
+                    sub_idx = 0
+                    matched_indices = []
+                    # Check if current item matches the first element
+                    if seq_items[seq_idx] == subsequence[0]:
+                        matched_indices.append(seq_idx)
+                        sub_idx = 1
+                    continue
+            
+            matched_indices.append(seq_idx)
+            sub_idx += 1
+            
+            # If we've matched the entire subsequence, check maxspan
+            if sub_idx == len_sub:
+                if seq_times is not None and maxspan is not None:
+                    first_idx = matched_indices[0]
+                    last_idx = matched_indices[-1]
+                    span = seq_times[last_idx] - seq_times[first_idx]
+                    if span > maxspan:
+                        # This match violates maxspan, need to continue searching
+                        # Reset to try finding another occurrence
+                        sub_idx = 0
+                        matched_indices = []
+                        # Don't check current position again, continue from next
+                        continue
+                return True
+    
     return False
 
 
