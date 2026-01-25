@@ -88,7 +88,7 @@ Version:
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, cast
 from itertools import chain
 from collections import Counter
 
@@ -241,17 +241,17 @@ class GSP:
         if self.has_timestamps:
             # For timestamped transactions, convert to tuples and extract items for counting
             self.transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]] = [
-                tuple(transaction) for transaction in raw_transactions  # type: ignore
+                tuple(transaction) for transaction in raw_transactions
             ]
             # Extract just the items for counting unique candidates
-            all_items = chain.from_iterable([[item for item, _ in tx] for tx in raw_transactions])  # type: ignore
+            all_items = chain.from_iterable([[item for item, _ in tx] for tx in raw_transactions])
             counts: Counter[str] = Counter(all_items)
         else:
             # For non-timestamped transactions, process as before
             self.transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]] = [
-                tuple(transaction) for transaction in raw_transactions  # type: ignore
+                tuple(transaction) for transaction in raw_transactions
             ]
-            counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))  # type: ignore
+            counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
 
         # Start with singleton candidates (1-sequences)
         self.unique_candidates: List[Tuple[str, ...]] = [(item,) for item in counts.keys()]
@@ -305,7 +305,7 @@ class GSP:
                 )
             else:
                 # Use standard non-temporal checking for simple transactions
-                frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))  # type: ignore
+                frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))
             
             if frequency >= min_support:
                 results.append((item, frequency))
@@ -363,8 +363,11 @@ class GSP:
         if has_temporal or self.has_timestamps:
             return self._support_python(items, min_support, batch_size)
         
+        # For non-timestamped transactions, we can use accelerated support counting
+        # Cast is safe here because we've confirmed no timestamps above
+        non_timestamped_transactions = cast(List[Tuple[str, ...]], self.transactions)
         try:
-            return support_counts_accel(self.transactions, items, min_support, batch_size, backend=backend)
+            return support_counts_accel(non_timestamped_transactions, items, min_support, batch_size, backend=backend)
         except Exception:
             # Fallback to Python implementation on any acceleration failure
             return self._support_python(items, min_support, batch_size)

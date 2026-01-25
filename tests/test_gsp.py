@@ -23,7 +23,7 @@ import random
 from typing import List
 
 import pytest
-from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore
+from pytest_benchmark.fixture import BenchmarkFixture
 
 from gsppy.gsp import GSP
 
