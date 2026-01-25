@@ -33,7 +33,7 @@ import csv
 import sys
 import json
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import click
 
@@ -244,6 +244,45 @@ def main(
         logger.error(f"Error: {e}")
         sys.exit(1)
 
+    # Validate parameters
+    _validate_parameters(min_support, mingap, maxgap, maxspan)
+
+    # Select backend for acceleration layer
+    if backend and backend.lower() != "auto":
+        os.environ["GSPPY_BACKEND"] = backend.lower()
+
+    # Initialize and run GSP algorithm
+    try:
+        gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan)
+        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
+        logger.info("Frequent Patterns Found:")
+        for i, level in enumerate(patterns, start=1):
+            logger.info(f"\n{i}-Sequence Patterns:")
+            for pattern, support in level.items():
+                logger.info(f"Pattern: {pattern}, Support: {support}")
+    except Exception as e:
+        logger.error(f"Error executing GSP algorithm: {e}")
+        sys.exit(1)
+
+
+def _validate_parameters(
+    min_support: float,
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
+) -> None:
+    """
+    Validate input parameters for GSP algorithm.
+    
+    Args:
+        min_support: Minimum support threshold
+        mingap: Minimum time gap constraint
+        maxgap: Maximum time gap constraint
+        maxspan: Maximum time span constraint
+        
+    Raises:
+        SystemExit: If validation fails
+    """
     # Check min_support
     if min_support <= 0.0 or min_support > 1.0:
         logger.error("Error: min_support must be in the range (0.0, 1.0].")
@@ -261,23 +300,6 @@ def main(
         sys.exit(1)
     if mingap is not None and maxgap is not None and mingap > maxgap:
         logger.error("Error: mingap cannot be greater than maxgap.")
-        sys.exit(1)
-
-    # Select backend for acceleration layer
-    if backend and backend.lower() != "auto":
-        os.environ["GSPPY_BACKEND"] = backend.lower()
-
-    # Initialize and run GSP algorithm
-    try:
-        gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan)
-        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
-        logger.info("Frequent Patterns Found:")
-        for i, level in enumerate(patterns, start=1):
-            logger.info(f"\n{i}-Sequence Patterns:")
-            for pattern, support in level.items():
-                logger.info(f"Pattern: {pattern}, Support: {support}")
-    except Exception as e:
-        logger.error(f"Error executing GSP algorithm: {e}")
         sys.exit(1)
 
 

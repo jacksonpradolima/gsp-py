@@ -193,7 +193,6 @@ class TestGSPWithTemporalConstraints:
             [("A", 1), ("B", 2), ("C", 10), ("D", 12)],
             [("A", 2), ("B", 4), ("C", 6), ("D", 9)],
         ]
-        # mingap=1, maxgap=3, maxspan=8
         gsp = GSP(transactions, mingap=1, maxgap=3, maxspan=8)
         result = gsp.search(min_support=0.5)
 
@@ -364,18 +363,8 @@ class TestTemporalConstraintsFuzzing:
             min_support: float,
             data,
         ) -> None:
-            # Generate random timestamped transactions using Hypothesis strategies
-            vocab = [chr(65 + i) for i in range(vocab_size)]  # A, B, C, etc.
-            transactions = []
-            
-            for _ in range(n_transactions):
-                # Use Hypothesis to generate transaction length and items
-                length = data.draw(st.integers(min_value=1, max_value=5))
-                items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
-                # Generate increasing timestamps using Hypothesis
-                timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=20), min_size=length, max_size=length)))
-                transaction = [(item, ts) for item, ts in zip(items, timestamps)]
-                transactions.append(transaction)
+            # Generate random timestamped transactions
+            transactions = _generate_test_transactions(n_transactions, vocab_size, data)
             
             # Create GSP with the constraint
             kwargs = {constraint_type: constraint_value}
@@ -383,34 +372,11 @@ class TestTemporalConstraintsFuzzing:
                 gsp = GSP(transactions, **kwargs)
                 result = gsp.search(min_support=min_support)
                 
-                # Property 1: All support counts should be non-negative
-                for level in result:
-                    for pattern, support in level.items():
-                        assert support >= 0, f"Support should be non-negative: {support}"
-                        assert isinstance(support, int), f"Support should be an integer: {support}"
-                
-                # Property 2: Pattern lengths should increase by level
-                for i, level in enumerate(result):
-                    for pattern in level.keys():
-                        assert len(pattern) == i + 1, f"Pattern length mismatch at level {i}"
-                
-                # Property 3: Support should be monotonic (longer patterns <= shorter patterns)
-                if len(result) > 1:
-                    for i in range(len(result) - 1):
-                        max_support_current = max(result[i].values()) if result[i] else 0
-                        max_support_next = max(result[i + 1].values()) if result[i + 1] else 0
-                        assert max_support_next <= max_support_current, (
-                            "Support should be monotonic (longer patterns should have <= support)"
-                        )
-                
-                # Property 4: All patterns should respect min_support threshold
-                abs_min_support = int(n_transactions * min_support)
-                if abs_min_support > 0:  # Only check if threshold is meaningful
-                    for level in result:
-                        for pattern, support in level.items():
-                            assert support >= abs_min_support, (
-                                f"Pattern {pattern} has support {support} below threshold {abs_min_support}"
-                            )
+                # Validate result properties
+                _validate_support_counts(result)
+                _validate_pattern_lengths(result)
+                _validate_support_monotonicity(result)
+                _validate_min_support_threshold(result, n_transactions, min_support)
                 
             except ValueError as e:
                 # Some constraint combinations may be invalid, that's okay
@@ -418,6 +384,62 @@ class TestTemporalConstraintsFuzzing:
                     raise
         
         run_test()
+
+
+def _generate_test_transactions(n_transactions: int, vocab_size: int, data) -> list:
+    """Generate random timestamped transactions for testing."""
+    from hypothesis import strategies as st
+    
+    vocab = [chr(65 + i) for i in range(vocab_size)]  # A, B, C, etc.
+    transactions = []
+    
+    for _ in range(n_transactions):
+        # Use Hypothesis to generate transaction length and items
+        length = data.draw(st.integers(min_value=1, max_value=5))
+        items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
+        # Generate increasing timestamps using Hypothesis
+        timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=20), min_size=length, max_size=length)))
+        transaction = [(item, ts) for item, ts in zip(items, timestamps)]
+        transactions.append(transaction)
+    
+    return transactions
+
+
+def _validate_support_counts(result: list) -> None:
+    """Validate that all support counts are non-negative integers."""
+    for level in result:
+        for pattern, support in level.items():
+            assert support >= 0, f"Support should be non-negative: {support}"
+            assert isinstance(support, int), f"Support should be an integer: {support}"
+
+
+def _validate_pattern_lengths(result: list) -> None:
+    """Validate that pattern lengths match their level."""
+    for i, level in enumerate(result):
+        for pattern in level.keys():
+            assert len(pattern) == i + 1, f"Pattern length mismatch at level {i}"
+
+
+def _validate_support_monotonicity(result: list) -> None:
+    """Validate that support is monotonic across pattern levels."""
+    if len(result) > 1:
+        for i in range(len(result) - 1):
+            max_support_current = max(result[i].values()) if result[i] else 0
+            max_support_next = max(result[i + 1].values()) if result[i + 1] else 0
+            assert max_support_next <= max_support_current, (
+                "Support should be monotonic (longer patterns should have <= support)"
+            )
+
+
+def _validate_min_support_threshold(result: list, n_transactions: int, min_support: float) -> None:
+    """Validate that all patterns meet the minimum support threshold."""
+    abs_min_support = int(n_transactions * min_support)
+    if abs_min_support > 0:  # Only check if threshold is meaningful
+        for level in result:
+            for pattern, support in level.items():
+                assert support >= abs_min_support, (
+                    f"Pattern {pattern} has support {support} below threshold {abs_min_support}"
+                )
 
     def test_temporal_constraints_edge_cases_hypothesis(self) -> None:
         """

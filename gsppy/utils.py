@@ -187,53 +187,175 @@ def is_subsequence_in_list_with_time_constraints(
         return is_subsequence_in_list(subsequence, sequence)  # type: ignore
 
     # Extract items and timestamps from sequence
+    seq_items, seq_times = _extract_items_and_timestamps(sequence, has_timestamps_flag)
+    
+    # Try to find a match starting from each position
+    return _find_temporal_match(subsequence, seq_items, seq_times, mingap, maxgap, maxspan)
+
+
+def _extract_items_and_timestamps(
+    sequence: Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]],
+    has_timestamps_flag: bool,
+) -> Tuple[Tuple[str, ...], Optional[Tuple[float, ...]]]:
+    """
+    Extract items and timestamps from a sequence.
+    
+    Args:
+        sequence: The sequence to extract from
+        has_timestamps_flag: Whether the sequence has timestamps
+        
+    Returns:
+        Tuple of (items, timestamps) where timestamps is None if not present
+    """
     if has_timestamps_flag:
         seq_items = tuple(item for item, _ in sequence)  # type: ignore
         seq_times = tuple(time for _, time in sequence)  # type: ignore
+        return seq_items, seq_times
     else:
-        seq_items = sequence  # type: ignore
-        seq_times = None
+        return sequence, None  # type: ignore
 
+
+def _find_temporal_match(
+    subsequence: Tuple[str, ...],
+    seq_items: Tuple[str, ...],
+    seq_times: Optional[Tuple[float, ...]],
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
+) -> bool:
+    """
+    Find if subsequence matches with temporal constraints.
+    
+    Args:
+        subsequence: Pattern to search for
+        seq_items: Items in the sequence
+        seq_times: Timestamps (None if not present)
+        mingap: Minimum gap constraint
+        maxgap: Maximum gap constraint
+        maxspan: Maximum span constraint
+        
+    Returns:
+        True if match found, False otherwise
+    """
     len_sub = len(subsequence)
     len_seq = len(seq_items)
     
-    # Use two-pointer approach with temporal constraint checking
-    # For maxgap violations, we need to try starting from each position
+    # Try starting from each position
     for start_idx in range(len_seq - len_sub + 1):
-        sub_idx = 0
-        matched_indices = []
-        
-        for seq_idx in range(start_idx, len_seq):
-            if seq_items[seq_idx] == subsequence[sub_idx]:
-                # Check temporal constraints if we have timestamps
-                if seq_times is not None and len(matched_indices) > 0:
-                    prev_idx = matched_indices[-1]
-                    time_gap = seq_times[seq_idx] - seq_times[prev_idx]
-                    
-                    # Check mingap constraint
-                    if mingap is not None and time_gap < mingap:
-                        continue
-                    
-                    # Check maxgap constraint
-                    if maxgap is not None and time_gap > maxgap:
-                        # This match chain is broken, try next starting position
-                        break
-                
-                matched_indices.append(seq_idx)
-                sub_idx += 1
-                
-                # If we've matched the entire subsequence, check maxspan
-                if sub_idx == len_sub:
-                    if seq_times is not None and maxspan is not None:
-                        first_idx = matched_indices[0]
-                        last_idx = matched_indices[-1]
-                        span = seq_times[last_idx] - seq_times[first_idx]
-                        if span > maxspan:
-                            # This match violates maxspan, try next starting position
-                            break
-                    return True
+        if _try_match_from_position(
+            start_idx, subsequence, seq_items, seq_times, mingap, maxgap, maxspan
+        ):
+            return True
     
     return False
+
+
+def _try_match_from_position(
+    start_idx: int,
+    subsequence: Tuple[str, ...],
+    seq_items: Tuple[str, ...],
+    seq_times: Optional[Tuple[float, ...]],
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
+) -> bool:
+    """
+    Try to match subsequence starting from a given position.
+    
+    Args:
+        start_idx: Starting position in sequence
+        subsequence: Pattern to match
+        seq_items: Items in sequence
+        seq_times: Timestamps (None if not present)
+        mingap: Minimum gap constraint
+        maxgap: Maximum gap constraint
+        maxspan: Maximum span constraint
+        
+    Returns:
+        True if match found, False otherwise
+    """
+    sub_idx = 0
+    matched_indices = []
+    len_sub = len(subsequence)
+    len_seq = len(seq_items)
+    
+    for seq_idx in range(start_idx, len_seq):
+        if seq_items[seq_idx] == subsequence[sub_idx]:
+            # Check temporal constraints if we have timestamps
+            if seq_times is not None and matched_indices:
+                if not _check_temporal_constraints(
+                    seq_idx, matched_indices, seq_times, mingap, maxgap
+                ):
+                    break
+            
+            matched_indices.append(seq_idx)
+            sub_idx += 1
+            
+            # If we've matched the entire subsequence, check maxspan
+            if sub_idx == len_sub:
+                return _check_maxspan(matched_indices, seq_times, maxspan)
+    
+    return False
+
+
+def _check_temporal_constraints(
+    seq_idx: int,
+    matched_indices: List[int],
+    seq_times: Tuple[float, ...],
+    mingap: Optional[float],
+    maxgap: Optional[float],
+) -> bool:
+    """
+    Check if temporal constraints are satisfied for a new match.
+    
+    Args:
+        seq_idx: Current sequence index
+        matched_indices: Previously matched indices
+        seq_times: Timestamps
+        mingap: Minimum gap constraint
+        maxgap: Maximum gap constraint
+        
+    Returns:
+        True if constraints satisfied, False otherwise
+    """
+    prev_idx = matched_indices[-1]
+    time_gap = seq_times[seq_idx] - seq_times[prev_idx]
+    
+    # Check mingap constraint
+    if mingap is not None and time_gap < mingap:
+        return False
+    
+    # Check maxgap constraint
+    if maxgap is not None and time_gap > maxgap:
+        return False
+    
+    return True
+
+
+def _check_maxspan(
+    matched_indices: List[int],
+    seq_times: Optional[Tuple[float, ...]],
+    maxspan: Optional[float],
+) -> bool:
+    """
+    Check if maxspan constraint is satisfied.
+    
+    Args:
+        matched_indices: Matched sequence indices
+        seq_times: Timestamps (None if not present)
+        maxspan: Maximum span constraint
+        
+    Returns:
+        True if constraint satisfied or not applicable, False otherwise
+    """
+    if seq_times is not None and maxspan is not None:
+        first_idx = matched_indices[0]
+        last_idx = matched_indices[-1]
+        span = seq_times[last_idx] - seq_times[first_idx]
+        if span > maxspan:
+            return False
+    
+    return True
 
 
 def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int]) -> List[Tuple[str, ...]]:
