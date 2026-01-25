@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v3.4.1 (2026-01-25)
+
+### Bug Fixes
+
+- Update checkout action to use specific tag reference
+  ([`3a33cb6`](https://github.com/jacksonpradolima/gsp-py/commit/3a33cb6243ae7e9dc46fc4f883662b3c7371ea97))
+
+Added ref input to checkout action for specific tag reference.
+
+Signed-off-by: Jackson Antonio do Prado Lima <jacksonpradolima@users.noreply.github.com>
+
+
 ## v3.4.0 (2026-01-25)
 
 ### Bug Fixes
