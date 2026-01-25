@@ -40,24 +40,53 @@ import click
 from gsppy.gsp import GSP
 from gsppy.utils import has_timestamps
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",  # Simplified to keep CLI output clean
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger: logging.Logger = logging.getLogger(__name__)
-
 
 def setup_logging(verbose: bool) -> None:
     """
-    Set the logging level based on the verbosity of the CLI output.
-    :param verbose: Whether to enable verbose logging.
+    Configure logging with standardized format based on verbosity level.
+    
+    When verbose is enabled, provides detailed structured logging with:
+    - Timestamps (ISO 8601 format)
+    - Log levels
+    - Process ID for traceability
+    - Module context
+    
+    When verbose is disabled, uses simple format with just the message.
+    
+    Parameters:
+        verbose: Whether to enable verbose logging with detailed formatting.
     """
+    # Remove any existing handlers
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
     if verbose:
-        logger.setLevel(logging.DEBUG)
+        # Detailed format with timestamps, levels, PID, and context for verbose mode
+        log_format = "%(asctime)s | %(levelname)-8s | PID:%(process)d | %(name)s | %(message)s"
+        date_format = "%Y-%m-%dT%H:%M:%S"
+        log_level = logging.DEBUG
     else:
-        logger.setLevel(logging.INFO)
+        # Simple format for default mode - just the message
+        log_format = "%(message)s"
+        date_format = None
+        log_level = logging.INFO
+    
+    # Configure logging with the appropriate format
+    logging.basicConfig(
+        level=log_level,
+        format=log_format,
+        datefmt=date_format,
+        handlers=[logging.StreamHandler(sys.stdout)],
+        force=True,  # Force reconfiguration even if already configured
+    )
+    
+    # Set logger level for CLI module
+    logger = logging.getLogger(__name__)
+    logger.setLevel(log_level)
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
@@ -279,7 +308,7 @@ def main(
 
     # Initialize and run GSP algorithm
     try:
-        gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan)
+        gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan, verbose=verbose)
         patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):

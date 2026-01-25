@@ -381,3 +381,106 @@ def test_benchmark(benchmark: BenchmarkFixture, supermarket_transactions: List[L
     """
     gsp = GSP(supermarket_transactions)
     benchmark(gsp.search, min_support=min_support)
+
+
+def test_verbose_initialization(supermarket_transactions: List[List[str]], caplog: pytest.LogCaptureFixture) -> None:
+    """
+    Test that verbose flag in GSP initialization enables detailed logging.
+    
+    Asserts:
+        - When verbose=True, DEBUG level messages are captured.
+        - Verbose logs include detailed information about processing.
+    """
+    import logging
+    with caplog.at_level(logging.DEBUG):
+        gsp = GSP(supermarket_transactions, verbose=True)
+        gsp.search(min_support=0.3)
+        
+        # Check that verbose logging produced debug messages
+        debug_messages = [record.message for record in caplog.records if record.levelno == logging.DEBUG]
+        assert len(debug_messages) > 0, "Expected debug messages when verbose=True"
+        assert any("Unique candidates" in msg for msg in debug_messages), "Expected candidate info in debug logs"
+
+
+def test_non_verbose_initialization(supermarket_transactions: List[List[str]], caplog: pytest.LogCaptureFixture) -> None:
+    """
+    Test that default (non-verbose) GSP initialization produces minimal logging.
+    
+    Asserts:
+        - When verbose=False (default), no DEBUG messages are produced.
+        - Only WARNING and above are logged by default.
+    """
+    import logging
+    with caplog.at_level(logging.DEBUG):
+        gsp = GSP(supermarket_transactions, verbose=False)
+        gsp.search(min_support=0.3)
+        
+        # Check that non-verbose mode doesn't produce debug messages
+        debug_messages = [record.message for record in caplog.records if record.levelno == logging.DEBUG]
+        assert len(debug_messages) == 0, "Expected no debug messages when verbose=False"
+
+
+def test_verbose_override_in_search(supermarket_transactions: List[List[str]], caplog: pytest.LogCaptureFixture) -> None:
+    """
+    Test that verbose parameter in search() method can override instance setting.
+    
+    Asserts:
+        - Instance created with verbose=False can enable verbose mode for a specific search.
+        - Instance created with verbose=True can disable verbose mode for a specific search.
+    """
+    import logging
+    
+    # Test Case 1: Instance with verbose=False, search with verbose=True
+    # Should see INFO messages when verbose=True (they would be suppressed with verbose=False)
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG):
+        gsp = GSP(supermarket_transactions, verbose=False)
+        gsp.search(min_support=0.3, verbose=True)
+        
+        # Check for INFO level messages that are produced during search
+        info_messages = [record.message for record in caplog.records if record.levelno == logging.INFO]
+        assert len(info_messages) > 0, "Expected INFO messages when search verbose=True overrides instance verbose=False"
+        assert any("Starting GSP algorithm" in msg for msg in info_messages), "Expected search progress messages"
+    
+    # Test Case 2: Instance with verbose=True, search with verbose=False
+    # Should suppress messages when verbose=False
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG):
+        gsp = GSP(supermarket_transactions, verbose=True)
+        # The __init__ will produce DEBUG messages, but search with verbose=False should suppress new ones
+        caplog.clear()  # Clear messages from init
+        gsp.search(min_support=0.3, verbose=False)
+        
+        # With verbose=False in search, we should see WARNING level or higher only
+        # Since the search itself doesn't produce warnings, we should see minimal output
+        debug_messages = [record.message for record in caplog.records if record.levelno == logging.DEBUG]
+        # Should have no new debug messages from the search
+        assert len(debug_messages) == 0, "Expected no search-related debug messages when search verbose=False"
+
+
+def test_verbose_instance_unchanged_after_search(supermarket_transactions: List[List[str]]) -> None:
+    """
+    Test that overriding verbose in search() doesn't permanently change instance setting.
+    
+    Asserts:
+        - Instance verbosity is restored after search() completes.
+        - Subsequent searches use the original instance verbosity.
+    """
+    import logging
+    
+    # Create instance with verbose=False
+    gsp = GSP(supermarket_transactions, verbose=False)
+    assert gsp.verbose is False, "Initial verbose setting should be False"
+    
+    # Run search with verbose=True override
+    gsp.search(min_support=0.3, verbose=True)
+    
+    # Check that instance verbose setting is restored
+    assert gsp.verbose is False, "Instance verbose setting should be restored after search"
+    
+    # Similar test with verbose=True instance
+    gsp2 = GSP(supermarket_transactions, verbose=True)
+    assert gsp2.verbose is True, "Initial verbose setting should be True"
+    
+    gsp2.search(min_support=0.3, verbose=False)
+    assert gsp2.verbose is True, "Instance verbose setting should be restored after search"
