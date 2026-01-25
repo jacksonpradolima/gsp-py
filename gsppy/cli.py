@@ -94,12 +94,12 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
         ):
             # Convert timestamped data: [[["A", 1], ["B", 2]]] -> [[("A", 1), ("B", 2)]]
             transactions: List[List[Tuple[str, float]]] = [
-                [tuple(item) for item in transaction] for transaction in raw_transactions  # type: ignore[misc]
+                [tuple(item) for item in transaction] for transaction in raw_transactions
             ]
             return transactions
         else:
             # Simple transactions remain as-is (or invalid data passed through for GSP to validate)
-            return raw_transactions  # type: ignore[return-value]
+            return raw_transactions
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
         logging.error(msg)
