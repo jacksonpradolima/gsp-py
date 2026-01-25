@@ -123,7 +123,7 @@ class TestTemporalSubsequenceMatching:
         seq2 = (("A", 0), ("B", 1), ("B", 5), ("C", 10))
         # With mingap=3, should match A@0 -> B@5 (gap=5) -> C@10 (gap=5)
         assert is_subsequence_in_list_with_time_constraints(("A", "B", "C"), seq2, mingap=3)
-        
+
         # Test case 2: Repeated B with maxgap constraint
         # Sequence intentionally has out-of-order timestamps to test robustness
         seq3 = (("A", 0), ("B", 15), ("B", 5))
@@ -377,9 +377,13 @@ class TestTemporalConstraintsFuzzing:
             transactions = _generate_test_transactions(n_transactions, vocab_size, data)
 
             # Create GSP with the constraint
-            kwargs = {constraint_type: constraint_value}
             try:
-                gsp = GSP(transactions, **kwargs)
+                if constraint_type == "mingap":
+                    gsp = GSP(transactions, mingap=constraint_value)
+                elif constraint_type == "maxgap":
+                    gsp = GSP(transactions, maxgap=constraint_value)
+                else:  # maxspan
+                    gsp = GSP(transactions, maxspan=constraint_value)
                 result = gsp.search(min_support=min_support)
 
                 # Validate result properties
@@ -583,9 +587,9 @@ class TestTemporalConstraintsFuzzingEdgeCases:
                 count_relaxed = sum(len(level) for level in result_relaxed)
 
                 # Relaxed constraints should find at least as many patterns
-                assert count_relaxed >= count_strict, (
-                    f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
-                )
+                assert (
+                    count_relaxed >= count_strict
+                ), f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
             except ValueError:
                 # Some combinations may be invalid
                 pass

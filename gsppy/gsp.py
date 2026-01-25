@@ -169,7 +169,7 @@ class GSP:
     def _configure_logging(self) -> None:
         """
         Configure logging for the GSP instance based on verbosity setting.
-        
+
         When verbose is True, sets logger to DEBUG level with detailed formatting.
         When verbose is False, sets logger to WARNING level for minimal output.
         """
@@ -480,11 +480,11 @@ class GSP:
             ```
         """
         # Override verbosity if specified for this search
+        original_verbose = self.verbose
         if verbose is not None:
-            original_verbose = self.verbose
             self.verbose = verbose
             self._configure_logging()
-        
+
         if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")
 
@@ -529,10 +529,10 @@ class GSP:
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
-        
+
         # Restore original verbosity if it was overridden
         if verbose is not None:
             self.verbose = original_verbose
             self._configure_logging()
-        
+
         return self.freq_patterns[:-1]
