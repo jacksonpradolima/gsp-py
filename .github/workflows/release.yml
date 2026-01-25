@@ -17,7 +17,7 @@ jobs:
     name: Semantic Release and Publish
     runs-on: ubuntu-latest
     concurrency: release
-    if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):')"
+    if: "github.event_name == 'workflow_dispatch' || (github.event.head_commit && !contains(github.event.head_commit.message, 'chore(release):'))"
     environment:
       name: pypi
       url: https://pypi.org/project/gsppy/
@@ -74,9 +74,13 @@ jobs:
         if: steps.release.outputs.released == 'true'
         run: |
           uv lock
-          git add uv.lock
-          git commit -m "chore: update uv.lock for version ${{ steps.release.outputs.version }}"
-          git push
+          if ! git diff --quiet uv.lock; then
+            git add uv.lock
+            git commit -m "chore: update uv.lock for version ${{ steps.release.outputs.version }}"
+            git push
+          else
+            echo "uv.lock is already up to date"
+          fi
 
       - name: Build package
         if: steps.release.outputs.released == 'true'
