@@ -144,12 +144,13 @@ To enable the automated release workflow to work with branch protection rules, y
 #### Option 2: Use a Personal Access Token (Advanced)
 
 If you need stricter control, create a PAT with bypass permissions:
-1. Create a fine-grained Personal Access Token with:
-   - Repository access: This repository only
-   - Permissions: Contents (read/write), Workflows (read/write)
+1. Create an organization-wide fine-grained Personal Access Token with:
+   - Resource owner: your GitHub organization
+   - Repository access: All repositories (or a restricted set that includes this repository)
+   - Permissions: Metadata (read), Contents (read/write), Workflows (read/write)
    - Enable "Allow bypassing branch protection"
-2. Add as repository secret: `RELEASE_TOKEN`
-3. Update workflow to use: `token: ${{ secrets.RELEASE_TOKEN }}`
+2. Add as an organization secret (or repository secret, if preferred): `ORG_RELEASE_TOKEN`
+3. Update workflow to use: `token: ${{ secrets.ORG_RELEASE_TOKEN }}`
 
 ### Semantic Release Configuration
 
