@@ -28,7 +28,10 @@ try:  # pragma: no cover - optional dependency path
     cp = cast(Any, _cp_mod)
 
     try:
-        _gpu_available = cp.cuda.runtime.getDeviceCount() > 0
+        if cp is not None:
+            _gpu_available = cp.cuda.runtime.getDeviceCount() > 0
+        else:
+            _gpu_available = False
     except Exception:
         _gpu_available = False
 except Exception:  # pragma: no cover - optional dependency path
