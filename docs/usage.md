@@ -38,6 +38,22 @@ print(frequent)
 
 The `min_support` argument expects a fraction in the range `(0.0, 1.0]` and defaults to `0.2`.
 
+## Verbose Mode
+
+Enable detailed logging to track algorithm progress and debug issues:
+
+```python
+# Enable verbose logging for the entire instance
+gsp = GSP(transactions, verbose=True)
+patterns = gsp.search(min_support=0.5)
+
+# Or enable verbose for a specific search
+gsp = GSP(transactions)
+patterns = gsp.search(min_support=0.5, verbose=True)
+```
+
+For more details on logging, output formatting, and traceability, see the [Logging Guide](logging.md).
+
 ## Backend selection
 
 GSP-Py can accelerate support counting with optional backends:

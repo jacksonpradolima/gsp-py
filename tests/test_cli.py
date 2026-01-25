@@ -335,7 +335,7 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
     os.unlink(temp_file_name)
 
 
-def test_cli_timestamped_json_parsing(monkeypatch: MonkeyPatch):
+def test_cli_timestamped_json_parsing() -> None:
     """Test that CLI correctly parses timestamped JSON data with nested lists."""
     # Create a timestamped JSON file with nested lists (as produced by json.dump)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
@@ -382,7 +382,7 @@ def test_cli_temporal_constraints_flags(monkeypatch: MonkeyPatch):
         os.unlink(temp_file_name)
 
 
-def test_cli_empty_first_transaction_timestamped(monkeypatch: MonkeyPatch):
+def test_cli_empty_first_transaction_timestamped() -> None:
     """Test that CLI correctly handles timestamped data when first transaction is empty."""
     # Create a timestamped JSON file with empty first transaction
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
@@ -402,7 +402,7 @@ def test_cli_empty_first_transaction_timestamped(monkeypatch: MonkeyPatch):
         os.unlink(temp_file_name)
 
 
-def test_cli_verbose_flag_formatting(monkeypatch: MonkeyPatch):
+def test_cli_verbose_flag_formatting() -> None:
     """
     Test that --verbose flag produces detailed log output with proper formatting.
     
@@ -412,9 +412,6 @@ def test_cli_verbose_flag_formatting(monkeypatch: MonkeyPatch):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
-
-    # Mock CLI arguments with --verbose flag
-    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2", "--verbose"])
 
     import subprocess
     
@@ -443,7 +440,7 @@ def test_cli_verbose_flag_formatting(monkeypatch: MonkeyPatch):
     os.unlink(temp_file_name)
 
 
-def test_cli_non_verbose_simple_output(monkeypatch: MonkeyPatch):
+def test_cli_non_verbose_simple_output() -> None:
     """
     Test that default (non-verbose) mode produces simple, clean output.
     

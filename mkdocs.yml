@@ -8,6 +8,7 @@ nav:
   - Usage: usage.md
   - CLI: cli.md
   - API: api.md
+  - Logging & Verbosity: logging.md
   - Acceleration: acceleration.md
   - Benchmarks: benchmarks.md
   - Contributing: contributing.md

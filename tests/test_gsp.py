@@ -466,8 +466,6 @@ def test_verbose_instance_unchanged_after_search(supermarket_transactions: List[
         - Instance verbosity is restored after search() completes.
         - Subsequent searches use the original instance verbosity.
     """
-    import logging
-    
     # Create instance with verbose=False
     gsp = GSP(supermarket_transactions, verbose=False)
     assert gsp.verbose is False, "Initial verbose setting should be False"
