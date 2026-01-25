@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v3.4.2 (2026-01-25)
+
+### Bug Fixes
+
+- Update PyPI publish action version
+  ([`eeebf53`](https://github.com/jacksonpradolima/gsp-py/commit/eeebf53fdfd319292d739946f9725dec37a1b6ed))
+
+Signed-off-by: Jackson Antonio do Prado Lima <jacksonpradolima@users.noreply.github.com>
+
+### Chores
+
+- Update uv.lock for version 3.4.1
+  ([`aac8fc1`](https://github.com/jacksonpradolima/gsp-py/commit/aac8fc118aca8ed2c58f4bf265d2fa45d9fb1f41))
+
+
 ## v3.4.1 (2026-01-25)
 
 ### Bug Fixes
