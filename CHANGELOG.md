@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v3.4.3 (2026-01-25)
+
+### Bug Fixes
+
+- **publish**: Update PyPI publish action version
+  ([`0f23d45`](https://github.com/jacksonpradolima/gsp-py/commit/0f23d45c8b23d8f2a811934349cb7e020f2e4695))
+
+Signed-off-by: Jackson Antonio do Prado Lima <jacksonpradolima@users.noreply.github.com>
+
+
 ## v3.4.2 (2026-01-25)
 
 ### Bug Fixes
