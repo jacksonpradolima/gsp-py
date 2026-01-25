@@ -102,11 +102,16 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
 
         is_timestamped = False
         if first_non_empty_transaction is not None:
-            # Normalize lists to tuples for timestamp detection
-            normalized_first = [
-                tuple(item) if isinstance(item, list) else item
-                for item in first_non_empty_transaction
-            ]
+            # Normalize to the exact input type expected by has_timestamps
+            normalized_first: List[Union[str, Tuple[str, float]]] = []
+            for item in first_non_empty_transaction:
+                if isinstance(item, list) and len(item) == 2:
+                    normalized_first.append((str(item[0]), float(item[1])))
+                elif isinstance(item, tuple):
+                    normalized_first.append(cast(Tuple[str, float], item))
+                else:
+                    normalized_first.append(str(item))
+
             is_timestamped = has_timestamps(normalized_first)
 
         if is_timestamped:
