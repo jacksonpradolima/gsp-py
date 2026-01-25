@@ -21,7 +21,7 @@ These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
 
-from typing import Dict, List, Tuple, Sequence, Generator, Optional, Union
+from typing import Dict, List, Tuple, Sequence, Generator, Optional, Union, cast
 from functools import lru_cache
 from itertools import product
 
@@ -184,7 +184,7 @@ def is_subsequence_in_list_with_time_constraints(
     
     # If no temporal constraints and no timestamps, use the optimized cached version
     if not has_timestamps_flag and mingap is None and maxgap is None and maxspan is None:
-        return is_subsequence_in_list(subsequence, sequence)  # type: ignore
+        return is_subsequence_in_list(subsequence, sequence)
 
     # Extract items and timestamps from sequence
     seq_items, seq_times = _extract_items_and_timestamps(sequence, has_timestamps_flag)
@@ -208,11 +208,15 @@ def _extract_items_and_timestamps(
         Tuple of (items, timestamps) where timestamps is None if not present
     """
     if has_timestamps_flag:
-        seq_items = tuple(item for item, _ in sequence)  # type: ignore
-        seq_times = tuple(time for _, time in sequence)  # type: ignore
+        # For timestamped sequences, extract items and timestamps separately
+        timestamped_seq = cast(Tuple[Tuple[str, float], ...], sequence)
+        seq_items = tuple(item for item, _ in timestamped_seq)
+        seq_times = tuple(time for _, time in timestamped_seq)
         return seq_items, seq_times
     else:
-        return sequence, None  # type: ignore
+        # For non-timestamped sequences, return items directly with None for timestamps
+        simple_seq = cast(Tuple[str, ...], sequence)
+        return simple_seq, None
 
 
 def _find_temporal_match(

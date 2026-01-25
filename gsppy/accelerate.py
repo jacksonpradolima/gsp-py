@@ -28,11 +28,11 @@ try:  # pragma: no cover - optional dependency path
     cp = cast(Any, _cp_mod)
 
     try:
-        _gpu_available = cp.cuda.runtime.getDeviceCount() > 0  # type: ignore[attr-defined]
+        _gpu_available = cp.cuda.runtime.getDeviceCount() > 0
     except Exception:
         _gpu_available = False
 except Exception:  # pragma: no cover - optional dependency path
-    cp = None  # type: ignore[assignment]
+    cp = None
     _gpu_available = False
 
 # Simple per-process cache for encoded transactions keyed by the list object's id
