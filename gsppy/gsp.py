@@ -230,6 +230,10 @@ class GSP:
                 "Temporal constraints specified but transactions do not have timestamps. "
                 "Constraints will be ignored."
             )
+            # Clear temporal constraints since they cannot be applied
+            self.mingap = None
+            self.maxgap = None
+            self.maxspan = None
 
         self.max_size: int = max(len(item) for item in raw_transactions)
 
@@ -283,8 +287,10 @@ class GSP:
         results: List[Tuple[Tuple[str, ...], int]] = []
         has_temporal = mingap is not None or maxgap is not None or maxspan is not None
 
-        # Detect if transactions have timestamps using the helper function
-        has_timestamps_flag = transactions and has_timestamps(transactions[0])
+        # Detect if transactions have timestamps using the helper function,
+        # based on the first non-empty transaction in the batch.
+        first_non_empty_tx = next((t for t in transactions if t), None)
+        has_timestamps_flag = bool(first_non_empty_tx and has_timestamps(first_non_empty_tx))
 
         for item in batch:
             if has_timestamps_flag or has_temporal:

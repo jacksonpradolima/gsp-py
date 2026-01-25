@@ -51,8 +51,8 @@ def has_timestamps(
 
     first_item = sequence[0]
 
-    # Check if first item is a tuple with 2 elements where second is numeric
-    if isinstance(first_item, tuple) and len(first_item) == 2:
+    # Check if first item is a tuple or list with 2 elements where second is numeric
+    if isinstance(first_item, (tuple, list)) and len(first_item) == 2:
         try:
             # Try to interpret second element as a number
             float(first_item[1])
@@ -293,7 +293,8 @@ def _try_match_from_position(
                 and matched_indices
                 and not _check_temporal_constraints(seq_idx, matched_indices, seq_times, mingap, maxgap)
             ):
-                break
+                # Skip this occurrence and continue searching for a valid one
+                continue
 
             matched_indices.append(seq_idx)
             sub_idx += 1

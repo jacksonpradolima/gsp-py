@@ -91,12 +91,29 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
             List[List[Union[str, Tuple[str, float]]]], raw_data
         )
 
-        # Check if this is timestamped data using the helper function
-        # Use defensive checks to avoid errors on malformed data
-        if raw_transactions and has_timestamps(raw_transactions[0]):
+        # Check if this is timestamped data using the helper function.
+        # Use defensive checks to avoid errors on malformed data:
+        # - Find the first non-empty transaction instead of assuming index 0 is non-empty.
+        # - Normalize inner list pairs (from json.load) to tuples before calling has_timestamps.
+        first_non_empty_transaction: Optional[List[Union[str, List[Any]]]] = next(
+            (transaction for transaction in raw_transactions if transaction),
+            None,
+        )
+
+        is_timestamped = False
+        if first_non_empty_transaction is not None:
+            # Normalize lists to tuples for timestamp detection
+            normalized_first = [
+                tuple(item) if isinstance(item, list) else item
+                for item in first_non_empty_transaction
+            ]
+            is_timestamped = has_timestamps(normalized_first)
+
+        if is_timestamped:
             # Convert timestamped data: [[["A", 1], ["B", 2]]] -> [[("A", 1), ("B", 2)]]
             transactions: List[List[Tuple[str, float]]] = [
-                [cast(Tuple[str, float], tuple(item)) for item in transaction] for transaction in raw_transactions
+                [cast(Tuple[str, float], tuple(item) if isinstance(item, list) else item) for item in transaction]
+                for transaction in raw_transactions
             ]
             return transactions
 
@@ -214,9 +231,9 @@ def main(
     file_path: str,
     min_support: float,
     backend: str,
-    mingap: float,
-    maxgap: float,
-    maxspan: float,
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
     verbose: bool,
 ) -> None:
     """

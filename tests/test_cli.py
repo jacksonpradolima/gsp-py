@@ -333,3 +333,70 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
         mock_setLevel.assert_called_with(logging.DEBUG)
 
     os.unlink(temp_file_name)
+
+
+def test_cli_timestamped_json_parsing(monkeypatch: MonkeyPatch):
+    """Test that CLI correctly parses timestamped JSON data with nested lists."""
+    # Create a timestamped JSON file with nested lists (as produced by json.dump)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([[["A", 1], ["B", 2]], [["A", 0], ["C", 3]]], temp_file)
+        temp_file_name = temp_file.name
+
+    try:
+        # Read the file using detect_and_read_file
+        transactions = detect_and_read_file(temp_file_name)
+        
+        # Verify that nested lists were converted to tuples
+        assert len(transactions) == 2
+        assert isinstance(transactions[0], list)
+        assert isinstance(transactions[0][0], tuple)
+        assert transactions[0][0] == ("A", 1)
+        assert transactions[0][1] == ("B", 2)
+        assert transactions[1][0] == ("A", 0)
+        assert transactions[1][1] == ("C", 3)
+    finally:
+        os.unlink(temp_file_name)
+
+
+def test_cli_temporal_constraints_flags(monkeypatch: MonkeyPatch):
+    """Test that CLI accepts and processes temporal constraint flags."""
+    # Create a timestamped JSON file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([[["A", 1], ["B", 3], ["C", 5]], [["A", 2], ["B", 10]]], temp_file)
+        temp_file_name = temp_file.name
+
+    # Mock CLI arguments with temporal constraints
+    monkeypatch.setattr(
+        "sys.argv",
+        ["main", "--file", temp_file_name, "--min_support", "0.5", "--mingap", "1", "--maxgap", "5", "--maxspan", "10"]
+    )
+
+    try:
+        with patch("gsppy.cli.logger.info") as mock_info:
+            with pytest.raises(SystemExit) as excinfo:
+                main()
+            assert excinfo.value.code == 0
+            # Verify that patterns were found (exact patterns depend on constraints)
+            mock_info.assert_any_call("Frequent Patterns Found:")
+    finally:
+        os.unlink(temp_file_name)
+
+
+def test_cli_empty_first_transaction_timestamped(monkeypatch: MonkeyPatch):
+    """Test that CLI correctly handles timestamped data when first transaction is empty."""
+    # Create a timestamped JSON file with empty first transaction
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([[], [["A", 1], ["B", 2]], [["A", 0], ["C", 3]]], temp_file)
+        temp_file_name = temp_file.name
+
+    try:
+        # Read the file using detect_and_read_file
+        transactions = detect_and_read_file(temp_file_name)
+        
+        # Verify that timestamped data was detected despite empty first transaction
+        assert len(transactions) == 3
+        assert transactions[0] == []
+        assert isinstance(transactions[1][0], tuple)
+        assert transactions[1][0] == ("A", 1)
+    finally:
+        os.unlink(temp_file_name)
