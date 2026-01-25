@@ -347,10 +347,10 @@ class TestTemporalConstraintsFuzzing:
         
         @given(
             n_transactions=st.integers(min_value=2, max_value=10),
-            tx_length=st.integers(min_value=1, max_value=5),
             vocab_size=st.integers(min_value=2, max_value=5),
             constraint_value=st.floats(min_value=0.1, max_value=10.0),
             min_support=st.floats(min_value=0.1, max_value=0.9),
+            data=st.data(),
         )
         @settings(
             max_examples=20,
@@ -359,23 +359,21 @@ class TestTemporalConstraintsFuzzing:
         )
         def run_test(
             n_transactions: int,
-            tx_length: int,
             vocab_size: int,
             constraint_value: float,
             min_support: float,
+            data,
         ) -> None:
-            # Generate random timestamped transactions
-            import random
-            random.seed(42)
-            
+            # Generate random timestamped transactions using Hypothesis strategies
             vocab = [chr(65 + i) for i in range(vocab_size)]  # A, B, C, etc.
             transactions = []
             
             for _ in range(n_transactions):
-                length = random.randint(1, tx_length)
-                items = [random.choice(vocab) for _ in range(length)]
-                # Generate increasing timestamps
-                timestamps = sorted([random.uniform(0, 20) for _ in range(length)])
+                # Use Hypothesis to generate transaction length and items
+                length = data.draw(st.integers(min_value=1, max_value=5))
+                items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
+                # Generate increasing timestamps using Hypothesis
+                timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=20), min_size=length, max_size=length)))
                 transaction = [(item, ts) for item, ts in zip(items, timestamps)]
                 transactions.append(transaction)
             
@@ -439,6 +437,7 @@ class TestTemporalConstraintsFuzzing:
             has_zero_gaps=st.booleans(),
             mingap=st.floats(min_value=0, max_value=5.0) | st.none(),
             maxgap=st.floats(min_value=0, max_value=10.0) | st.none(),
+            data=st.data(),
         )
         @settings(
             max_examples=20,
@@ -451,10 +450,8 @@ class TestTemporalConstraintsFuzzing:
             has_zero_gaps: bool,
             mingap: float,
             maxgap: float,
+            data,
         ) -> None:
-            import random
-            random.seed(42)
-            
             # Validate constraint combination
             if mingap is not None and maxgap is not None:
                 assume(mingap <= maxgap)
@@ -463,18 +460,19 @@ class TestTemporalConstraintsFuzzing:
             transactions = []
             
             for _ in range(n_transactions):
-                length = random.randint(1, 4)
-                items = [random.choice(vocab) for _ in range(length)]
+                # Use Hypothesis to generate transaction length and items
+                length = data.draw(st.integers(min_value=1, max_value=4))
+                items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
                 
                 if has_zero_gaps:
-                    # Some items have the same timestamp
-                    timestamps = sorted([random.choice([1.0, 2.0, 3.0]) for _ in range(length)])
+                    # Some items have the same timestamp - use Hypothesis
+                    timestamps = sorted(data.draw(st.lists(st.sampled_from([1.0, 2.0, 3.0]), min_size=length, max_size=length)))
                 elif has_duplicates:
                     # Allow duplicate items
                     timestamps = sorted([float(i) for i in range(length)])
                 else:
-                    # Normal case
-                    timestamps = sorted([random.uniform(0, 10) for _ in range(length)])
+                    # Normal case - use Hypothesis
+                    timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=10), min_size=length, max_size=length)))
                 
                 transaction = [(item, ts) for item, ts in zip(items, timestamps)]
                 transactions.append(transaction)
@@ -507,8 +505,8 @@ class TestTemporalConstraintsFuzzing:
         
         @given(
             n_transactions=st.integers(min_value=3, max_value=6),
-            tx_length=st.integers(min_value=2, max_value=4),
             base_gap=st.floats(min_value=1.0, max_value=5.0),
+            data=st.data(),
         )
         @settings(
             max_examples=15,
@@ -517,19 +515,17 @@ class TestTemporalConstraintsFuzzing:
         )
         def run_monotonicity_test(
             n_transactions: int,
-            tx_length: int,
             base_gap: float,
+            data,
         ) -> None:
-            import random
-            random.seed(42)
-            
-            # Generate fixed transactions
+            # Generate transactions using Hypothesis
             vocab = ["P", "Q", "R"]
             transactions = []
             
             for _ in range(n_transactions):
-                length = random.randint(2, tx_length)
-                items = [random.choice(vocab) for _ in range(length)]
+                # Use Hypothesis to generate transaction length and items
+                length = data.draw(st.integers(min_value=2, max_value=4))
+                items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
                 timestamps = sorted([i * 2.0 for i in range(length)])  # Evenly spaced
                 transaction = [(item, ts) for item, ts in zip(items, timestamps)]
                 transactions.append(transaction)
