@@ -95,7 +95,7 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
         # Use defensive checks to avoid errors on malformed data:
         # - Find the first non-empty transaction instead of assuming index 0 is non-empty.
         # - Normalize inner list pairs (from json.load) to tuples before calling has_timestamps.
-        first_non_empty_transaction: Optional[List[Union[str, List[Any]]]] = next(
+        first_non_empty_transaction: Optional[List[Union[str, Tuple[str, float]]]] = next(
             (transaction for transaction in raw_transactions if transaction),
             None,
         )
