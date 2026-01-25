@@ -240,18 +240,16 @@ class GSP:
         
         if self.has_timestamps:
             # For timestamped transactions, convert to tuples and extract items for counting
-            self.transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]] = [
-                tuple(transaction) for transaction in raw_transactions
-            ]
+            timestamped_txs = cast(List[List[Tuple[str, float]]], raw_transactions)
+            self.transactions = [tuple(transaction) for transaction in timestamped_txs]
             # Extract just the items for counting unique candidates
-            all_items = chain.from_iterable([[item for item, _ in tx] for tx in raw_transactions])
+            all_items = chain.from_iterable([[item for item, _ in tx] for tx in timestamped_txs])
             counts: Counter[str] = Counter(all_items)
         else:
             # For non-timestamped transactions, process as before
-            self.transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]] = [
-                tuple(transaction) for transaction in raw_transactions
-            ]
-            counts: Counter[str] = Counter(chain.from_iterable(raw_transactions))
+            simple_txs = cast(List[List[str]], raw_transactions)
+            self.transactions = [tuple(transaction) for transaction in simple_txs]
+            counts: Counter[str] = Counter(chain.from_iterable(simple_txs))
 
         # Start with singleton candidates (1-sequences)
         self.unique_candidates: List[Tuple[str, ...]] = [(item,) for item in counts.keys()]

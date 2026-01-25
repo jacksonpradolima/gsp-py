@@ -26,7 +26,7 @@ from functools import lru_cache
 from itertools import product
 
 
-def has_timestamps(sequence: Union[Tuple, List]) -> bool:
+def has_timestamps(sequence: Union[Tuple[Union[str, Tuple[str, float]], ...], List[Union[str, Tuple[str, float]]]]) -> bool:
     """
     Check if a sequence contains timestamped data (item-timestamp pairs).
     
@@ -51,7 +51,7 @@ def has_timestamps(sequence: Union[Tuple, List]) -> bool:
     if isinstance(first_item, tuple) and len(first_item) == 2:
         try:
             # Try to interpret second element as a number
-            float(first_item[1])
+            float(first_item[1])  # type: ignore[arg-type]
             return True
         except (TypeError, ValueError):
             return False
