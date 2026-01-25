@@ -109,17 +109,11 @@ class TestTemporalSubsequenceMatching:
         """Test pattern matching with multiple constraints combined."""
         seq = (("A", 1), ("B", 3), ("C", 6), ("D", 8))
         # Pattern A, C, D: gaps are 5 (A-C) and 2 (C-D), span is 7
-        assert is_subsequence_in_list_with_time_constraints(
-            ("A", "C", "D"), seq, mingap=1, maxgap=6, maxspan=10
-        )
+        assert is_subsequence_in_list_with_time_constraints(("A", "C", "D"), seq, mingap=1, maxgap=6, maxspan=10)
         # Violates mingap=3 for C-D gap
-        assert not is_subsequence_in_list_with_time_constraints(
-            ("A", "C", "D"), seq, mingap=3, maxgap=6, maxspan=10
-        )
+        assert not is_subsequence_in_list_with_time_constraints(("A", "C", "D"), seq, mingap=3, maxgap=6, maxspan=10)
         # Violates maxspan=6
-        assert not is_subsequence_in_list_with_time_constraints(
-            ("A", "C", "D"), seq, mingap=1, maxgap=6, maxspan=6
-        )
+        assert not is_subsequence_in_list_with_time_constraints(("A", "C", "D"), seq, mingap=1, maxgap=6, maxspan=6)
 
 
 class TestGSPWithTemporalConstraints:
@@ -335,15 +329,15 @@ class TestTemporalConstraintsFuzzing:
     def test_temporal_constraints_with_hypothesis(self, constraint_type: str) -> None:
         """
         Property-based test: temporal constraints should always produce valid results.
-        
+
         Tests that:
         1. Support counts are non-negative
         2. Pattern lengths are sensible
         3. No crashes occur with various constraint values
         4. Support is monotonic across levels
         """
-        from hypothesis import given, strategies as st, settings, HealthCheck
-        
+        from hypothesis import HealthCheck, given, settings, strategies as st
+
         @given(
             n_transactions=st.integers(min_value=2, max_value=10),
             vocab_size=st.integers(min_value=2, max_value=5),
@@ -365,50 +359,50 @@ class TestTemporalConstraintsFuzzing:
         ) -> None:
             # Generate random timestamped transactions
             transactions = _generate_test_transactions(n_transactions, vocab_size, data)
-            
+
             # Create GSP with the constraint
             kwargs = {constraint_type: constraint_value}
             try:
                 gsp = GSP(transactions, **kwargs)
                 result = gsp.search(min_support=min_support)
-                
+
                 # Validate result properties
                 _validate_support_counts(result)
                 _validate_pattern_lengths(result)
                 _validate_support_monotonicity(result)
                 _validate_min_support_threshold(result, n_transactions, min_support)
-                
+
             except ValueError as e:
                 # Some constraint combinations may be invalid, that's okay
                 if "mingap cannot be greater than maxgap" not in str(e):
                     raise
-        
+
         run_test()
 
 
 def _generate_test_transactions(n_transactions: int, vocab_size: int, data) -> list:
     """Generate random timestamped transactions for testing."""
     from hypothesis import strategies as st
-    
+
     vocab = [chr(65 + i) for i in range(vocab_size)]  # A, B, C, etc.
     transactions = []
-    
+
     for _ in range(n_transactions):
         # Use Hypothesis to generate transaction length and items
         length = data.draw(st.integers(min_value=1, max_value=5))
         items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
         # Generate increasing timestamps using Hypothesis
         timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=20), min_size=length, max_size=length)))
-        transaction = [(item, ts) for item, ts in zip(items, timestamps)]
+        transaction = [(item, ts) for item, ts in zip(items, timestamps, strict=True)]
         transactions.append(transaction)
-    
+
     return transactions
 
 
 def _validate_support_counts(result: list) -> None:
     """Validate that all support counts are non-negative integers."""
     for level in result:
-        for pattern, support in level.items():
+        for support in level.values():
             assert support >= 0, f"Support should be non-negative: {support}"
             assert isinstance(support, int), f"Support should be an integer: {support}"
 
@@ -426,9 +420,9 @@ def _validate_support_monotonicity(result: list) -> None:
         for i in range(len(result) - 1):
             max_support_current = max(result[i].values()) if result[i] else 0
             max_support_next = max(result[i + 1].values()) if result[i + 1] else 0
-            assert max_support_next <= max_support_current, (
-                "Support should be monotonic (longer patterns should have <= support)"
-            )
+            assert (
+                max_support_next <= max_support_current
+            ), "Support should be monotonic (longer patterns should have <= support)"
 
 
 def _validate_min_support_threshold(result: list, n_transactions: int, min_support: float) -> None:
@@ -437,9 +431,9 @@ def _validate_min_support_threshold(result: list, n_transactions: int, min_suppo
     if abs_min_support > 0:  # Only check if threshold is meaningful
         for level in result:
             for pattern, support in level.items():
-                assert support >= abs_min_support, (
-                    f"Pattern {pattern} has support {support} below threshold {abs_min_support}"
-                )
+                assert (
+                    support >= abs_min_support
+                ), f"Pattern {pattern} has support {support} below threshold {abs_min_support}"
 
 
 class TestTemporalConstraintsFuzzingEdgeCases:
@@ -448,15 +442,15 @@ class TestTemporalConstraintsFuzzingEdgeCases:
     def test_temporal_constraints_edge_cases_hypothesis(self) -> None:
         """
         Fuzzing test for edge cases with temporal constraints.
-        
+
         Tests robustness with:
         - Empty transactions
         - Single-item transactions
         - Transactions with identical timestamps
         - Transactions with very large timestamp gaps
         """
-        from hypothesis import given, strategies as st, settings, HealthCheck, assume
-        
+        from hypothesis import HealthCheck, given, assume, settings, strategies as st
+
         @given(
             n_transactions=st.integers(min_value=2, max_value=8),
             has_duplicates=st.booleans(),
@@ -481,54 +475,58 @@ class TestTemporalConstraintsFuzzingEdgeCases:
             # Validate constraint combination
             if mingap is not None and maxgap is not None:
                 assume(mingap <= maxgap)
-            
+
             vocab = ["X", "Y", "Z"]
             transactions = []
-            
+
             for _ in range(n_transactions):
                 # Use Hypothesis to generate transaction length and items
                 length = data.draw(st.integers(min_value=1, max_value=4))
                 items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
-                
+
                 if has_zero_gaps:
                     # Some items have the same timestamp - use Hypothesis
-                    timestamps = sorted(data.draw(st.lists(st.sampled_from([1.0, 2.0, 3.0]), min_size=length, max_size=length)))
+                    timestamps = sorted(
+                        data.draw(st.lists(st.sampled_from([1.0, 2.0, 3.0]), min_size=length, max_size=length))
+                    )
                 elif has_duplicates:
                     # Allow duplicate items
                     timestamps = sorted([float(i) for i in range(length)])
                 else:
                     # Normal case - use Hypothesis
-                    timestamps = sorted(data.draw(st.lists(st.floats(min_value=0, max_value=10), min_size=length, max_size=length)))
-                
-                transaction = [(item, ts) for item, ts in zip(items, timestamps)]
+                    timestamps = sorted(
+                        data.draw(st.lists(st.floats(min_value=0, max_value=10), min_size=length, max_size=length))
+                    )
+
+                transaction = [(item, ts) for item, ts in zip(items, timestamps, strict=True)]
                 transactions.append(transaction)
-            
+
             try:
                 gsp = GSP(transactions, mingap=mingap, maxgap=maxgap)
                 result = gsp.search(min_support=0.3)
-                
+
                 # Should not crash and should return valid results
                 assert isinstance(result, list), "Result should be a list"
                 for level in result:
                     assert isinstance(level, dict), "Each level should be a dict"
-                    
+
             except ValueError:
                 # Some constraint combinations may be invalid
                 pass
-        
+
         run_edge_case_test()
 
     def test_temporal_constraints_monotonicity_hypothesis(self) -> None:
         """
         Property test: Relaxing constraints should never decrease the number of patterns found.
-        
+
         Tests that:
         - Increasing maxgap should find >= patterns
         - Decreasing mingap should find >= patterns
         - Increasing maxspan should find >= patterns
         """
-        from hypothesis import given, strategies as st, settings, HealthCheck
-        
+        from hypothesis import HealthCheck, given, settings, strategies as st
+
         @given(
             n_transactions=st.integers(min_value=3, max_value=6),
             base_gap=st.floats(min_value=1.0, max_value=5.0),
@@ -547,34 +545,33 @@ class TestTemporalConstraintsFuzzingEdgeCases:
             # Generate transactions using Hypothesis
             vocab = ["P", "Q", "R"]
             transactions = []
-            
+
             for _ in range(n_transactions):
                 # Use Hypothesis to generate transaction length and items
                 length = data.draw(st.integers(min_value=2, max_value=4))
                 items = data.draw(st.lists(st.sampled_from(vocab), min_size=length, max_size=length))
                 timestamps = sorted([i * 2.0 for i in range(length)])  # Evenly spaced
-                transaction = [(item, ts) for item, ts in zip(items, timestamps)]
+                transaction = [(item, ts) for item, ts in zip(items, timestamps, strict=True)]
                 transactions.append(transaction)
-            
+
             # Test maxgap monotonicity
             try:
                 gsp_strict = GSP(transactions, maxgap=base_gap)
                 result_strict = gsp_strict.search(min_support=0.3)
-                
+
                 gsp_relaxed = GSP(transactions, maxgap=base_gap * 2)
                 result_relaxed = gsp_relaxed.search(min_support=0.3)
-                
+
                 # Count total patterns
                 count_strict = sum(len(level) for level in result_strict)
                 count_relaxed = sum(len(level) for level in result_relaxed)
-                
+
                 # Relaxed constraints should find at least as many patterns
                 assert count_relaxed >= count_strict, (
-                    f"Relaxing maxgap should not decrease patterns: "
-                    f"strict={count_strict}, relaxed={count_relaxed}"
+                    f"Relaxing maxgap should not decrease patterns: " f"strict={count_strict}, relaxed={count_relaxed}"
                 )
             except ValueError:
                 # Some combinations may be invalid
                 pass
-        
+
         run_monotonicity_test()

@@ -6,7 +6,12 @@ implementation, CLI helpers for loading transactional data, and the package vers
 
 from importlib import metadata as importlib_metadata
 
-from gsppy.cli import detect_and_read_file, read_transactions_from_csv, read_transactions_from_json, setup_logging
+from gsppy.cli import (
+    setup_logging,
+    detect_and_read_file,
+    read_transactions_from_csv,
+    read_transactions_from_json,
+)
 from gsppy.gsp import GSP
 
 try:
