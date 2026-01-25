@@ -67,6 +67,7 @@ def read_transactions_from_json(file_path: str) -> List[List]:
     Supports both simple transactions and timestamped transactions:
     - Simple: [["A", "B", "C"], ["D", "E"]]
     - Timestamped: [[["A", 1], ["B", 3]], [["D", 2], ["E", 5]]]
+      where the first element is the item and the second element is the timestamp
 
     Parameters:
         file_path (str): Path to the file containing transactions.
@@ -219,6 +220,20 @@ def main(
     
     Supports both simple transactions (items only) and timestamped transactions
     (item-timestamp pairs) for temporal pattern mining.
+    
+    Examples:
+        Basic usage without temporal constraints:
+        
+        ```bash
+        gsppy --file transactions.json --min_support 0.3
+        ```
+        
+        With temporal constraints:
+        
+        ```bash
+        gsppy --file temporal_data.json --min_support 0.3 --maxgap 10
+        gsppy --file events.json --min_support 0.5 --mingap 2 --maxgap 10 --maxspan 20
+        ```
     """
     setup_logging(verbose)
 

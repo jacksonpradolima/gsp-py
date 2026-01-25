@@ -441,18 +441,19 @@ class GSP:
             ```python
             from gsppy.gsp import GSP
 
-            # Transactions with timestamps
+            # Transactions with timestamps (item, timestamp) pairs
+            # where timestamps can be in any unit (seconds, minutes, hours, days, etc.)
             timestamped_transactions = [
-                [("A", 1), ("B", 3), ("C", 5)],
-                [("A", 2), ("B", 10), ("C", 12)],
-                [("A", 1), ("C", 4)],
+                [("A", 1), ("B", 3), ("C", 5)],      # timestamps: 1, 3, 5
+                [("A", 2), ("B", 10), ("C", 12)],    # timestamps: 2, 10, 12
+                [("A", 1), ("C", 4)],                # timestamps: 1, 4
             ]
 
             # Find patterns with maxgap of 5 time units between consecutive items
             gsp = GSP(timestamped_transactions, maxgap=5)
             patterns = gsp.search(min_support=0.5)
             # Pattern ("A", "B", "C") won't be found in transaction 2 
-            # because gap between B and C is only 2, but A to B is 8 (exceeds maxgap)
+            # because gap between A and B is 8 (exceeds maxgap=5)
             ```
         """
         if not 0.0 < min_support <= 1.0:
