@@ -17,7 +17,7 @@ jobs:
     name: Semantic Release and Publish
     runs-on: ubuntu-latest
     concurrency: release
-    if: "!contains(github.event.head_commit.message, 'chore(release):')"
+    if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):')"
     environment:
       name: pypi
       url: https://pypi.org/project/gsppy/
@@ -37,7 +37,7 @@ jobs:
       - name: Install Python Semantic Release
         run: |
           python -m pip install --upgrade pip
-          pip install python-semantic-release==9.17.0 build
+          pip install python-semantic-release==9.17.0 build uv
 
       - name: Python Semantic Release (Version & Tag)
         id: release
@@ -50,21 +50,33 @@ jobs:
           # Store current tag before running semantic-release
           BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
           
-          # Run semantic-release
-          semantic-release version
-          
-          # Check if a new tag was created
-          AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
-          
-          if [ "$BEFORE_TAG" != "$AFTER_TAG" ] && [ "$AFTER_TAG" != "none" ]; then
-            NEW_VERSION=$(echo "$AFTER_TAG" | sed 's/^v//')
-            echo "released=true" >> $GITHUB_OUTPUT
-            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "New version released: $NEW_VERSION (was: $BEFORE_TAG)"
+          # Run semantic-release and handle potential failure
+          if semantic-release version; then
+            # Check if a new tag was created
+            AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+            
+            if [ "$BEFORE_TAG" != "$AFTER_TAG" ] && [ "$AFTER_TAG" != "none" ]; then
+              NEW_VERSION=$(echo "$AFTER_TAG" | sed 's/^v//')
+              echo "released=true" >> $GITHUB_OUTPUT
+              echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "New version released: $NEW_VERSION (was: $BEFORE_TAG)"
+            else
+              echo "released=false" >> $GITHUB_OUTPUT
+              echo "No new version to release (current tag: $AFTER_TAG)"
+            fi
           else
             echo "released=false" >> $GITHUB_OUTPUT
-            echo "No new version to release (current tag: $AFTER_TAG)"
+            echo "semantic-release version command failed; no release created." >&2
+            exit 1
           fi
+
+      - name: Update uv.lock
+        if: steps.release.outputs.released == 'true'
+        run: |
+          uv lock
+          git add uv.lock
+          git commit -m "chore: update uv.lock for version ${{ steps.release.outputs.version }}"
+          git push
 
       - name: Build package
         if: steps.release.outputs.released == 'true'
