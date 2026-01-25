@@ -157,9 +157,10 @@ def test_main_invalid_json_file(monkeypatch: MonkeyPatch):
         with pytest.raises(SystemExit) as excinfo:
             main()
         assert excinfo.value.code == 1
-        mock_error.assert_called_with(
-            "Error executing GSP algorithm: GSP requires multiple transactions to find meaningful patterns."
-        )
+        # Error now caught during JSON parsing validation
+        assert mock_error.called
+        error_message = mock_error.call_args[0][0]
+        assert "JSON must contain a top-level list of transactions" in error_message
 
     # Cleanup
     os.unlink(temp_file_name)

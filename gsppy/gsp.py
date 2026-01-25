@@ -88,16 +88,16 @@ Version:
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Optional, Union, cast
+from typing import Dict, List, Tuple, Union, Optional, cast
 from itertools import chain
 from collections import Counter
 
 from gsppy.utils import (
+    has_timestamps,
     split_into_batches,
     is_subsequence_in_list,
-    is_subsequence_in_list_with_time_constraints,
     generate_candidates_from_previous,
-    has_timestamps,
+    is_subsequence_in_list_with_time_constraints,
 )
 from gsppy.accelerate import support_counts as support_counts_accel
 
@@ -134,7 +134,7 @@ class GSP:
         Initialize the GSP algorithm with raw transactional data.
 
         Parameters:
-            raw_transactions (Union[List[List[str]], List[List[Tuple[str, float]]]]): 
+            raw_transactions (Union[List[List[str]], List[List[Tuple[str, float]]]]):
                 Input transaction dataset where each transaction is either:
                 - A list of items (e.g., [['A', 'B'], ['B', 'C', 'D']])
                 - A list of (item, timestamp) tuples (e.g., [[('A', 1.0), ('B', 2.0)]])
@@ -174,16 +174,10 @@ class GSP:
             raise ValueError("maxgap must be non-negative")
         if self.maxspan is not None and self.maxspan < 0:
             raise ValueError("maxspan must be non-negative")
-        if (
-            self.mingap is not None
-            and self.maxgap is not None
-            and self.mingap > self.maxgap
-        ):
+        if self.mingap is not None and self.maxgap is not None and self.mingap > self.maxgap:
             raise ValueError("mingap cannot be greater than maxgap")
 
-    def _pre_processing(
-        self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]]]
-    ) -> None:
+    def _pre_processing(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]]]) -> None:
         """
         Validate and preprocess the input transactional dataset.
 
@@ -192,7 +186,7 @@ class GSP:
         It handles both simple transactions (items only) and timestamped transactions.
 
         Parameters:
-            raw_transactions (Union[List[List[str]], List[List[Tuple[str, float]]]]): 
+            raw_transactions (Union[List[List[str]], List[List[Tuple[str, float]]]]):
                 Input transactional data (with or without timestamps).
 
         Attributes Set:
@@ -219,12 +213,13 @@ class GSP:
             raise ValueError(msg)
 
         logger.info("Pre-processing transactions...")
-        
+
         # Detect if transactions have timestamps by checking non-empty transactions
         self.has_timestamps = False
         for tx in raw_transactions:
             if tx:  # Check non-empty transactions
-                self.has_timestamps = has_timestamps(tx)
+                tx_sequence = cast(List[Union[str, Tuple[str, float]]], tx)
+                self.has_timestamps = has_timestamps(tx_sequence)
                 if self.has_timestamps:
                     logger.debug("Detected timestamped transactions")
                 break
@@ -237,7 +232,7 @@ class GSP:
             )
 
         self.max_size: int = max(len(item) for item in raw_transactions)
-        
+
         if self.has_timestamps:
             # For timestamped transactions, convert to tuples and extract items for counting
             timestamped_txs = cast(List[List[Tuple[str, float]]], raw_transactions)
@@ -273,7 +268,7 @@ class GSP:
 
         Parameters:
             batch (List[Tuple]): A batch of candidate sequences, where each sequence is represented as a tuple.
-            transactions (List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]]): 
+            transactions (List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]]):
                 Preprocessed transactions as tuples (with or without timestamps).
             min_support (int): Absolute minimum support count required for a candidate to be considered frequent.
             mingap (Optional[float]): Minimum time gap between consecutive items.
@@ -287,10 +282,10 @@ class GSP:
         """
         results: List[Tuple[Tuple[str, ...], int]] = []
         has_temporal = mingap is not None or maxgap is not None or maxspan is not None
-        
+
         # Detect if transactions have timestamps using the helper function
         has_timestamps_flag = transactions and has_timestamps(transactions[0])
-        
+
         for item in batch:
             if has_timestamps_flag or has_temporal:
                 # Use temporal-aware checking for timestamped transactions
@@ -304,7 +299,7 @@ class GSP:
             else:
                 # Use standard non-temporal checking for simple transactions
                 frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))
-            
+
             if frequency >= min_support:
                 results.append((item, frequency))
         return results
@@ -331,10 +326,7 @@ class GSP:
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [
-                    (batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan)
-                    for batch in batches
-                ],
+                [(batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary
@@ -351,7 +343,7 @@ class GSP:
         Calculate support counts for candidate sequences using the fastest available backend.
         This will try the Rust extension if available (and configured), otherwise fall back to
         the Python multiprocessing implementation.
-        
+
         Note: When temporal constraints are active or transactions have timestamps,
         the Python implementation is always used as the accelerated backends do not yet
         support temporal constraints or timestamped transactions.
@@ -360,7 +352,7 @@ class GSP:
         has_temporal = self.mingap is not None or self.maxgap is not None or self.maxspan is not None
         if has_temporal or self.has_timestamps:
             return self._support_python(items, min_support, batch_size)
-        
+
         # For non-timestamped transactions, we can use accelerated support counting
         # Cast is safe here because we've confirmed no timestamps above
         non_timestamped_transactions = cast(List[Tuple[str, ...]], self.transactions)
@@ -395,7 +387,7 @@ class GSP:
         This method facilitates the discovery of frequent sequential patterns
         in the input transaction dataset. Patterns are extracted iteratively at each k-sequence level,
         starting from singleton sequences, until no further frequent patterns can be found.
-        
+
         When temporal constraints (mingap, maxgap, maxspan) are specified during initialization,
         the algorithm enforces these constraints during pattern matching, allowing for time-aware
         sequential pattern mining.
@@ -436,7 +428,7 @@ class GSP:
             gsp = GSP(transactions)
             patterns = gsp.search(min_support=0.3)
             ```
-            
+
             Usage with temporal constraints (requires timestamped transactions):
 
             ```python
@@ -445,15 +437,15 @@ class GSP:
             # Transactions with timestamps (item, timestamp) pairs
             # where timestamps can be in any unit (seconds, minutes, hours, days, etc.)
             timestamped_transactions = [
-                [("A", 1), ("B", 3), ("C", 5)],      # timestamps: 1, 3, 5
-                [("A", 2), ("B", 10), ("C", 12)],    # timestamps: 2, 10, 12
-                [("A", 1), ("C", 4)],                # timestamps: 1, 4
+                [("A", 1), ("B", 3), ("C", 5)],  # timestamps: 1, 3, 5
+                [("A", 2), ("B", 10), ("C", 12)],  # timestamps: 2, 10, 12
+                [("A", 1), ("C", 4)],  # timestamps: 1, 4
             ]
 
             # Find patterns with maxgap of 5 time units between consecutive items
             gsp = GSP(timestamped_transactions, maxgap=5)
             patterns = gsp.search(min_support=0.5)
-            # Pattern ("A", "B", "C") won't be found in transaction 2 
+            # Pattern ("A", "B", "C") won't be found in transaction 2
             # because gap between A and B is 8 (exceeds maxgap=5)
             ```
         """

@@ -33,7 +33,7 @@ import csv
 import sys
 import json
 import logging
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Tuple, Union, Optional, cast
 
 import click
 
@@ -63,7 +63,7 @@ def setup_logging(verbose: bool) -> None:
 def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
     """
     Read transactions from a JSON file.
-    
+
     Supports both simple transactions and timestamped transactions:
     - Simple: [["A", "B", "C"], ["D", "E"]]
     - Timestamped: [[["A", 1], ["B", 3]], [["D", 2], ["E", 5]]]
@@ -73,7 +73,7 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
         file_path (str): Path to the file containing transactions.
 
     Returns:
-        Union[List[List[str]], List[List[Tuple[str, float]]]]: 
+        Union[List[List[str]], List[List[Tuple[str, float]]]]:
             Parsed transactions from the file. For timestamped data,
             inner lists are converted to tuples (item, timestamp).
 
@@ -82,24 +82,27 @@ def read_transactions_from_json(file_path: str) -> Union[List[List[str]], List[L
     """
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            raw_transactions = json.load(f)
-        
+            raw_data: Any = json.load(f)
+
+        if not isinstance(raw_data, list):
+            raise ValueError("JSON must contain a top-level list of transactions.")
+
+        raw_transactions: List[List[Union[str, Tuple[str, float]]]] = cast(
+            List[List[Union[str, Tuple[str, float]]]], raw_data
+        )
+
         # Check if this is timestamped data using the helper function
         # Use defensive checks to avoid errors on malformed data
-        if (
-            isinstance(raw_transactions, list)
-            and len(raw_transactions) > 0
-            and isinstance(raw_transactions[0], list)
-            and has_timestamps(raw_transactions[0])
-        ):
+        if raw_transactions and has_timestamps(raw_transactions[0]):
             # Convert timestamped data: [[["A", 1], ["B", 2]]] -> [[("A", 1), ("B", 2)]]
             transactions: List[List[Tuple[str, float]]] = [
-                [tuple(item) for item in transaction] for transaction in raw_transactions
+                [cast(Tuple[str, float], tuple(item)) for item in transaction] for transaction in raw_transactions
             ]
             return transactions
-        else:
-            # Simple transactions remain as-is (or invalid data passed through for GSP to validate)
-            return raw_transactions
+
+        # Simple transactions remain as-is (or invalid data passed through for GSP to validate)
+        simple_transactions: List[List[str]] = [[str(item) for item in transaction] for transaction in raw_transactions]
+        return simple_transactions
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
         logging.error(msg)
@@ -144,7 +147,7 @@ def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tup
         file_path (str): Path to the file containing transactions.
 
     Returns:
-        Union[List[List[str]], List[List[Tuple[str, float]]]]: 
+        Union[List[List[str]], List[List[Tuple[str, float]]]]:
             Parsed transactions from the file.
 
     Raises:
@@ -218,19 +221,19 @@ def main(
 ) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
-    
+
     Supports both simple transactions (items only) and timestamped transactions
     (item-timestamp pairs) for temporal pattern mining.
-    
+
     Examples:
         Basic usage without temporal constraints:
-        
+
         ```bash
         gsppy --file transactions.json --min_support 0.3
         ```
-        
+
         With temporal constraints:
-        
+
         ```bash
         gsppy --file temporal_data.json --min_support 0.3 --maxgap 10
         gsppy --file events.json --min_support 0.5 --mingap 2 --maxgap 10 --maxspan 20
@@ -274,13 +277,13 @@ def _validate_parameters(
 ) -> None:
     """
     Validate input parameters for GSP algorithm.
-    
+
     Args:
         min_support: Minimum support threshold
         mingap: Minimum time gap constraint
         maxgap: Maximum time gap constraint
         maxspan: Maximum time span constraint
-        
+
     Raises:
         SystemExit: If validation fails
     """
