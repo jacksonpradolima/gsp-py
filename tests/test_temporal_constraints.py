@@ -117,21 +117,17 @@ class TestTemporalSubsequenceMatching:
 
     def test_repeated_items_with_temporal_constraints(self) -> None:
         """Test pattern matching with repeated items where early match violates constraints but later match satisfies."""
-        # Sequence with repeated B at different times
-        seq = (("A", 0), ("B", 1), ("B", 5), ("C", 7))
-        # Pattern A, B, C with mingap=3
-        # First B at time 1 would violate mingap (gap A-B = 1 < 3)
-        # But second B at time 5 satisfies mingap (gap A-B = 5 >= 3) and B-C (gap = 2, but only mingap applies between A-B)
-        # Actually, mingap applies to all consecutive pairs, so B-C gap=2 < 3 would fail
-        # Let's test a case where the later occurrence works
+        # Test case 1: Repeated B with mingap constraint
+        # Early B at time 1 violates mingap (A@0 -> B@1, gap=1 < 3)
+        # Later B at time 5 satisfies mingap (A@0 -> B@5, gap=5 >= 3)
         seq2 = (("A", 0), ("B", 1), ("B", 5), ("C", 10))
-        # With mingap=3, A@0 -> B@5 (gap=5, ok) -> C@10 (gap=5, ok)
+        # With mingap=3, should match A@0 -> B@5 (gap=5) -> C@10 (gap=5)
         assert is_subsequence_in_list_with_time_constraints(("A", "B", "C"), seq2, mingap=3)
         
-        # Test with maxgap: early B violates, later B satisfies
+        # Test case 2: Repeated B with maxgap constraint
+        # Sequence intentionally has out-of-order timestamps to test robustness
         seq3 = (("A", 0), ("B", 15), ("B", 5))
-        # Pattern A, B with maxgap=10
-        # First B at time 15 would violate maxgap (gap = 15 > 10)
+        # First B at time 15 violates maxgap (gap = 15 > 10)
         # Second B at time 5 satisfies maxgap (gap = 5 <= 10)
         assert is_subsequence_in_list_with_time_constraints(("A", "B"), seq3, maxgap=10)
 
