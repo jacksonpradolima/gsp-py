@@ -38,6 +38,7 @@ from typing import Dict, List, Tuple
 import click
 
 from gsppy.gsp import GSP
+from gsppy.utils import has_timestamps
 
 # Configure logging
 logging.basicConfig(
@@ -81,15 +82,13 @@ def read_transactions_from_json(file_path: str) -> List[List]:
         with open(file_path, "r", encoding="utf-8") as f:
             raw_transactions = json.load(f)
         
-        # Check if this is timestamped data (nested lists with 2 elements)
+        # Check if this is timestamped data using the helper function
         # Use defensive checks to avoid errors on malformed data
         if (
             isinstance(raw_transactions, list)
             and len(raw_transactions) > 0
             and isinstance(raw_transactions[0], list)
-            and len(raw_transactions[0]) > 0
-            and isinstance(raw_transactions[0][0], list)
-            and len(raw_transactions[0][0]) == 2
+            and has_timestamps(raw_transactions[0])
         ):
             # Convert timestamped data: [[["A", 1], ["B", 2]]] -> [[("A", 1), ("B", 2)]]
             transactions = [
