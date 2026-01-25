@@ -291,7 +291,7 @@ def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> No
     # Either empty or very few patterns
     total_patterns = sum(len(level) for level in result)
     assert total_patterns <= 5, (
-        f"With min_support=0.95, expected very few or no patterns, " f"but found {total_patterns} patterns"
+        f"With min_support=0.95, expected very few or no patterns, but found {total_patterns} patterns"
     )
 
 

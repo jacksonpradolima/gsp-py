@@ -584,7 +584,7 @@ class TestTemporalConstraintsFuzzingEdgeCases:
 
                 # Relaxed constraints should find at least as many patterns
                 assert count_relaxed >= count_strict, (
-                    f"Relaxing maxgap should not decrease patterns: " f"strict={count_strict}, relaxed={count_relaxed}"
+                    f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
                 )
             except ValueError:
                 # Some combinations may be invalid
