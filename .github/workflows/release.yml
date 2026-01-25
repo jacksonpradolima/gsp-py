@@ -46,16 +46,24 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Store current tag before running semantic-release
+          BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          
+          # Run semantic-release
           semantic-release version
-          RELEASE_STATUS=$?
-          if [ $RELEASE_STATUS -eq 0 ]; then
-            NEW_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+          
+          # Check if a new tag was created
+          AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          
+          if [ "$BEFORE_TAG" != "$AFTER_TAG" ] && [ "$AFTER_TAG" != "none" ]; then
+            NEW_VERSION=$(echo "$AFTER_TAG" | sed 's/^v//')
             echo "released=true" >> $GITHUB_OUTPUT
             echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "New version released: $NEW_VERSION"
+            echo "New version released: $NEW_VERSION (was: $BEFORE_TAG)"
           else
             echo "released=false" >> $GITHUB_OUTPUT
-            echo "No new version to release"
+            echo "No new version to release (current tag: $AFTER_TAG)"
           fi
 
       - name: Build package
@@ -104,7 +112,5 @@ jobs:
       - name: Publish package distributions to PyPI
         if: steps.release.outputs.released == 'true'
         uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598 # v1.13.0
-        with:
-          attestations: false
 
 
