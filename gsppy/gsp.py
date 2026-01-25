@@ -97,6 +97,7 @@ from gsppy.utils import (
     is_subsequence_in_list,
     is_subsequence_in_list_with_time_constraints,
     generate_candidates_from_previous,
+    has_timestamps,
 )
 from gsppy.accelerate import support_counts as support_counts_accel
 
@@ -219,13 +220,14 @@ class GSP:
 
         logger.info("Pre-processing transactions...")
         
-        # Detect if transactions have timestamps
+        # Detect if transactions have timestamps by checking non-empty transactions
         self.has_timestamps = False
-        if raw_transactions and raw_transactions[0]:
-            first_item = raw_transactions[0][0]
-            if isinstance(first_item, tuple) and len(first_item) == 2:
-                self.has_timestamps = True
-                logger.debug("Detected timestamped transactions")
+        for tx in raw_transactions:
+            if tx:  # Check non-empty transactions
+                self.has_timestamps = has_timestamps(tx)
+                if self.has_timestamps:
+                    logger.debug("Detected timestamped transactions")
+                break
 
         # Validate temporal constraints are only used with timestamps
         if (self.mingap is not None or self.maxgap is not None or self.maxspan is not None) and not self.has_timestamps:
@@ -288,17 +290,11 @@ class GSP:
         results: List[Tuple[Tuple[str, ...], int]] = []
         has_temporal = mingap is not None or maxgap is not None or maxspan is not None
         
-        # Detect if transactions have timestamps
-        has_timestamps = (
-            transactions
-            and isinstance(transactions[0], tuple)
-            and len(transactions[0]) > 0
-            and isinstance(transactions[0][0], tuple)
-            and len(transactions[0][0]) == 2
-        )
+        # Detect if transactions have timestamps using the helper function
+        has_timestamps_flag = transactions and has_timestamps(transactions[0])
         
         for item in batch:
-            if has_timestamps or has_temporal:
+            if has_timestamps_flag or has_temporal:
                 # Use temporal-aware checking for timestamped transactions
                 frequency = sum(
                     1

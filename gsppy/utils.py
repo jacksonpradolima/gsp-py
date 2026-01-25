@@ -26,6 +26,39 @@ from functools import lru_cache
 from itertools import product
 
 
+def has_timestamps(sequence: Union[Tuple, List]) -> bool:
+    """
+    Check if a sequence contains timestamped data (item-timestamp pairs).
+    
+    Parameters:
+        sequence: A sequence that may contain timestamped data
+        
+    Returns:
+        bool: True if the sequence contains timestamped data, False otherwise
+        
+    Examples:
+        >>> has_timestamps((('A', 1), ('B', 2)))
+        True
+        >>> has_timestamps(('A', 'B', 'C'))
+        False
+    """
+    if not sequence or len(sequence) == 0:
+        return False
+    
+    first_item = sequence[0]
+    
+    # Check if first item is a tuple with 2 elements where second is numeric
+    if isinstance(first_item, tuple) and len(first_item) == 2:
+        try:
+            # Try to interpret second element as a number
+            float(first_item[1])
+            return True
+        except (TypeError, ValueError):
+            return False
+    
+    return False
+
+
 def split_into_batches(
     items: Sequence[Tuple[str, ...]], batch_size: int
 ) -> Generator[Sequence[Tuple[str, ...]], None, None]:
@@ -147,14 +180,14 @@ def is_subsequence_in_list_with_time_constraints(
         return False
 
     # Determine if sequence has timestamps
-    has_timestamps = sequence and isinstance(sequence[0], tuple) and len(sequence[0]) == 2
+    has_timestamps_flag = has_timestamps(sequence)
     
     # If no temporal constraints and no timestamps, use the optimized cached version
-    if not has_timestamps and mingap is None and maxgap is None and maxspan is None:
+    if not has_timestamps_flag and mingap is None and maxgap is None and maxspan is None:
         return is_subsequence_in_list(subsequence, sequence)  # type: ignore
 
     # Extract items and timestamps from sequence
-    if has_timestamps:
+    if has_timestamps_flag:
         seq_items = tuple(item for item, _ in sequence)  # type: ignore
         seq_times = tuple(time for _, time in sequence)  # type: ignore
     else:
@@ -165,49 +198,40 @@ def is_subsequence_in_list_with_time_constraints(
     len_seq = len(seq_items)
     
     # Use two-pointer approach with temporal constraint checking
-    sub_idx = 0
-    matched_indices = []
-    
-    for seq_idx in range(len_seq):
-        if seq_items[seq_idx] == subsequence[sub_idx]:
-            # Check temporal constraints if we have timestamps
-            if seq_times is not None and len(matched_indices) > 0:
-                prev_idx = matched_indices[-1]
-                time_gap = seq_times[seq_idx] - seq_times[prev_idx]
-                
-                # Check mingap constraint
-                if mingap is not None and time_gap < mingap:
-                    continue
-                
-                # Check maxgap constraint
-                if maxgap is not None and time_gap > maxgap:
-                    # If maxgap is violated, we need to restart from the beginning
-                    # because the current match chain is broken
-                    sub_idx = 0
-                    matched_indices = []
-                    # Check if current item matches the first element
-                    if seq_items[seq_idx] == subsequence[0]:
-                        matched_indices.append(seq_idx)
-                        sub_idx = 1
-                    continue
-            
-            matched_indices.append(seq_idx)
-            sub_idx += 1
-            
-            # If we've matched the entire subsequence, check maxspan
-            if sub_idx == len_sub:
-                if seq_times is not None and maxspan is not None:
-                    first_idx = matched_indices[0]
-                    last_idx = matched_indices[-1]
-                    span = seq_times[last_idx] - seq_times[first_idx]
-                    if span > maxspan:
-                        # This match violates maxspan, need to continue searching
-                        # Reset to try finding another occurrence
-                        sub_idx = 0
-                        matched_indices = []
-                        # Don't check current position again, continue from next
+    # For maxgap violations, we need to try starting from each position
+    for start_idx in range(len_seq - len_sub + 1):
+        sub_idx = 0
+        matched_indices = []
+        
+        for seq_idx in range(start_idx, len_seq):
+            if seq_items[seq_idx] == subsequence[sub_idx]:
+                # Check temporal constraints if we have timestamps
+                if seq_times is not None and len(matched_indices) > 0:
+                    prev_idx = matched_indices[-1]
+                    time_gap = seq_times[seq_idx] - seq_times[prev_idx]
+                    
+                    # Check mingap constraint
+                    if mingap is not None and time_gap < mingap:
                         continue
-                return True
+                    
+                    # Check maxgap constraint
+                    if maxgap is not None and time_gap > maxgap:
+                        # This match chain is broken, try next starting position
+                        break
+                
+                matched_indices.append(seq_idx)
+                sub_idx += 1
+                
+                # If we've matched the entire subsequence, check maxspan
+                if sub_idx == len_sub:
+                    if seq_times is not None and maxspan is not None:
+                        first_idx = matched_indices[0]
+                        last_idx = matched_indices[-1]
+                        span = seq_times[last_idx] - seq_times[first_idx]
+                        if span > maxspan:
+                            # This match violates maxspan, try next starting position
+                            break
+                    return True
     
     return False
 
