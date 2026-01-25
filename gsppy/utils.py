@@ -281,12 +281,11 @@ def _try_match_from_position(
     
     for seq_idx in range(start_idx, len_seq):
         if seq_items[seq_idx] == subsequence[sub_idx]:
-            # Check temporal constraints if we have timestamps
-            if seq_times is not None and matched_indices:
-                if not _check_temporal_constraints(
-                    seq_idx, matched_indices, seq_times, mingap, maxgap
-                ):
-                    break
+            # Check temporal constraints if we have timestamps and have previous matches
+            if seq_times is not None and matched_indices and not _check_temporal_constraints(
+                seq_idx, matched_indices, seq_times, mingap, maxgap
+            ):
+                break
             
             matched_indices.append(seq_idx)
             sub_idx += 1

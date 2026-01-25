@@ -441,6 +441,10 @@ def _validate_min_support_threshold(result: list, n_transactions: int, min_suppo
                     f"Pattern {pattern} has support {support} below threshold {abs_min_support}"
                 )
 
+
+class TestTemporalConstraintsFuzzingEdgeCases:
+    """Additional property-based fuzzing tests for temporal constraint edge cases."""
+
     def test_temporal_constraints_edge_cases_hypothesis(self) -> None:
         """
         Fuzzing test for edge cases with temporal constraints.
