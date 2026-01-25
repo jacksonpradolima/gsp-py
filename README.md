@@ -38,6 +38,7 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
 6. [💡 Usage](#usage)
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
+    - [⏱️ Temporal Constraints](#temporal-constraints)
 7. [⌨️ Typing](#typing)
 8. [🌟 Planned Features](#planned-features)
 9. [🤝 Contributing](#contributing)
@@ -56,6 +57,7 @@ principles**. Using support thresholds, GSP identifies frequent sequences of ite
 - **Ordered (non-contiguous) matching**: Detects patterns where items appear in order but not necessarily adjacent, following standard GSP semantics. For example, the pattern `('A', 'C')` is found in the sequence `['A', 'B', 'C']`.
 - **Support-based pruning**: Only retains sequences that meet the minimum support threshold.
 - **Candidate generation**: Iteratively generates candidate sequences of increasing length.
+- **Temporal constraints**: Support for time-constrained pattern mining with `mingap`, `maxgap`, and `maxspan` parameters to find patterns within specific time windows.
 - **General-purpose**: Useful in retail, web analytics, social networks, temporal sequence mining, and more.
 
 For example:
@@ -469,6 +471,128 @@ result = gsp.search(min_support=0.5)  # Need at least 2/4 sequences
 
 ---
 
+## ⏱️ Temporal Constraints
+
+GSP-Py supports **time-constrained sequential pattern mining** with three powerful temporal constraints: `mingap`, `maxgap`, and `maxspan`. These constraints enable domain-specific applications such as medical event mining, retail analytics, and temporal user journey discovery.
+
+### Temporal Constraint Parameters
+
+- **`mingap`**: Minimum time gap required between consecutive items in a pattern
+- **`maxgap`**: Maximum time gap allowed between consecutive items in a pattern  
+- **`maxspan`**: Maximum time span from the first to the last item in a pattern
+
+### Using Temporal Constraints
+
+To use temporal constraints, your transactions must include timestamps as (item, timestamp) tuples:
+
+```python
+from gsppy.gsp import GSP
+
+# Transactions with timestamps (e.g., in seconds, hours, days, etc.)
+timestamped_transactions = [
+    [("Login", 0), ("Browse", 2), ("AddToCart", 5), ("Purchase", 7)],
+    [("Login", 0), ("Browse", 1), ("AddToCart", 15), ("Purchase", 20)],
+    [("Login", 0), ("Browse", 3), ("AddToCart", 6), ("Purchase", 8)],
+]
+
+# Find patterns where consecutive events occur within 10 time units
+gsp = GSP(timestamped_transactions, maxgap=10)
+patterns = gsp.search(min_support=0.6)
+
+# The pattern ("Browse", "AddToCart", "Purchase") will:
+# - Be found in transaction 1: gaps are 3 and 2 (both ≤ 10) ✅
+# - NOT be found in transaction 2: gap between Browse→AddToCart is 14 (exceeds maxgap) ❌
+# - Be found in transaction 3: gaps are 3 and 2 (both ≤ 10) ✅
+# Result: Support = 2/3 = 67% (above threshold of 60%)
+```
+
+### CLI Usage with Temporal Constraints
+
+```bash
+# Find patterns with maximum gap of 5 time units
+gsppy --file temporal_data.json --min_support 0.3 --maxgap 5
+
+# Find patterns with minimum gap of 2 time units
+gsppy --file temporal_data.json --min_support 0.3 --mingap 2
+
+# Find patterns that complete within 10 time units
+gsppy --file temporal_data.json --min_support 0.3 --maxspan 10
+
+# Combine multiple constraints
+gsppy --file temporal_data.json --min_support 0.3 --mingap 1 --maxgap 5 --maxspan 10
+```
+
+### Real-World Examples
+
+#### Medical Event Mining
+
+```python
+from gsppy.gsp import GSP
+
+# Medical events with timestamps in days
+medical_sequences = [
+    [("Symptom", 0), ("Diagnosis", 2), ("Treatment", 5), ("Recovery", 15)],
+    [("Symptom", 0), ("Diagnosis", 1), ("Treatment", 20), ("Recovery", 30)],
+    [("Symptom", 0), ("Diagnosis", 3), ("Treatment", 6), ("Recovery", 18)],
+]
+
+# Find patterns where treatment follows diagnosis within 10 days
+gsp = GSP(medical_sequences, maxgap=10)
+result = gsp.search(min_support=0.5)
+
+# Pattern ("Diagnosis", "Treatment") found in sequences 1 & 3 only
+# (sequence 2 has gap of 19 days, exceeding maxgap)
+```
+
+#### Retail Analytics
+
+```python
+from gsppy.gsp import GSP
+
+# Customer purchases with timestamps in hours
+purchase_sequences = [
+    [("Browse", 0), ("AddToCart", 0.5), ("Purchase", 1)],
+    [("Browse", 0), ("AddToCart", 1), ("Purchase", 25)],  # Long delay
+    [("Browse", 0), ("AddToCart", 0.3), ("Purchase", 0.8)],
+]
+
+# Find purchase journeys that complete within 2 hours
+gsp = GSP(purchase_sequences, maxspan=2)
+result = gsp.search(min_support=0.5)
+
+# Full sequence found in 2 out of 3 transactions
+# (sequence 2 has span of 25 hours, exceeding maxspan)
+```
+
+#### User Journey Discovery
+
+```python
+from gsppy.gsp import GSP
+
+# Website navigation with timestamps in seconds
+navigation_sequences = [
+    [("Home", 0), ("Search", 5), ("Product", 10), ("Checkout", 15)],
+    [("Home", 0), ("Search", 3), ("Product", 8), ("Checkout", 180)],
+    [("Home", 0), ("Search", 4), ("Product", 9), ("Checkout", 14)],
+]
+
+# Find navigation patterns with:
+# - Minimum 2 seconds between steps (mingap)
+# - Maximum 20 seconds between steps (maxgap)
+# - Complete within 30 seconds total (maxspan)
+gsp = GSP(navigation_sequences, mingap=2, maxgap=20, maxspan=30)
+result = gsp.search(min_support=0.5)
+```
+
+### Important Notes
+
+- Temporal constraints require timestamped transactions (item-timestamp tuples)
+- If temporal constraints are specified but transactions don't have timestamps, a warning is logged and constraints are ignored
+- When using temporal constraints, the Python backend is automatically used (accelerated backends don't yet support temporal constraints)
+- Timestamps can be in any unit (seconds, minutes, hours, days) as long as they're consistent within your dataset
+
+---
+
 ## ⌨️ Typing
 
 `gsppy` ships inline type information (PEP 561) via a bundled `py.typed` marker. The public API is re-exported from
@@ -487,11 +611,6 @@ We are actively working to improve GSP-Py. Here are some exciting features plann
 
 2. **Support for Preprocessing and Postprocessing**:
     - Add hooks to allow users to transform datasets before mining and customize the output results.
-
-3. **Support for Time-Constrained Pattern Mining**:
-    - Extend GSP-Py to handle temporal datasets by allowing users to define time constraints (e.g., maximum time gaps
-      between events, time windows) during the sequence mining process.
-    - Enable candidate pruning and support calculations based on these temporal constraints.
 
 Want to contribute or suggest an
 improvement? [Open a discussion or issue!](https://github.com/jacksonpradolima/gsp-py/issues)

@@ -59,22 +59,46 @@ def setup_logging(verbose: bool) -> None:
         logger.setLevel(logging.INFO)
 
 
-def read_transactions_from_json(file_path: str) -> List[List[str]]:
+def read_transactions_from_json(file_path: str) -> List[List]:
     """
     Read transactions from a JSON file.
+    
+    Supports both simple transactions and timestamped transactions:
+    - Simple: [["A", "B", "C"], ["D", "E"]]
+    - Timestamped: [[["A", 1], ["B", 3]], [["D", 2], ["E", 5]]]
 
     Parameters:
         file_path (str): Path to the file containing transactions.
 
     Returns:
-        List[List]: Parsed transactions from the file.
+        List[List]: Parsed transactions from the file. For timestamped data,
+                   inner lists are converted to tuples (item, timestamp).
 
     Raises:
         ValueError: If the file cannot be read or does not contain valid JSON.
     """
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            transactions: List[List[str]] = json.load(f)
+            raw_transactions = json.load(f)
+        
+        # Check if this is timestamped data (nested lists with 2 elements)
+        # Use defensive checks to avoid errors on malformed data
+        if (
+            isinstance(raw_transactions, list)
+            and len(raw_transactions) > 0
+            and isinstance(raw_transactions[0], list)
+            and len(raw_transactions[0]) > 0
+            and isinstance(raw_transactions[0][0], list)
+            and len(raw_transactions[0][0]) == 2
+        ):
+            # Convert timestamped data: [[["A", 1], ["B", 2]]] -> [[("A", 1), ("B", 2)]]
+            transactions = [
+                [tuple(item) for item in transaction] for transaction in raw_transactions
+            ]
+        else:
+            # Simple transactions remain as-is (or invalid data passed through for GSP to validate)
+            transactions = raw_transactions
+        
         return transactions
     except Exception as e:
         msg = f"Error reading transaction data from JSON file '{file_path}': {e}"
@@ -112,7 +136,7 @@ def read_transactions_from_csv(file_path: str) -> List[List[str]]:
         raise ValueError(msg) from e
 
 
-def detect_and_read_file(file_path: str) -> List[List[str]]:
+def detect_and_read_file(file_path: str) -> List[List]:
     """
     Detect file format (CSV or JSON) and read transactions.
 
