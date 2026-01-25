@@ -1,4 +1,4 @@
-name: Automated Release Management
+name: Automated Release Management and PyPI Publishing
 
 on:
   push:
@@ -14,10 +14,13 @@ permissions:
 
 jobs:
   release:
-    name: Semantic Release
+    name: Semantic Release and Publish
     runs-on: ubuntu-latest
     concurrency: release
     if: "!contains(github.event.head_commit.message, 'chore(release):')"
+    environment:
+      name: pypi
+      url: https://pypi.org/project/gsppy/
 
     steps:
       - name: Checkout code
@@ -36,12 +39,72 @@ jobs:
           python -m pip install --upgrade pip
           pip install python-semantic-release==9.17.0 build
 
-      - name: Python Semantic Release
+      - name: Python Semantic Release (Version & Tag)
+        id: release
         env:
           GH_TOKEN: ${{ secrets.ORG_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           semantic-release version
+          RELEASE_STATUS=$?
+          if [ $RELEASE_STATUS -eq 0 ]; then
+            NEW_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "New version released: $NEW_VERSION"
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+            echo "No new version to release"
+          fi
+
+      - name: Build package
+        if: steps.release.outputs.released == 'true'
+        run: |
+          python -m build
+
+      - name: Install Syft
+        if: steps.release.outputs.released == 'true'
+        uses: anchore/sbom-action/download-syft@62ad5284b8ced813296287a0b63906cb364b73ee # v0.22.0
+
+      - name: Generate SBOM (CycloneDX)
+        if: steps.release.outputs.released == 'true'
+        run: syft packages dist -o cyclonedx-json=dist/sbom.json
+
+      - name: Sign distributions with Sigstore
+        if: steps.release.outputs.released == 'true'
+        uses: sigstore/gh-action-sigstore-python@f514d46b907ebcd5bedc05145c03b69c1edd8b46 # v3.0.0
+        with:
+          inputs: >-
+            dist/*.whl
+            dist/*.tar.gz
+
+      - name: Move Sigstore attestations and SBOM out of dist
+        if: steps.release.outputs.released == 'true'
+        run: |
+          mkdir -p attestations
+          if ls dist/*.sigstore.json 1> /dev/null 2>&1; then
+            mv dist/*.sigstore.json attestations/
+          fi
+          if [ -f dist/sbom.json ]; then
+            mv dist/sbom.json attestations/
+          fi
+
+      - name: Create GitHub Release
+        if: steps.release.outputs.released == 'true'
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.1
+        with:
+          tag_name: v${{ steps.release.outputs.version }}
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            attestations/*.sigstore.json
+            attestations/sbom.json
+
+      - name: Publish package distributions to PyPI
+        if: steps.release.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598 # v1.13.0
+        with:
+          attestations: false
 
 
