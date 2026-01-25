@@ -163,10 +163,39 @@ def detect_and_read_file(file_path: str) -> List[List[str]]:
     show_default=True,
     help="Backend to use for support counting.",
 )
+@click.option(
+    "--mingap",
+    type=float,
+    default=None,
+    help="Minimum time gap required between consecutive items in patterns (requires timestamped transactions).",
+)
+@click.option(
+    "--maxgap",
+    type=float,
+    default=None,
+    help="Maximum time gap allowed between consecutive items in patterns (requires timestamped transactions).",
+)
+@click.option(
+    "--maxspan",
+    type=float,
+    default=None,
+    help="Maximum time span from first to last item in patterns (requires timestamped transactions).",
+)
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
-def main(file_path: str, min_support: float, backend: str, verbose: bool) -> None:
+def main(
+    file_path: str,
+    min_support: float,
+    backend: str,
+    mingap: float,
+    maxgap: float,
+    maxspan: float,
+    verbose: bool,
+) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
+    
+    Supports both simple transactions (items only) and timestamped transactions
+    (item-timestamp pairs) for temporal pattern mining.
     """
     setup_logging(verbose)
 
@@ -182,13 +211,27 @@ def main(file_path: str, min_support: float, backend: str, verbose: bool) -> Non
         logger.error("Error: min_support must be in the range (0.0, 1.0].")
         sys.exit(1)
 
+    # Validate temporal constraints
+    if mingap is not None and mingap < 0:
+        logger.error("Error: mingap must be non-negative.")
+        sys.exit(1)
+    if maxgap is not None and maxgap < 0:
+        logger.error("Error: maxgap must be non-negative.")
+        sys.exit(1)
+    if maxspan is not None and maxspan < 0:
+        logger.error("Error: maxspan must be non-negative.")
+        sys.exit(1)
+    if mingap is not None and maxgap is not None and mingap > maxgap:
+        logger.error("Error: mingap cannot be greater than maxgap.")
+        sys.exit(1)
+
     # Select backend for acceleration layer
     if backend and backend.lower() != "auto":
         os.environ["GSPPY_BACKEND"] = backend.lower()
 
     # Initialize and run GSP algorithm
     try:
-        gsp = GSP(transactions)
+        gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan)
         patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
