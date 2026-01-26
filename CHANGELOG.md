@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v3.6.0 (2026-01-26)
+
+### Chores
+
+- Update uv.lock for version 3.5.0
+  ([`e2c1be0`](https://github.com/jacksonpradolima/gsp-py/commit/e2c1be0945b0b124d8afa8981877513449b29ff0))
+
+### Features
+
+- Add flexible pruning strategy system to GSP algorithm
+  ([`94089cc`](https://github.com/jacksonpradolima/gsp-py/commit/94089cc5716ec6d7c7a6e0720843162db116fca2))
+
+feat: add flexible pruning strategy system to GSP algorithm
+
+- Add typing-extensions as a dependency
+  ([`6222945`](https://github.com/jacksonpradolima/gsp-py/commit/62229455ef3976c405d96e5ea9d5cafaf5eee6e3))
+
+### Refactoring
+
+- Pruning strategy initialization and enhance type hints; add typing_extensions dependency
+  ([`ddc0abd`](https://github.com/jacksonpradolima/gsp-py/commit/ddc0abd9352797dd19988f60d6287da421ef60cf))
+
+
 ## v3.5.0 (2026-01-26)
 
 ### Bug Fixes
