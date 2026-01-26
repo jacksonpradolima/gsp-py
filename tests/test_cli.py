@@ -322,20 +322,22 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
 
     monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2", "--verbose"])
 
-    # Patch file reading and GSP.search so CLI runs and verbosity is set
-    with patch("gsppy.cli.logger.setLevel") as mock_setLevel:
+    # Patch logging.basicConfig to verify it's called with DEBUG level
+    with patch("gsppy.cli.logging.basicConfig") as mock_basicConfig:
         with patch("gsppy.cli.detect_and_read_file", return_value=[["Bread", "Milk"], ["Milk", "Diaper"]]):
             with patch("gsppy.cli.GSP.search", return_value=[{("Bread",): 1}]):
                 with pytest.raises(SystemExit) as excinfo:
                     main()  # Run the CLI
                 assert excinfo.value.code == 0
-        # Check that the logger level was set to DEBUG
-        mock_setLevel.assert_called_with(logging.DEBUG)
+        # Check that basicConfig was called with DEBUG level
+        mock_basicConfig.assert_called_once()
+        call_kwargs = mock_basicConfig.call_args[1]
+        assert call_kwargs['level'] == logging.DEBUG
 
     os.unlink(temp_file_name)
 
 
-def test_cli_timestamped_json_parsing(monkeypatch: MonkeyPatch):
+def test_cli_timestamped_json_parsing() -> None:
     """Test that CLI correctly parses timestamped JSON data with nested lists."""
     # Create a timestamped JSON file with nested lists (as produced by json.dump)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
@@ -382,7 +384,7 @@ def test_cli_temporal_constraints_flags(monkeypatch: MonkeyPatch):
         os.unlink(temp_file_name)
 
 
-def test_cli_empty_first_transaction_timestamped(monkeypatch: MonkeyPatch):
+def test_cli_empty_first_transaction_timestamped() -> None:
     """Test that CLI correctly handles timestamped data when first transaction is empty."""
     # Create a timestamped JSON file with empty first transaction
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
@@ -400,3 +402,106 @@ def test_cli_empty_first_transaction_timestamped(monkeypatch: MonkeyPatch):
         assert transactions[1][0] == ("A", 1)
     finally:
         os.unlink(temp_file_name)
+
+
+def test_cli_verbose_flag_formatting() -> None:
+    """
+    Test that --verbose flag produces detailed log output with proper formatting.
+    
+    Verifies that verbose mode includes timestamps, log levels, PID, and context.
+    """
+    # Create a valid JSON file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
+        temp_file_name = temp_file.name
+    
+    # Run the CLI using subprocess to capture actual output
+    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    
+    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
+    process = subprocess.run(cmd, text=True, capture_output=True, env=env)
+    
+    # Verify verbose output contains expected format elements
+    output = process.stdout + process.stderr
+    
+    # Check for timestamp format (ISO 8601: YYYY-MM-DDTHH:MM:SS)
+    assert any("T" in line and "|" in line for line in output.split("\n")), \
+        "Expected timestamp format in verbose output"
+    
+    # Check for log level labels
+    assert "INFO" in output or "DEBUG" in output, "Expected log level labels in verbose output"
+    
+    # Check for PID (Process ID)
+    assert "PID:" in output, "Expected process ID in verbose output"
+    
+    # Cleanup
+    os.unlink(temp_file_name)
+
+
+def test_cli_non_verbose_simple_output() -> None:
+    """
+    Test that default (non-verbose) mode produces simple, clean output.
+    
+    Verifies that non-verbose mode doesn't include timestamps, PIDs, or log levels.
+    """
+    # Create a valid JSON file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
+        temp_file_name = temp_file.name
+    
+    # Run the CLI without --verbose flag
+    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    
+    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
+    process = subprocess.run(cmd, text=True, capture_output=True, env=env)
+    
+    output = process.stdout
+    
+    # Check that simple mode doesn't have verbose formatting
+    assert "PID:" not in output, "PID should not appear in non-verbose output"
+    # Output should still have the results
+    assert "Frequent Patterns Found:" in output, "Expected results in output"
+    
+    # Cleanup
+    os.unlink(temp_file_name)
+
+
+def test_cli_verbose_with_gsp_verbose(monkeypatch: MonkeyPatch):
+    """
+    Test that CLI --verbose flag is passed to GSP instance.
+    
+    Verifies integration between CLI and GSP verbosity settings.
+    """
+    # Create a valid JSON file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
+        temp_file_name = temp_file.name
+
+    # Mock CLI arguments with --verbose flag
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2", "--verbose"])
+
+    # Capture the GSP initialization to check verbose parameter
+    from unittest.mock import patch
+    with patch("gsppy.cli.GSP") as mock_gsp:
+        mock_instance = mock_gsp.return_value
+        mock_instance.search.return_value = []
+        
+        try:
+            main()
+        except SystemExit as e:
+            if e.code == 0:
+                pass  # Expected success exit
+            else:
+                raise
+        
+        # Verify GSP was initialized with verbose=True
+        mock_gsp.assert_called_once()
+        call_kwargs = mock_gsp.call_args[1]
+        assert call_kwargs.get("verbose") is True, "Expected GSP to be initialized with verbose=True"
+
+    # Cleanup
+    os.unlink(temp_file_name)

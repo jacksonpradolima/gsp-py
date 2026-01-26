@@ -308,7 +308,28 @@ gsppy --file path/to/transactions.csv --min_support 0.3 --backend rust
 - `--file`: Path to your input file (JSON or CSV). **Required**.
 - `--min_support`: Minimum support threshold as a fraction (e.g., `0.3` for 30%). Default is `0.2`.
 - `--backend`: Backend to use for support counting. One of `auto` (default), `python`, `rust`, or `gpu`.
-- `--verbose`: (Optional) Enable detailed output for debugging.
+- `--verbose`: Enable detailed logging with timestamps, log levels, and process IDs for debugging and traceability.
+- `--mingap`, `--maxgap`, `--maxspan`: Temporal constraints for time-aware pattern mining (requires timestamped transactions).
+
+#### Verbose Mode
+
+For debugging or to track execution in CI/CD pipelines, use the `--verbose` flag:
+
+```bash
+gsppy --file transactions.json --min_support 0.3 --verbose
+```
+
+This produces structured logging output with timestamps, log levels, and process information:
+
+```
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Pre-processing transactions...
+YYYY-MM-DDTHH:MM:SS | DEBUG    | PID:4179 | gsppy.gsp | Unique candidates: [('Bread',), ('Milk',), ...]
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Starting GSP algorithm with min_support=0.3...
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Run 1: 6 candidates filtered to 5.
+...
+```
+
+For complete logging documentation, see [docs/logging.md](docs/logging.md).
 
 #### Example
 
@@ -404,6 +425,30 @@ result = GSP(transactions).search(min_support)
 # Output the results
 print(result)
 ```
+
+### Verbose Mode for Debugging
+
+Enable detailed logging to track algorithm progress and debug issues:
+
+```python
+from gsppy.gsp import GSP
+
+# Enable verbose logging for the entire instance
+gsp = GSP(transactions, verbose=True)
+result = gsp.search(min_support=0.3)
+
+# Or enable verbose for a specific search only
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3, verbose=True)
+```
+
+Verbose mode provides:
+- Detailed progress information during execution
+- Candidate generation and filtering statistics
+- Preprocessing and validation details
+- Useful for debugging, research, and CI/CD integration
+
+For complete documentation on logging, see [docs/logging.md](docs/logging.md).
 
 ### Output
 

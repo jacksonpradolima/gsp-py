@@ -129,6 +129,7 @@ class GSP:
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
         maxspan: Optional[float] = None,
+        verbose: bool = False,
     ):
         """
         Initialize the GSP algorithm with raw transactional data.
@@ -141,6 +142,8 @@ class GSP:
             mingap (Optional[float]): Minimum time gap required between consecutive items in patterns.
             maxgap (Optional[float]): Maximum time gap allowed between consecutive items in patterns.
             maxspan (Optional[float]): Maximum time span from first to last item in patterns.
+            verbose (bool): Enable verbose logging output with detailed progress information.
+                           Default is False (minimal output).
 
         Attributes Initialized:
             - Processes the input raw transaction dataset.
@@ -158,8 +161,26 @@ class GSP:
         self.mingap = mingap
         self.maxgap = maxgap
         self.maxspan = maxspan
+        self.verbose = verbose
+        self._configure_logging()
         self._validate_temporal_constraints()
         self._pre_processing(raw_transactions)
+
+    def _configure_logging(self) -> None:
+        """
+        Configure logging for the GSP instance based on verbosity setting.
+
+        When verbose is True, sets the module logger to DEBUG level for detailed output.
+        When verbose is False, sets the module logger to WARNING level for minimal output.
+
+        This method intentionally avoids modifying the root logger to prevent
+        unexpected global logging side effects, especially in multiprocessing
+        environments.
+        """
+        if self.verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
 
     def _validate_temporal_constraints(self) -> None:
         """
@@ -386,6 +407,7 @@ class GSP:
         min_support: float = 0.2,
         max_k: Optional[int] = None,
         backend: Optional[str] = None,
+        verbose: Optional[bool] = None,
     ) -> List[Dict[Tuple[str, ...], int]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
@@ -405,6 +427,8 @@ class GSP:
             max_k (Optional[int]): Maximum length of patterns to mine. If None, mines up to max transaction length.
             backend (Optional[str]): Backend to use for support counting ('auto', 'python', 'rust', 'gpu').
                                     Note: temporal constraints always use Python backend.
+            verbose (Optional[bool]): Override instance verbosity setting for this search.
+                                     If None, uses the instance's verbose setting.
 
         Returns:
             List[Dict[Tuple[str, ...], int]]: A list of dictionaries containing frequent patterns
@@ -455,6 +479,12 @@ class GSP:
             # because gap between A and B is 8 (exceeds maxgap=5)
             ```
         """
+        # Override verbosity if specified for this search
+        original_verbose = self.verbose
+        if verbose is not None:
+            self.verbose = verbose
+            self._configure_logging()
+
         if not 0.0 < min_support <= 1.0:
             raise ValueError("Minimum support must be in the range (0.0, 1.0]")
 
@@ -499,4 +529,10 @@ class GSP:
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
+
+        # Restore original verbosity if it was overridden
+        if verbose is not None:
+            self.verbose = original_verbose
+            self._configure_logging()
+
         return self.freq_patterns[:-1]
