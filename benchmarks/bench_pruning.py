@@ -38,6 +38,9 @@ from gsppy.pruning import (
     CombinedPruning,
 )
 
+# Note: Using random module for synthetic data generation in benchmarks.
+# This is safe for non-cryptographic purposes (benchmarking/testing).
+# For cryptographic use cases, use the secrets module instead.
 random.seed(42)  # For reproducibility
 
 
@@ -58,6 +61,7 @@ def generate_synthetic_data(n_tx: int, tx_len: int, vocab_size: int) -> List[Lis
 
     for _ in range(n_tx):
         # Vary transaction length slightly for realism
+        # Using random for synthetic benchmark data (non-cryptographic use)
         length = max(1, tx_len + random.randint(-2, 2))
         transactions.append(random.sample(vocab, min(length, len(vocab))))
 

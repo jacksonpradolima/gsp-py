@@ -785,12 +785,7 @@ larger applications.
 
 We are actively working to improve GSP-Py. Here are some exciting features planned for future releases:
 
-1. **~~Custom Filters for Candidate Pruning~~** ✅ **Implemented!**
-    - Flexible pruning strategies with `PruningStrategy` interface
-    - Built-in strategies: Support-based, Frequency-based, Temporal-aware, Combined
-    - Easy creation of custom pruning logic
-
-2. **Support for Preprocessing and Postprocessing**:
+1. **Support for Preprocessing and Postprocessing**:
     - Add hooks to allow users to transform datasets before mining and customize the output results.
 
 Want to contribute or suggest an
