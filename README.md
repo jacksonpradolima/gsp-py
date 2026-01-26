@@ -38,6 +38,7 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
 6. [💡 Usage](#usage)
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
+    - [📊 DataFrame Input Support](#dataframe-input-support)
     - [⏱️ Temporal Constraints](#temporal-constraints)
 7. [⌨️ Typing](#typing)
 8. [🌟 Planned Features](#planned-features)
@@ -513,6 +514,208 @@ result = gsp.search(min_support=0.5)  # Need at least 2/4 sequences
 
 > [!TIP]
 > For more complex examples, find example scripts in the [`gsppy/tests`](gsppy/tests) folder.
+
+---
+
+## 📊 DataFrame Input Support
+
+GSP-Py supports **Polars and Pandas DataFrames** as input, enabling high-performance workflows with modern data formats like Arrow and Parquet. This feature is particularly useful for large-scale data engineering pipelines and integration with existing data processing workflows.
+
+### Installation
+
+Install GSP-Py with DataFrame support:
+
+```bash
+pip install 'gsppy[dataframe]'
+```
+
+This installs the optional dependencies: `polars`, `pandas`, and `pyarrow`.
+
+### DataFrame Input Formats
+
+GSP-Py supports two DataFrame formats:
+
+#### 1. Grouped Format (Transaction ID + Item Columns)
+
+Use when your data has separate rows for each item in a transaction:
+
+```python
+import polars as pl
+from gsppy import GSP
+
+# Polars DataFrame with transaction_id and item columns
+df = pl.DataFrame({
+    "transaction_id": [1, 1, 2, 2, 2, 3, 3],
+    "item": ["Bread", "Milk", "Bread", "Diaper", "Beer", "Milk", "Coke"],
+})
+
+# Run GSP directly on the DataFrame
+gsp = GSP(df, transaction_col="transaction_id", item_col="item")
+patterns = gsp.search(min_support=0.3)
+
+for level, freq_patterns in enumerate(patterns, start=1):
+    print(f"\n{level}-Sequence Patterns:")
+    for pattern, support in freq_patterns.items():
+        print(f"  {pattern}: {support}")
+```
+
+#### 2. Sequence Format (List Column)
+
+Use when each row contains a complete transaction as a list:
+
+```python
+import pandas as pd
+from gsppy import GSP
+
+# Pandas DataFrame with sequences as lists
+df = pd.DataFrame({
+    "transaction": [
+        ["Bread", "Milk"],
+        ["Bread", "Diaper", "Beer"],
+        ["Milk", "Coke"],
+    ]
+})
+
+gsp = GSP(df, sequence_col="transaction")
+patterns = gsp.search(min_support=0.3)
+```
+
+### DataFrame with Timestamps
+
+DataFrames support temporal constraints for time-aware pattern mining:
+
+```python
+import polars as pl
+from gsppy import GSP
+
+# Grouped format with timestamps
+df = pl.DataFrame({
+    "transaction_id": [1, 1, 1, 2, 2, 2],
+    "item": ["Login", "Browse", "Purchase", "Login", "Browse", "Purchase"],
+    "timestamp": [0, 2, 5, 0, 1, 15],  # Time in seconds
+})
+
+# Find patterns where consecutive events occur within 10 seconds
+gsp = GSP(
+    df,
+    transaction_col="transaction_id",
+    item_col="item",
+    timestamp_col="timestamp",
+    maxgap=10
+)
+patterns = gsp.search(min_support=0.5)
+```
+
+For sequence format with timestamps:
+
+```python
+import pandas as pd
+from gsppy import GSP
+
+df = pd.DataFrame({
+    "sequence": [["A", "B", "C"], ["A", "D"]],
+    "timestamps": [[1, 2, 3], [1, 5]],  # Timestamps per item
+})
+
+gsp = GSP(df, sequence_col="sequence", timestamp_col="timestamps", maxgap=3)
+patterns = gsp.search(min_support=0.5)
+```
+
+### Working with Parquet and Arrow Files
+
+DataFrames enable seamless integration with columnar storage formats:
+
+```python
+import polars as pl
+from gsppy import GSP
+
+# Read directly from Parquet
+df = pl.read_parquet("transactions.parquet")
+
+# Run GSP with automatic schema detection
+gsp = GSP(df, transaction_col="txn_id", item_col="product")
+patterns = gsp.search(min_support=0.2)
+
+# Or use Pandas with Arrow backend
+import pandas as pd
+df_pandas = pd.read_parquet("transactions.parquet", engine="pyarrow")
+gsp = GSP(df_pandas, transaction_col="txn_id", item_col="product")
+patterns = gsp.search(min_support=0.2)
+```
+
+### Performance Considerations
+
+DataFrames offer performance benefits for large datasets:
+
+- **Polars**: Leverages Arrow for zero-copy operations and parallel processing
+- **Pandas**: Compatible with Arrow backend for efficient memory usage
+- **Parquet/Arrow**: Columnar storage enables efficient filtering and reading
+- **Schema validation**: Errors are caught early with clear messages
+
+### DataFrame Schema Requirements
+
+**Grouped Format:**
+- `transaction_col`: Column containing transaction/sequence IDs (any type)
+- `item_col`: Column containing items (any type, converted to strings)
+- `timestamp_col` (optional): Column containing timestamps (numeric)
+
+**Sequence Format:**
+- `sequence_col`: Column containing lists of items
+- `timestamp_col` (optional): Column containing lists of timestamps (must match sequence lengths)
+
+### Error Handling
+
+GSP-Py provides clear error messages for schema issues:
+
+```python
+import polars as pl
+from gsppy import GSP
+
+df = pl.DataFrame({
+    "txn_id": [1, 2],
+    "product": ["A", "B"],
+})
+
+# ❌ Missing required column
+try:
+    gsp = GSP(df, transaction_col="txn_id", item_col="item")  # 'item' doesn't exist
+except ValueError as e:
+    print(f"Error: {e}")  # "Column 'item' not found in DataFrame"
+
+# ❌ Invalid format specification
+try:
+    gsp = GSP(df)  # Must specify either sequence_col or both transaction_col and item_col
+except ValueError as e:
+    print(f"Error: {e}")  # "Must specify either 'sequence_col' or both 'transaction_col' and 'item_col'"
+```
+
+### Backward Compatibility
+
+Traditional list-based input continues to work:
+
+```python
+from gsppy import GSP
+
+# Lists still work as before
+transactions = [["A", "B"], ["A", "C"], ["B", "C"]]
+gsp = GSP(transactions)
+patterns = gsp.search(min_support=0.5)
+```
+
+DataFrame parameters cannot be mixed with list input:
+
+```python
+transactions = [["A", "B"], ["C", "D"]]
+
+# ❌ This raises an error
+gsp = GSP(transactions, transaction_col="txn")  # ValueError: DataFrame parameters cannot be used with list input
+```
+
+### Examples and Tests
+
+For complete examples and edge cases, see:
+- [`tests/test_dataframe.py`](tests/test_dataframe.py) - Comprehensive test suite
+- DataFrame adapter documentation in [`gsppy/dataframe_adapters.py`](gsppy/dataframe_adapters.py)
 
 ---
 

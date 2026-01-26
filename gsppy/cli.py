@@ -188,7 +188,10 @@ def read_transactions_from_csv(file_path: str) -> List[List[str]]:
 
 def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
     """
-    Detect file format (CSV or JSON) and read transactions.
+    Detect file format (CSV, JSON, Parquet, Arrow) and read transactions.
+
+    Supports traditional formats (CSV, JSON) and modern DataFrame formats (Parquet, Arrow).
+    For DataFrame formats, requires 'gsppy[dataframe]' to be installed.
 
     Parameters:
         file_path (str): Path to the file containing transactions.
@@ -211,8 +214,111 @@ def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tup
 
     if file_extension == ".csv":
         return read_transactions_from_csv(file_path)
+    
+    if file_extension in [".parquet", ".pq"]:
+        return read_transactions_from_parquet(file_path)
+    
+    if file_extension in [".arrow", ".feather"]:
+        return read_transactions_from_arrow(file_path)
 
-    raise ValueError("Unsupported file format. Please provide a JSON or CSV file.")
+    raise ValueError(
+        f"Unsupported file format '{file_extension}'. "
+        "Supported formats: .json, .csv, .parquet, .arrow, .feather"
+    )
+
+
+def read_transactions_from_parquet(
+    file_path: str,
+    transaction_col: Optional[str] = None,
+    item_col: Optional[str] = None,
+    timestamp_col: Optional[str] = None,
+    sequence_col: Optional[str] = None,
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Read transactions from a Parquet file using Polars.
+
+    Parameters:
+        file_path (str): Path to the Parquet file.
+        transaction_col (Optional[str]): Column name for transaction IDs (grouped format).
+        item_col (Optional[str]): Column name for items (grouped format).
+        timestamp_col (Optional[str]): Column name for timestamps.
+        sequence_col (Optional[str]): Column name containing sequences (sequence format).
+
+    Returns:
+        Union[List[List[str]], List[List[Tuple[str, float]]]]:
+            Parsed transactions from the file.
+
+    Raises:
+        ValueError: If the file cannot be read or Polars is not installed.
+    """
+    try:
+        import polars as pl
+        from gsppy.dataframe_adapters import polars_to_transactions
+    except ImportError as e:
+        raise ValueError(
+            "Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'"
+        ) from e
+
+    try:
+        df = pl.read_parquet(file_path)
+        return polars_to_transactions(
+            df,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+    except Exception as e:
+        msg = f"Error reading transaction data from Parquet file '{file_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
+def read_transactions_from_arrow(
+    file_path: str,
+    transaction_col: Optional[str] = None,
+    item_col: Optional[str] = None,
+    timestamp_col: Optional[str] = None,
+    sequence_col: Optional[str] = None,
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Read transactions from an Arrow/Feather file using Polars.
+
+    Parameters:
+        file_path (str): Path to the Arrow/Feather file.
+        transaction_col (Optional[str]): Column name for transaction IDs (grouped format).
+        item_col (Optional[str]): Column name for items (grouped format).
+        timestamp_col (Optional[str]): Column name for timestamps.
+        sequence_col (Optional[str]): Column name containing sequences (sequence format).
+
+    Returns:
+        Union[List[List[str]], List[List[Tuple[str, float]]]]:
+            Parsed transactions from the file.
+
+    Raises:
+        ValueError: If the file cannot be read or Polars is not installed.
+    """
+    try:
+        import polars as pl
+        from gsppy.dataframe_adapters import polars_to_transactions
+    except ImportError as e:
+        raise ValueError(
+            "Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'"
+        ) from e
+
+    try:
+        df = pl.read_ipc(file_path)
+        return polars_to_transactions(
+            df,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+    except Exception as e:
+        msg = f"Error reading transaction data from Arrow file '{file_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
 
 
 # Click-based CLI
@@ -256,6 +362,30 @@ def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tup
     default=None,
     help="Maximum time span from first to last item in patterns (requires timestamped transactions).",
 )
+@click.option(
+    "--transaction-col",
+    type=str,
+    default=None,
+    help="DataFrame: column name for transaction IDs (grouped format).",
+)
+@click.option(
+    "--item-col",
+    type=str,
+    default=None,
+    help="DataFrame: column name for items (grouped format).",
+)
+@click.option(
+    "--timestamp-col",
+    type=str,
+    default=None,
+    help="DataFrame: column name for timestamps.",
+)
+@click.option(
+    "--sequence-col",
+    type=str,
+    default=None,
+    help="DataFrame: column name containing sequences (sequence format).",
+)
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
 def main(
     file_path: str,
@@ -264,10 +394,18 @@ def main(
     mingap: Optional[float],
     maxgap: Optional[float],
     maxspan: Optional[float],
+    transaction_col: Optional[str],
+    item_col: Optional[str],
+    timestamp_col: Optional[str],
+    sequence_col: Optional[str],
     verbose: bool,
 ) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
+
+    Supports multiple file formats:
+    - JSON/CSV: Traditional transaction formats
+    - Parquet/Arrow: Modern DataFrame formats (requires 'gsppy[dataframe]')
 
     Supports both simple transactions (items only) and timestamped transactions
     (item-timestamp pairs) for temporal pattern mining.
@@ -285,12 +423,51 @@ def main(
         gsppy --file temporal_data.json --min_support 0.3 --maxgap 10
         gsppy --file events.json --min_support 0.5 --mingap 2 --maxgap 10 --maxspan 20
         ```
+        
+        With Parquet files (grouped format):
+        
+        ```bash
+        gsppy --file data.parquet --min_support 0.3 \
+              --transaction-col txn_id --item-col product
+        ```
+        
+        With Arrow files (sequence format):
+        
+        ```bash
+        gsppy --file sequences.arrow --min_support 0.3 \
+              --sequence-col items
+        ```
     """
     setup_logging(verbose)
 
+    # Detect file extension to determine if DataFrame column params are needed
+    _, file_extension = os.path.splitext(file_path)
+    file_extension = file_extension.lower()
+    is_dataframe_format = file_extension in [".parquet", ".pq", ".arrow", ".feather"]
+
     # Automatically detect and load transactions
     try:
-        transactions = detect_and_read_file(file_path)
+        if is_dataframe_format:
+            # For DataFrame formats, pass column parameters
+            if file_extension in [".parquet", ".pq"]:
+                transactions = read_transactions_from_parquet(
+                    file_path,
+                    transaction_col=transaction_col,
+                    item_col=item_col,
+                    timestamp_col=timestamp_col,
+                    sequence_col=sequence_col,
+                )
+            else:  # Arrow/Feather
+                transactions = read_transactions_from_arrow(
+                    file_path,
+                    transaction_col=transaction_col,
+                    item_col=item_col,
+                    timestamp_col=timestamp_col,
+                    sequence_col=sequence_col,
+                )
+        else:
+            # For traditional formats, use existing detect_and_read_file
+            transactions = detect_and_read_file(file_path)
     except ValueError as e:
         logger.error(f"Error: {e}")
         sys.exit(1)
