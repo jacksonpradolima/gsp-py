@@ -1,6 +1,63 @@
 # CHANGELOG
 
 
+## v3.5.0 (2026-01-26)
+
+### Bug Fixes
+
+- Address code review feedback
+  ([`1e7cf86`](https://github.com/jacksonpradolima/gsp-py/commit/1e7cf8681b3cd0432e6d1608187b7d518c27fcc0))
+
+- Remove root logger modifications to prevent global side effects - Fix redundant logger
+  configuration in CLI - Remove redundant subprocess imports in tests - Revert unrelated formatting
+  changes in temporal constraints tests - Replace future dates with YYYY-MM-DD placeholders in
+  documentation - Add explanation for not using Loguru in logging documentation
+
+All changes address feedback from code review while maintaining backward compatibility and test
+  coverage.
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Specify logger name in caplog for verbose tests
+  ([`cb477b0`](https://github.com/jacksonpradolima/gsp-py/commit/cb477b0f040ce38b60b6e3d485536e79d6d3ea19))
+
+Update test_verbose_initialization, test_non_verbose_initialization, and
+  test_verbose_override_in_search to use caplog.at_level(logging.DEBUG, logger='gsppy.gsp') instead
+  of just caplog.at_level(logging.DEBUG). This ensures tests only capture logs from the gsppy.gsp
+  logger, preventing interference from other loggers and making tests more reliable.
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Update test_setup_logging_verbose to match refactored logging
+  ([`ab78c33`](https://github.com/jacksonpradolima/gsp-py/commit/ab78c33ee1c09964773b1af835c9bb133a778824))
+
+Update test to verify logging.basicConfig is called with DEBUG level instead of checking the removed
+  explicit logger.setLevel call. This aligns with the refactored logging configuration that removed
+  redundant logger level setting.
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Chores
+
+- Update uv.lock for version 3.4.3
+  ([`6a78997`](https://github.com/jacksonpradolima/gsp-py/commit/6a789979fd6a7422c063dbe5b2ff46cd0d2141c6))
+
+### Features
+
+- Add explicit verbosity control and structured logging
+  ([`44f56d9`](https://github.com/jacksonpradolima/gsp-py/commit/44f56d947978ddad1b7f2a2cca00f59def0ce4e4))
+
+feat: add explicit verbosity control and structured logging
+
+### Refactoring
+
+- Gsp initialization in tests to handle constraints explicitly and improve verbosity handling
+  ([`ced0243`](https://github.com/jacksonpradolima/gsp-py/commit/ced0243e58ff444988e37f5ae472f58d4478498e))
+
+- Gsp initialization in tests to handle constraints explicitly and improve verbosity handling
+  ([`479f305`](https://github.com/jacksonpradolima/gsp-py/commit/479f305aae02217ce7b75fede5e0fb249fd1b477))
+
+
 ## v3.4.3 (2026-01-25)
 
 ### Bug Fixes
