@@ -9,7 +9,7 @@ Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
 
-from typing import List, Tuple
+from typing import List, Tuple, Literal
 
 import pytest
 
@@ -342,7 +342,9 @@ class TestTemporalConstraintsFuzzing:
     """Property-based fuzzing tests for temporal constraints using Hypothesis."""
 
     @pytest.mark.parametrize("constraint_type", ["mingap", "maxgap", "maxspan"])
-    def test_temporal_constraints_with_hypothesis(self, constraint_type: str) -> None:
+    def test_temporal_constraints_with_hypothesis(
+        self, constraint_type: Literal["mingap", "maxgap", "maxspan"]
+    ) -> None:
         """
         Property-based test: temporal constraints should always produce valid results.
 
@@ -377,9 +379,13 @@ class TestTemporalConstraintsFuzzing:
             transactions = _generate_test_transactions(n_transactions, vocab_size, data)
 
             # Create GSP with the constraint
-            kwargs = {constraint_type: constraint_value}
             try:
-                gsp = GSP(transactions, **kwargs)
+                if constraint_type == "mingap":
+                    gsp = GSP(transactions, mingap=constraint_value)
+                elif constraint_type == "maxgap":
+                    gsp = GSP(transactions, maxgap=constraint_value)
+                else:
+                    gsp = GSP(transactions, maxspan=constraint_value)
                 result = gsp.search(min_support=min_support)
 
                 # Validate result properties
@@ -583,9 +589,9 @@ class TestTemporalConstraintsFuzzingEdgeCases:
                 count_relaxed = sum(len(level) for level in result_relaxed)
 
                 # Relaxed constraints should find at least as many patterns
-                assert count_relaxed >= count_strict, (
-                    f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
-                )
+                assert (
+                    count_relaxed >= count_strict
+                ), f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
             except ValueError:
                 # Some combinations may be invalid
                 pass
