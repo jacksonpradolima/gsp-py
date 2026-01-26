@@ -9,7 +9,6 @@ Email: jacksonpradolima@gmail.com
 """
 
 import pytest
-from typing import List
 
 # Check if optional dependencies are available
 try:
@@ -215,13 +214,6 @@ class TestDataFrameCompatibility:
         # Check that we got patterns
         assert len(result) > 0
 
-    @pytest.mark.skipif(POLARS_AVAILABLE and PANDAS_AVAILABLE, reason="Test only when libraries not installed")
-    def test_dataframe_without_installation(self):
-        """Test error message when DataFrame libraries not installed."""
-        # This test only runs if neither Polars nor Pandas is available
-        # Since we can't create a real DataFrame, we'll skip this test if libraries are installed
-        pass
-
 
 @pytest.mark.skipif(not POLARS_AVAILABLE or not PANDAS_AVAILABLE, reason="Both Polars and Pandas required")
 class TestDataFrameInteroperability:
@@ -298,6 +290,32 @@ class TestPolarsAdvancedFeatures:
         result = gsp.search(min_support=0.5)
         
         # Should work correctly even with unsorted timestamps
+        assert len(result) > 0
+
+    def test_polars_lazyframe_grouped_format(self):
+        """Test Polars LazyFrame with grouped format."""
+        df = pl.DataFrame({
+            "transaction_id": [1, 1, 2, 2, 2],
+            "item": ["A", "B", "A", "C", "D"],
+        }).lazy()  # Convert to LazyFrame
+        
+        gsp = GSP(df, transaction_col="transaction_id", item_col="item")
+        result = gsp.search(min_support=0.5)
+        
+        # Check that LazyFrame works correctly
+        assert len(result) > 0
+        assert ("A",) in result[0]
+
+    def test_polars_lazyframe_sequence_format(self):
+        """Test Polars LazyFrame with sequence format."""
+        df = pl.DataFrame({
+            "sequence": [["A", "B"], ["A", "C", "D"], ["B", "D"]]
+        }).lazy()  # Convert to LazyFrame
+        
+        gsp = GSP(df, sequence_col="sequence")
+        result = gsp.search(min_support=0.5)
+        
+        # Check that LazyFrame works correctly
         assert len(result) > 0
 
 

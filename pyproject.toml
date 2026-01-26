@@ -8,17 +8,17 @@ version = "3.6.0"
 description = "GSP (Generalized Sequence Pattern) algorithm in Python"
 keywords = ["GSP", "sequential patterns", "data analysis", "sequence mining"]
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = { file = "README.md", content-type = "text/markdown" }
 homepage = "https://github.com/jacksonpradolima/gsp-py"
 repository = "https://github.com/jacksonpradolima/gsp-py"
 authors = [{ name = "Jackson Antonio do Prado Lima", email = "jacksonpradolima@gmail.com" }]
 maintainers = [{ name = "Jackson Antonio do Prado Lima", email = "jacksonpradolima@gmail.com" }]
 classifiers = [
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Science/Research",
