@@ -33,7 +33,6 @@ gsp = GSP(transactions)
 patterns = gsp.search(min_support=0.3)
 
 # Use frequency-based pruning with a minimum frequency threshold
-from gsppy.pruning import FrequencyBasedPruning
 pruner = FrequencyBasedPruning(min_frequency=5)
 gsp = GSP(transactions, pruning_strategy=pruner)
 patterns = gsp.search(min_support=0.3)
@@ -57,6 +56,7 @@ License:
 This implementation is distributed under the MIT License.
 """
 
+import math
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional
 
@@ -150,8 +150,6 @@ class SupportBasedPruning(PruningStrategy):
         if context and "min_support_count" in context:
             min_support_count = context["min_support_count"]
         elif self.min_support_fraction is not None:
-            import math
-
             min_support_count = int(math.ceil(total_transactions * self.min_support_fraction))
         else:
             # If no threshold specified, don't prune
@@ -276,8 +274,6 @@ class TemporalAwarePruning(PruningStrategy):
         """
         # First check support threshold if specified
         if self.min_support_fraction is not None:
-            import math
-
             min_support_count = int(math.ceil(total_transactions * self.min_support_fraction))
             if support_count < min_support_count:
                 return True
