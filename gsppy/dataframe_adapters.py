@@ -70,22 +70,33 @@ License:
 This implementation is distributed under the MIT License.
 """
 
-from typing import List, Tuple, Union, Optional, cast, Any
+from typing import List, Tuple, Union, Optional, cast, Any, TYPE_CHECKING
 
-# Type stubs for optional dependencies
+if TYPE_CHECKING:
+    # Import for type checking only
+    try:
+        import polars as pl
+    except ImportError:
+        pl = None  # type: ignore
+    try:
+        import pandas as pd
+    except ImportError:
+        pd = None  # type: ignore
+
+# Runtime imports - these can fail
 try:
-    import polars as pl
+    import polars as pl_runtime
     POLARS_AVAILABLE = True
 except ImportError:
     POLARS_AVAILABLE = False
-    pl = None  # type: ignore
+    pl_runtime = None  # type: ignore
 
 try:
-    import pandas as pd
+    import pandas as pd_runtime
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
-    pd = None  # type: ignore
+    pd_runtime = None  # type: ignore
 
 
 class DataFrameAdapterError(Exception):
@@ -110,7 +121,7 @@ def _validate_pandas_available() -> None:
 
 
 def polars_to_transactions(
-    df: Any,
+    df: Union["pl.DataFrame", "pl.LazyFrame"],
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
@@ -166,7 +177,7 @@ def polars_to_transactions(
 
 
 def _polars_sequence_format(
-    df: Any,
+    df: Union["pl.DataFrame", "pl.LazyFrame"],
     sequence_col: str,
     timestamp_col: Optional[str] = None,
 ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
@@ -216,7 +227,7 @@ def _polars_sequence_format(
 
 
 def _polars_grouped_format(
-    df: Any,
+    df: Union["pl.DataFrame", "pl.LazyFrame"],
     transaction_col: str,
     item_col: str,
     timestamp_col: Optional[str] = None,
@@ -252,8 +263,8 @@ def _polars_grouped_format(
     if timestamp_col is not None:
         # Create timestamped transactions
         grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg([
-            pl.col(item_col).alias("items"),
-            pl.col(timestamp_col).alias("timestamps"),
+            pl_runtime.col(item_col).alias("items"),
+            pl_runtime.col(timestamp_col).alias("timestamps"),
         ])
         
         result: List[List[Tuple[str, float]]] = []
@@ -265,7 +276,7 @@ def _polars_grouped_format(
     else:
         # Create non-timestamped transactions
         grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg(
-            pl.col(item_col).alias("items")
+            pl_runtime.col(item_col).alias("items")
         )
         
         result_simple: List[List[str]] = []
@@ -276,7 +287,7 @@ def _polars_grouped_format(
 
 
 def pandas_to_transactions(
-    df: Any,
+    df: "pd.DataFrame",
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
@@ -332,7 +343,7 @@ def pandas_to_transactions(
 
 
 def _pandas_sequence_format(
-    df: Any,
+    df: "pd.DataFrame",
     sequence_col: str,
     timestamp_col: Optional[str] = None,
 ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
@@ -382,7 +393,7 @@ def _pandas_sequence_format(
 
 
 def _pandas_grouped_format(
-    df: Any,
+    df: "pd.DataFrame",
     transaction_col: str,
     item_col: str,
     timestamp_col: Optional[str] = None,
@@ -444,19 +455,19 @@ def detect_dataframe_type(data: Any) -> Optional[str]:
     Returns:
         'polars' if Polars DataFrame, 'pandas' if Pandas DataFrame, None otherwise
     """
-    if POLARS_AVAILABLE and pl is not None:
-        if isinstance(data, (pl.DataFrame, pl.LazyFrame)):
+    if POLARS_AVAILABLE and pl_runtime is not None:
+        if isinstance(data, (pl_runtime.DataFrame, pl_runtime.LazyFrame)):
             return "polars"
     
-    if PANDAS_AVAILABLE and pd is not None:
-        if isinstance(data, pd.DataFrame):
+    if PANDAS_AVAILABLE and pd_runtime is not None:
+        if isinstance(data, pd_runtime.DataFrame):
             return "pandas"
     
     return None
 
 
 def dataframe_to_transactions(
-    df: Any,
+    df: Union["pl.DataFrame", "pl.LazyFrame", "pd.DataFrame"],
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
