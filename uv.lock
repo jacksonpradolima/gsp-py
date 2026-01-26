@@ -643,6 +643,7 @@ version = "3.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -696,6 +697,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.14.13" },
     { name = "tox", marker = "extra == 'dev'", specifier = "==4.34.1" },
     { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.12" },
+    { name = "typing-extensions", specifier = ">=4.0.0" },
 ]
 provides-extras = ["dev", "docs", "rust", "gpu"]
 
