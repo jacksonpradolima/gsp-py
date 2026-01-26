@@ -254,7 +254,7 @@ class DomainSpecificPruning(PruningStrategy):
             return True
         
         # Prune if doesn't have required prefix
-        if self.required_prefix and not candidate[0].startswith(self.required_prefix):
+        if self.required_prefix and (not candidate or not candidate[0].startswith(self.required_prefix)):
             return True
         
         return False
