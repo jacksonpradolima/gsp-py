@@ -638,6 +638,140 @@ result = gsp.search(min_support=0.5)
 
 ---
 
+## 🔧 Flexible Candidate Pruning
+
+GSP-Py supports **flexible candidate pruning strategies** that allow you to customize how candidate sequences are filtered during pattern mining. This enables optimization for different dataset characteristics and mining requirements.
+
+### Built-in Pruning Strategies
+
+#### 1. Support-Based Pruning (Default)
+
+The standard GSP pruning based on minimum support threshold:
+
+```python
+from gsppy.gsp import GSP
+from gsppy.pruning import SupportBasedPruning
+
+# Explicit support-based pruning
+pruner = SupportBasedPruning(min_support_fraction=0.3)
+gsp = GSP(transactions, pruning_strategy=pruner)
+result = gsp.search(min_support=0.3)
+```
+
+#### 2. Frequency-Based Pruning
+
+Prunes candidates based on absolute frequency (minimum number of occurrences):
+
+```python
+from gsppy.pruning import FrequencyBasedPruning
+
+# Require patterns to appear at least 5 times
+pruner = FrequencyBasedPruning(min_frequency=5)
+gsp = GSP(transactions, pruning_strategy=pruner)
+result = gsp.search(min_support=0.2)
+```
+
+**Use case**: When you need patterns to occur a minimum absolute number of times, regardless of dataset size.
+
+#### 3. Temporal-Aware Pruning
+
+Optimizes pruning for time-constrained pattern mining by pre-filtering infeasible patterns:
+
+```python
+from gsppy.pruning import TemporalAwarePruning
+
+# Prune patterns that cannot satisfy temporal constraints
+pruner = TemporalAwarePruning(
+    mingap=1,
+    maxgap=5,
+    maxspan=10,
+    min_support_fraction=0.3
+)
+gsp = GSP(timestamped_transactions, mingap=1, maxgap=5, maxspan=10, pruning_strategy=pruner)
+result = gsp.search(min_support=0.3)
+```
+
+**Use case**: Improves performance for temporal pattern mining by eliminating patterns that cannot satisfy temporal constraints.
+
+#### 4. Combined Pruning
+
+Combines multiple pruning strategies for aggressive filtering:
+
+```python
+from gsppy.pruning import CombinedPruning, SupportBasedPruning, FrequencyBasedPruning
+
+# Apply both support and frequency constraints
+strategies = [
+    SupportBasedPruning(min_support_fraction=0.3),
+    FrequencyBasedPruning(min_frequency=5)
+]
+pruner = CombinedPruning(strategies)
+gsp = GSP(transactions, pruning_strategy=pruner)
+result = gsp.search(min_support=0.3)
+```
+
+**Use case**: When you want to combine multiple filtering criteria for more selective pattern discovery.
+
+### Custom Pruning Strategies
+
+You can create custom pruning strategies by implementing the `PruningStrategy` interface:
+
+```python
+from gsppy.pruning import PruningStrategy
+from typing import Dict, Optional, Tuple
+
+class MyCustomPruner(PruningStrategy):
+    def should_prune(
+        self,
+        candidate: Tuple[str, ...],
+        support_count: int,
+        total_transactions: int,
+        context: Optional[Dict] = None
+    ) -> bool:
+        # Custom pruning logic
+        # Return True to prune (filter out), False to keep
+        pattern_length = len(candidate)
+        # Example: Prune very long patterns with low support
+        if pattern_length > 5 and support_count < 10:
+            return True
+        return False
+
+# Use your custom pruner
+custom_pruner = MyCustomPruner()
+gsp = GSP(transactions, pruning_strategy=custom_pruner)
+result = gsp.search(min_support=0.2)
+```
+
+### Performance Characteristics
+
+Different pruning strategies have different performance tradeoffs:
+
+| Strategy | Pruning Aggressiveness | Use Case | Performance Impact |
+|----------|----------------------|----------|-------------------|
+| **SupportBased** | Moderate | General-purpose mining | Baseline performance |
+| **FrequencyBased** | High (for large datasets) | Require absolute frequency | Faster on large datasets |
+| **TemporalAware** | High (for temporal data) | Time-constrained patterns | Significant speedup for temporal mining |
+| **Combined** | Very High | Selective pattern discovery | Fastest, but may miss edge cases |
+
+### Benchmarking Pruning Strategies
+
+To compare pruning strategies on your dataset:
+
+```bash
+# Compare all strategies
+python benchmarks/bench_pruning.py --n_tx 1000 --vocab 100 --min_support 0.2 --strategy all
+
+# Benchmark a specific strategy
+python benchmarks/bench_pruning.py --n_tx 1000 --vocab 100 --min_support 0.2 --strategy frequency
+
+# Run multiple rounds for averaging
+python benchmarks/bench_pruning.py --n_tx 1000 --vocab 100 --min_support 0.2 --strategy all --rounds 3
+```
+
+See `benchmarks/bench_pruning.py` for the complete benchmarking script.
+
+---
+
 ## ⌨️ Typing
 
 `gsppy` ships inline type information (PEP 561) via a bundled `py.typed` marker. The public API is re-exported from
@@ -651,10 +785,7 @@ larger applications.
 
 We are actively working to improve GSP-Py. Here are some exciting features planned for future releases:
 
-1. **Custom Filters for Candidate Pruning**:
-    - Enable users to define their own pruning logic during the mining process.
-
-2. **Support for Preprocessing and Postprocessing**:
+1. **Support for Preprocessing and Postprocessing**:
     - Add hooks to allow users to transform datasets before mining and customize the output results.
 
 Want to contribute or suggest an

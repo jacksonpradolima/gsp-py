@@ -13,6 +13,14 @@ from gsppy.cli import (
     read_transactions_from_json,
 )
 from gsppy.gsp import GSP
+from gsppy.pruning import (
+    PruningStrategy,
+    SupportBasedPruning,
+    FrequencyBasedPruning,
+    TemporalAwarePruning,
+    CombinedPruning,
+    create_default_pruning_strategy,
+)
 
 try:
     __version__ = importlib_metadata.version("gsppy")
@@ -26,4 +34,10 @@ __all__ = [
     "read_transactions_from_json",
     "setup_logging",
     "__version__",
+    "PruningStrategy",
+    "SupportBasedPruning",
+    "FrequencyBasedPruning",
+    "TemporalAwarePruning",
+    "CombinedPruning",
+    "create_default_pruning_strategy",
 ]

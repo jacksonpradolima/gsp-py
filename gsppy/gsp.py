@@ -99,6 +99,7 @@ from gsppy.utils import (
     generate_candidates_from_previous,
     is_subsequence_in_list_with_time_constraints,
 )
+from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
 from gsppy.accelerate import support_counts as support_counts_accel
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -130,6 +131,7 @@ class GSP:
         maxgap: Optional[float] = None,
         maxspan: Optional[float] = None,
         verbose: bool = False,
+        pruning_strategy: Optional[PruningStrategy] = None,
     ):
         """
         Initialize the GSP algorithm with raw transactional data.
@@ -144,6 +146,9 @@ class GSP:
             maxspan (Optional[float]): Maximum time span from first to last item in patterns.
             verbose (bool): Enable verbose logging output with detailed progress information.
                            Default is False (minimal output).
+            pruning_strategy (Optional[PruningStrategy]): Custom pruning strategy for candidate filtering.
+                                                          If None, a default strategy is created based on
+                                                          temporal constraints.
 
         Attributes Initialized:
             - Processes the input raw transaction dataset.
@@ -162,9 +167,18 @@ class GSP:
         self.maxgap = maxgap
         self.maxspan = maxspan
         self.verbose = verbose
+        self.pruning_strategy: PruningStrategy
         self._configure_logging()
         self._validate_temporal_constraints()
         self._pre_processing(raw_transactions)
+        # Initialize default pruning strategy if none provided
+        if pruning_strategy is None:
+            self.pruning_strategy = create_default_pruning_strategy(
+                mingap=self.mingap, maxgap=self.maxgap, maxspan=self.maxspan
+            )
+            logger.debug("Using default pruning strategy: %s", self.pruning_strategy.get_description())
+        else:
+            self.pruning_strategy = pruning_strategy
 
     def _configure_logging(self) -> None:
         """
@@ -389,6 +403,39 @@ class GSP:
             # Fallback to Python implementation on any acceleration failure
             return self._support_python(items, min_support, batch_size)
 
+    def _apply_pruning(
+        self, freq_patterns: Dict[Tuple[str, ...], int], min_support_count: int
+    ) -> Dict[Tuple[str, ...], int]:
+        """
+        Apply the configured pruning strategy to filter frequent patterns.
+
+        This method uses the pruning strategy to post-process patterns that have
+        already met the minimum support threshold. Additional pruning can be applied
+        based on other criteria such as temporal feasibility or frequency thresholds.
+
+        Parameters:
+            freq_patterns (Dict[Tuple[str, ...], int]): Dictionary of patterns and their support counts.
+            min_support_count (int): Absolute minimum support count threshold.
+
+        Returns:
+            Dict[Tuple[str, ...], int]: Filtered patterns after applying pruning strategy.
+        """
+        if not freq_patterns:
+            return freq_patterns
+
+        pruned_patterns: Dict[Tuple[str, ...], int] = {}
+        context = {"min_support_count": min_support_count}
+
+        for candidate, support_count in freq_patterns.items():
+            if not self.pruning_strategy.should_prune(candidate, support_count, len(self.transactions), context):
+                pruned_patterns[candidate] = support_count
+
+        num_pruned = len(freq_patterns) - len(pruned_patterns)
+        if num_pruned > 0:
+            logger.debug("Pruning strategy filtered out %d additional candidates", num_pruned)
+
+        return pruned_patterns
+
     def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
         Log progress information for the current GSP iteration.
@@ -504,7 +551,10 @@ class GSP:
 
         # scan transactions to collect support count for each candidate
         # sequence & filter
-        self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
+        freq_1 = self._support(candidates, abs_min_support, backend=backend)
+        # Apply pruning strategy for additional filtering
+        freq_1 = self._apply_pruning(freq_1, abs_min_support)
+        self.freq_patterns.append(freq_1)
 
         # (k-itemsets/k-sequence = 1)
         k_items = 1
@@ -525,7 +575,10 @@ class GSP:
 
             # candidate pruning - eliminates candidates who are not potentially
             # frequent (using support as threshold)
-            self.freq_patterns.append(self._support(candidates, abs_min_support, backend=backend))
+            freq_k = self._support(candidates, abs_min_support, backend=backend)
+            # Apply pruning strategy for additional filtering
+            freq_k = self._apply_pruning(freq_k, abs_min_support)
+            self.freq_patterns.append(freq_k)
 
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
