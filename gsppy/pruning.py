@@ -309,7 +309,7 @@ class TemporalAwarePruning(PruningStrategy):
 
 class CombinedPruning(PruningStrategy):
     """
-    Combines multiple pruning strategies using logical AND.
+    Combines multiple pruning strategies using logical OR.
 
     A candidate is pruned if ANY of the constituent strategies determines
     it should be pruned. This allows combining different pruning criteria

@@ -10,11 +10,10 @@ This module tests the flexible pruning system, including:
 """
 
 import pytest
-from typing import List
+from typing import List, Tuple
 
 from gsppy.gsp import GSP
 from gsppy.pruning import (
-    PruningStrategy,
     SupportBasedPruning,
     FrequencyBasedPruning,
     TemporalAwarePruning,
@@ -36,7 +35,7 @@ def simple_transactions() -> List[List[str]]:
 
 
 @pytest.fixture
-def timestamped_transactions():
+def timestamped_transactions() -> List[List[Tuple[str, int]]]:
     """Provide timestamped transactions for temporal testing."""
     return [
         [("A", 0), ("B", 2), ("C", 5)],
@@ -298,9 +297,8 @@ class TestGSPIntegration:
         assert len(result) > 0
         for patterns in result:
             for pattern, support in patterns.items():
-                # Should meet minimum frequency of 2
-                assert support >= 2
-                # Should meet minimum support of ceil(5 * 0.3) = 2
+                # Both constraints result in the same threshold for 5 transactions:
+                # frequency >= 2 and support >= ceil(5 * 0.3) = 2
                 assert support >= 2
 
     def test_gsp_with_temporal_strategy(self, timestamped_transactions):
@@ -309,8 +307,9 @@ class TestGSPIntegration:
         gsp = GSP(timestamped_transactions, mingap=0, maxgap=3, maxspan=10, pruning_strategy=pruner)
         result = gsp.search(min_support=0.4)
 
-        # Should find patterns that satisfy temporal constraints
-        assert len(result) == 0 or len(result) > 0  # Result can be empty or non-empty
+        # The result may be empty or contain patterns depending on temporal constraints
+        # This test validates that the strategy doesn't crash with temporal constraints
+        assert isinstance(result, list)
 
     def test_gsp_preserves_correctness(self, simple_transactions):
         """Test that custom pruning doesn't break correctness."""

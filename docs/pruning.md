@@ -155,7 +155,7 @@ result = gsp.search(min_support=0.3)
 
 ### 4. CombinedPruning
 
-**Description**: Combines multiple pruning strategies using logical AND.
+**Description**: Combines multiple pruning strategies using logical OR.
 
 **Parameters**:
 - `strategies` (List[PruningStrategy]): List of strategies to combine

@@ -27,14 +27,13 @@ Compare pruning strategies:
 import time
 import random
 import statistics
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any
 import click
 
 from gsppy.gsp import GSP
 from gsppy.pruning import (
     SupportBasedPruning,
     FrequencyBasedPruning,
-    TemporalAwarePruning,
     CombinedPruning,
 )
 
@@ -73,7 +72,7 @@ def run_gsp_benchmark(
     min_support: float,
     strategy_name: str,
     strategy_config: Optional[Dict] = None,
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Run GSP with a specific pruning strategy and collect metrics.
 
@@ -166,6 +165,10 @@ def print_comparison_summary(results: List[Dict]) -> None:
     Parameters:
         results: List of benchmark results to compare
     """
+    if not results:
+        click.echo("No results to compare.")
+        return
+
     click.echo(f"\n{'='*60}")
     click.echo("COMPARISON SUMMARY")
     click.echo(f"{'='*60}")
@@ -178,7 +181,14 @@ def print_comparison_summary(results: List[Dict]) -> None:
     click.echo("-" * 60)
 
     for result in results:
-        speedup = baseline_time / result["time"] if result["time"] > 0 else float("inf")
+        # Handle zero or near-zero times to avoid division by zero
+        if result["time"] > 0 and baseline_time > 0:
+            speedup = baseline_time / result["time"]
+        elif result["time"] == 0 and baseline_time == 0:
+            speedup = 1.0  # Both are essentially instant
+        else:
+            speedup = float("inf")
+        
         click.echo(
             f"{result['strategy']:<20} {result['time']:<12.4f} "
             f"{speedup:<10.2f}x {result['total_patterns']:<10}"
@@ -192,7 +202,8 @@ def print_comparison_summary(results: List[Dict]) -> None:
     click.echo(f"Fastest Strategy:  {min(results, key=lambda r: r['time'])['strategy']}")
     click.echo(f"Slowest Strategy:  {max(results, key=lambda r: r['time'])['strategy']}")
     click.echo(f"Average Time:      {statistics.mean(times):.4f} seconds")
-    click.echo(f"Std Dev:           {statistics.stdev(times):.4f} seconds" if len(times) > 1 else "")
+    if len(times) > 1:
+        click.echo(f"Std Dev:           {statistics.stdev(times):.4f} seconds")
 
 
 def _print_header(n_tx: int, tx_len: int, vocab: int, min_support: float, rounds: int) -> None:
