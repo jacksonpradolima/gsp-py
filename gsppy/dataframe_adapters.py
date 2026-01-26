@@ -70,7 +70,7 @@ License:
 This implementation is distributed under the MIT License.
 """
 
-from typing import List, Tuple, Union, Optional, cast, Any, TYPE_CHECKING
+from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     # Import for type checking only
@@ -185,13 +185,17 @@ def _polars_sequence_format(
     Convert Polars DataFrame in sequence format.
 
     Parameters:
-        df: Polars DataFrame
+        df: Polars DataFrame or LazyFrame
         sequence_col: Column containing sequences
         timestamp_col: Optional column containing timestamps per sequence
 
     Returns:
         List of transactions
     """
+    # Collect LazyFrame if needed
+    if pl_runtime is not None and isinstance(df, pl_runtime.LazyFrame):
+        df = df.collect()
+    
     if sequence_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{sequence_col}' not found in DataFrame")
 
@@ -236,7 +240,7 @@ def _polars_grouped_format(
     Convert Polars DataFrame in grouped format.
 
     Parameters:
-        df: Polars DataFrame
+        df: Polars DataFrame or LazyFrame
         transaction_col: Column containing transaction IDs
         item_col: Column containing items
         timestamp_col: Optional column containing timestamps
@@ -244,6 +248,10 @@ def _polars_grouped_format(
     Returns:
         List of transactions
     """
+    # Collect LazyFrame if needed
+    if pl_runtime is not None and isinstance(df, pl_runtime.LazyFrame):
+        df = df.collect()
+    
     # Validate required columns exist
     if transaction_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{transaction_col}' not found in DataFrame")
