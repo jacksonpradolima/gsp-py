@@ -322,15 +322,17 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
 
     monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--min_support", "0.2", "--verbose"])
 
-    # Patch file reading and GSP.search so CLI runs and verbosity is set
-    with patch("gsppy.cli.logger.setLevel") as mock_setLevel:
+    # Patch logging.basicConfig to verify it's called with DEBUG level
+    with patch("gsppy.cli.logging.basicConfig") as mock_basicConfig:
         with patch("gsppy.cli.detect_and_read_file", return_value=[["Bread", "Milk"], ["Milk", "Diaper"]]):
             with patch("gsppy.cli.GSP.search", return_value=[{("Bread",): 1}]):
                 with pytest.raises(SystemExit) as excinfo:
                     main()  # Run the CLI
                 assert excinfo.value.code == 0
-        # Check that the logger level was set to DEBUG
-        mock_setLevel.assert_called_with(logging.DEBUG)
+        # Check that basicConfig was called with DEBUG level
+        mock_basicConfig.assert_called_once()
+        call_kwargs = mock_basicConfig.call_args[1]
+        assert call_kwargs['level'] == logging.DEBUG
 
     os.unlink(temp_file_name)
 
