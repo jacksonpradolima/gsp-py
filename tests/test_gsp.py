@@ -392,7 +392,7 @@ def test_verbose_initialization(supermarket_transactions: List[List[str]], caplo
         - Verbose logs include detailed information about processing.
     """
     import logging
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger='gsppy.gsp'):
         gsp = GSP(supermarket_transactions, verbose=True)
         gsp.search(min_support=0.3)
         
@@ -411,7 +411,7 @@ def test_non_verbose_initialization(supermarket_transactions: List[List[str]], c
         - Only WARNING and above are logged by default.
     """
     import logging
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger='gsppy.gsp'):
         gsp = GSP(supermarket_transactions, verbose=False)
         gsp.search(min_support=0.3)
         
@@ -433,7 +433,7 @@ def test_verbose_override_in_search(supermarket_transactions: List[List[str]], c
     # Test Case 1: Instance with verbose=False, search with verbose=True
     # Should see INFO messages when verbose=True (they would be suppressed with verbose=False)
     caplog.clear()
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger='gsppy.gsp'):
         gsp = GSP(supermarket_transactions, verbose=False)
         gsp.search(min_support=0.3, verbose=True)
         
@@ -445,7 +445,7 @@ def test_verbose_override_in_search(supermarket_transactions: List[List[str]], c
     # Test Case 2: Instance with verbose=True, search with verbose=False
     # Should suppress messages when verbose=False
     caplog.clear()
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.DEBUG, logger='gsppy.gsp'):
         gsp = GSP(supermarket_transactions, verbose=True)
         # The __init__ will produce DEBUG messages, but search with verbose=False should suppress new ones
         caplog.clear()  # Clear messages from init
