@@ -8,6 +8,7 @@ Requirements:
     pip install 'gsppy[dataframe]'
 """
 
+import tempfile
 import polars as pl
 import pandas as pd
 from gsppy import GSP
@@ -100,8 +101,9 @@ print("\n" + "=" * 70)
 print("4. Reading from Parquet File")
 print("-" * 70)
 
-# Save DataFrame to Parquet
-parquet_file = "/tmp/example_transactions.parquet"
+# Save DataFrame to Parquet using secure temporary directory
+import os
+parquet_file = os.path.join(tempfile.gettempdir(), "example_transactions.parquet")
 df_polars.write_parquet(parquet_file)
 print(f"Saved DataFrame to {parquet_file}")
 
