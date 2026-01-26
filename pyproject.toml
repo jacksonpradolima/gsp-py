@@ -66,6 +66,11 @@ rust = [
 gpu = [
     "cupy>=11,<14"
 ]
+dataframe = [
+    "polars>=0.20.0",
+    "pandas>=2.0.0",
+    "pyarrow>=10.0.0"
+]
 
 [tool.hatch.build]
 include = [

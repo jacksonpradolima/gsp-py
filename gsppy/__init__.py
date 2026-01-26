@@ -22,6 +22,22 @@ from gsppy.pruning import (
     create_default_pruning_strategy,
 )
 
+# DataFrame adapters are optional - import only if dependencies are available
+try:
+    from gsppy.dataframe_adapters import (
+        dataframe_to_transactions,
+        polars_to_transactions,
+        pandas_to_transactions,
+        DataFrameAdapterError,
+    )
+    _DATAFRAME_AVAILABLE = True
+except ImportError:
+    _DATAFRAME_AVAILABLE = False
+    dataframe_to_transactions = None  # type: ignore
+    polars_to_transactions = None  # type: ignore
+    pandas_to_transactions = None  # type: ignore
+    DataFrameAdapterError = None  # type: ignore
+
 try:
     __version__ = importlib_metadata.version("gsppy")
 except importlib_metadata.PackageNotFoundError:  # pragma: no cover - handled only in editable installs
@@ -41,3 +57,13 @@ __all__ = [
     "CombinedPruning",
     "create_default_pruning_strategy",
 ]
+
+# Add DataFrame adapters to __all__ if available
+if _DATAFRAME_AVAILABLE:
+    __all__.extend([
+        "dataframe_to_transactions",
+        "polars_to_transactions",
+        "pandas_to_transactions",
+        "DataFrameAdapterError",
+    ])
+
