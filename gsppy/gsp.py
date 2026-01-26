@@ -88,9 +88,19 @@ Version:
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Union, Optional, cast, Any
+from typing import Dict, List, Tuple, Union, Optional, cast, Any, TYPE_CHECKING
 from itertools import chain
 from collections import Counter
+
+if TYPE_CHECKING:
+    try:
+        import polars as pl
+    except ImportError:
+        pl = None  # type: ignore
+    try:
+        import pandas as pd
+    except ImportError:
+        pd = None  # type: ignore
 
 from gsppy.utils import (
     has_timestamps,
@@ -126,7 +136,13 @@ class GSP:
 
     def __init__(
         self,
-        raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], Any],
+        raw_transactions: Union[
+            List[List[str]], 
+            List[List[Tuple[str, float]]], 
+            "pl.DataFrame",
+            "pl.LazyFrame", 
+            "pd.DataFrame"
+        ],
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
         maxspan: Optional[float] = None,
@@ -240,7 +256,13 @@ class GSP:
 
     def _convert_input_data(
         self,
-        raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], Any],
+        raw_transactions: Union[
+            List[List[str]], 
+            List[List[Tuple[str, float]]], 
+            "pl.DataFrame",
+            "pl.LazyFrame",
+            "pd.DataFrame"
+        ],
         transaction_col: Optional[str],
         item_col: Optional[str],
         timestamp_col: Optional[str],
