@@ -195,6 +195,63 @@ def print_comparison_summary(results: List[Dict]) -> None:
     click.echo(f"Std Dev:           {statistics.stdev(times):.4f} seconds" if len(times) > 1 else "")
 
 
+def _print_header(n_tx: int, tx_len: int, vocab: int, min_support: float, rounds: int) -> None:
+    """Print benchmark header with dataset parameters."""
+    click.echo("="*60)
+    click.echo("GSP PRUNING STRATEGIES BENCHMARK")
+    click.echo("="*60)
+    click.echo("\nDataset Parameters:")
+    click.echo(f"  Transactions:     {n_tx:,}")
+    click.echo(f"  Transaction Len:  {tx_len}")
+    click.echo(f"  Vocabulary Size:  {vocab:,}")
+    click.echo(f"  Min Support:      {min_support}")
+    click.echo(f"  Benchmark Rounds: {rounds}")
+
+
+def _generate_and_report_data(n_tx: int, tx_len: int, vocab: int) -> List[List[str]]:
+    """Generate synthetic data and report."""
+    click.echo("\nGenerating synthetic data...")
+    transactions = generate_synthetic_data(n_tx, tx_len, vocab)
+    click.echo(f"Generated {len(transactions):,} transactions")
+    return transactions
+
+
+def _get_strategies_to_test(strategy: str, n_tx: int, min_support: float) -> List[Tuple[str, Optional[Dict]]]:
+    """Determine which strategies to test based on user input."""
+    if strategy == "all":
+        return [
+            ("default", None),
+            ("support", None),
+            ("frequency", {"min_frequency": max(2, int(n_tx * min_support))}),
+            ("combined", {"min_frequency": max(2, int(n_tx * min_support * 0.8))}),
+        ]
+    return [(strategy, None)]
+
+
+def _aggregate_results(all_results: List[Dict]) -> List[Dict]:
+    """Aggregate results across multiple rounds by averaging."""
+    strategy_results: Dict[str, Dict[str, List]] = {}
+    for result in all_results:
+        strat_name = result["strategy"]
+        if strat_name not in strategy_results:
+            strategy_results[strat_name] = {"times": [], "patterns": []}
+        strategy_results[strat_name]["times"].append(result["time"])
+        strategy_results[strat_name]["patterns"].append(result["total_patterns"])
+
+    averaged_results = []
+    for strat_name, data in strategy_results.items():
+        averaged_results.append(
+            {
+                "strategy": strat_name,
+                "time": statistics.mean(data["times"]),
+                "total_patterns": int(statistics.mean(data["patterns"])),
+                "patterns_per_level": [],  # Not averaged for simplicity
+                "max_level": 0,  # Not averaged
+            }
+        )
+    return averaged_results
+
+
 @click.command()
 @click.option("--n_tx", default=1000, show_default=True, type=int, help="Number of transactions")
 @click.option("--tx_len", default=8, show_default=True, type=int, help="Average items per transaction")
@@ -214,31 +271,9 @@ def main(n_tx: int, tx_len: int, vocab: int, min_support: float, strategy: str, 
     This script generates synthetic transactional data and evaluates the performance
     of different pruning strategies. Use --strategy all to compare all available strategies.
     """
-    click.echo("="*60)
-    click.echo("GSP PRUNING STRATEGIES BENCHMARK")
-    click.echo("="*60)
-    click.echo(f"\nDataset Parameters:")
-    click.echo(f"  Transactions:     {n_tx:,}")
-    click.echo(f"  Transaction Len:  {tx_len}")
-    click.echo(f"  Vocabulary Size:  {vocab:,}")
-    click.echo(f"  Min Support:      {min_support}")
-    click.echo(f"  Benchmark Rounds: {rounds}")
-
-    # Generate data
-    click.echo(f"\nGenerating synthetic data...")
-    transactions = generate_synthetic_data(n_tx, tx_len, vocab)
-    click.echo(f"Generated {len(transactions):,} transactions")
-
-    # Define strategies to test
-    if strategy == "all":
-        strategies_to_test = [
-            ("default", None),
-            ("support", None),
-            ("frequency", {"min_frequency": max(2, int(n_tx * min_support))}),
-            ("combined", {"min_frequency": max(2, int(n_tx * min_support * 0.8))}),
-        ]
-    else:
-        strategies_to_test = [(strategy, None)]
+    _print_header(n_tx, tx_len, vocab, min_support, rounds)
+    transactions = _generate_and_report_data(n_tx, tx_len, vocab)
+    strategies_to_test = _get_strategies_to_test(strategy, n_tx, min_support)
 
     # Run benchmarks multiple rounds if specified
     all_results = []
@@ -253,33 +288,11 @@ def main(n_tx: int, tx_len: int, vocab: int, min_support: float, strategy: str, 
 
     # Print summary
     if strategy == "all":
-        # Aggregate results across rounds
         if rounds > 1:
             click.echo(f"\n{'='*60}")
             click.echo("AVERAGE RESULTS ACROSS ALL ROUNDS")
             click.echo(f"{'='*60}")
-
-            # Group by strategy and average
-            strategy_results = {}
-            for result in all_results:
-                strat_name = result["strategy"]
-                if strat_name not in strategy_results:
-                    strategy_results[strat_name] = {"times": [], "patterns": []}
-                strategy_results[strat_name]["times"].append(result["time"])
-                strategy_results[strat_name]["patterns"].append(result["total_patterns"])
-
-            averaged_results = []
-            for strat_name, data in strategy_results.items():
-                averaged_results.append(
-                    {
-                        "strategy": strat_name,
-                        "time": statistics.mean(data["times"]),
-                        "total_patterns": int(statistics.mean(data["patterns"])),
-                        "patterns_per_level": [],  # Not averaged for simplicity
-                        "max_level": 0,  # Not averaged
-                    }
-                )
-
+            averaged_results = _aggregate_results(all_results)
             print_comparison_summary(averaged_results)
         else:
             print_comparison_summary(results)
