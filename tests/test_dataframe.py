@@ -284,9 +284,9 @@ class TestPolarsAdvancedFeatures:
     def test_polars_sorted_by_timestamp(self):
         """Test that timestamps are properly sorted."""
         df = pl.DataFrame({
-            "transaction_id": [1, 1, 1],
-            "item": ["A", "B", "C"],
-            "timestamp": [3.0, 1.0, 2.0],  # Out of order
+            "transaction_id": [1, 1, 1, 2, 2],
+            "item": ["A", "B", "C", "A", "C"],
+            "timestamp": [3.0, 1.0, 2.0, 1.0, 2.0],  # First transaction out of order
         })
         
         gsp = GSP(
