@@ -67,8 +67,8 @@ gpu = [
     "cupy>=11,<14"
 ]
 dataframe = [
-    "polars>=0.20.0",
-    "pandas>=2.0.0",
+    "polars>=1.37.1",
+    "pandas>=3.0.0",
     "pyarrow>=10.0.0"
 ]
 
