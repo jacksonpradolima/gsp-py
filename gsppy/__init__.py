@@ -11,6 +11,8 @@ from gsppy.cli import (
     detect_and_read_file,
     read_transactions_from_csv,
     read_transactions_from_json,
+    read_transactions_from_parquet,
+    read_transactions_from_arrow,
 )
 from gsppy.gsp import GSP
 from gsppy.pruning import (
@@ -48,6 +50,8 @@ __all__ = [
     "detect_and_read_file",
     "read_transactions_from_csv",
     "read_transactions_from_json",
+    "read_transactions_from_parquet",
+    "read_transactions_from_arrow",
     "setup_logging",
     "__version__",
     "PruningStrategy",
