@@ -99,8 +99,8 @@ from gsppy.utils import (
     generate_candidates_from_previous,
     is_subsequence_in_list_with_time_constraints,
 )
-from gsppy.accelerate import support_counts as support_counts_accel
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
+from gsppy.accelerate import support_counts as support_counts_accel
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -167,16 +167,18 @@ class GSP:
         self.maxgap = maxgap
         self.maxspan = maxspan
         self.verbose = verbose
-        self.pruning_strategy = pruning_strategy
+        self.pruning_strategy: PruningStrategy
         self._configure_logging()
         self._validate_temporal_constraints()
         self._pre_processing(raw_transactions)
         # Initialize default pruning strategy if none provided
-        if self.pruning_strategy is None:
+        if pruning_strategy is None:
             self.pruning_strategy = create_default_pruning_strategy(
                 mingap=self.mingap, maxgap=self.maxgap, maxspan=self.maxspan
             )
             logger.debug("Using default pruning strategy: %s", self.pruning_strategy.get_description())
+        else:
+            self.pruning_strategy = pruning_strategy
 
     def _configure_logging(self) -> None:
         """

@@ -38,10 +38,7 @@ gsp = GSP(transactions, pruning_strategy=pruner)
 patterns = gsp.search(min_support=0.3)
 
 # Combine multiple pruning strategies
-combined = CombinedPruning([
-    SupportBasedPruning(),
-    FrequencyBasedPruning(min_frequency=3)
-])
+combined = CombinedPruning([SupportBasedPruning(), FrequencyBasedPruning(min_frequency=3)])
 gsp = GSP(transactions, pruning_strategy=combined)
 patterns = gsp.search(min_support=0.3)
 ```
@@ -58,7 +55,10 @@ This implementation is distributed under the MIT License.
 
 import math
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Optional
+from typing import List, Tuple, Mapping, Optional
+from typing_extensions import override
+
+PruningContext = Mapping[str, object]
 
 
 class PruningStrategy(ABC):
@@ -77,7 +77,7 @@ class PruningStrategy(ABC):
         candidate: Tuple[str, ...],
         support_count: int,
         total_transactions: int,
-        context: Optional[Dict] = None,
+        context: Optional[PruningContext] = None,
     ) -> bool:
         """
         Determine whether a candidate sequence should be pruned.
@@ -127,12 +127,13 @@ class SupportBasedPruning(PruningStrategy):
         """
         self.min_support_fraction = min_support_fraction
 
+    @override
     def should_prune(
         self,
         candidate: Tuple[str, ...],
         support_count: int,
         total_transactions: int,
-        context: Optional[Dict] = None,
+        context: Optional[PruningContext] = None,
     ) -> bool:
         """
         Prune candidates below the minimum support threshold.
@@ -147,16 +148,26 @@ class SupportBasedPruning(PruningStrategy):
             bool: True if support_count < min_support_count, False otherwise.
         """
         # Prioritize user-provided min_support_fraction if set, otherwise use context
+        min_support_count: int
+
         if self.min_support_fraction is not None:
             min_support_count = int(math.ceil(total_transactions * self.min_support_fraction))
-        elif context and "min_support_count" in context:
-            min_support_count = context["min_support_count"]
+        elif context is not None:
+            min_support_value = context.get("min_support_count")
+            if isinstance(min_support_value, int):
+                min_support_count = min_support_value
+            elif isinstance(min_support_value, float):
+                min_support_count = int(math.ceil(min_support_value))
+            else:
+                # Context does not provide a usable threshold
+                return False
         else:
             # If no threshold specified, don't prune
             return False
 
         return support_count < min_support_count
 
+    @override
     def get_description(self) -> str:
         """Get description of this pruning strategy."""
         if self.min_support_fraction is not None:
@@ -187,12 +198,13 @@ class FrequencyBasedPruning(PruningStrategy):
             raise ValueError("min_frequency must be at least 1")
         self.min_frequency = min_frequency
 
+    @override
     def should_prune(
         self,
         candidate: Tuple[str, ...],
         support_count: int,
         total_transactions: int,
-        context: Optional[Dict] = None,
+        context: Optional[PruningContext] = None,
     ) -> bool:
         """
         Prune candidates with frequency below the minimum threshold.
@@ -208,6 +220,7 @@ class FrequencyBasedPruning(PruningStrategy):
         """
         return support_count < self.min_frequency
 
+    @override
     def get_description(self) -> str:
         """Get description of this pruning strategy."""
         return f"FrequencyBasedPruning(min_frequency={self.min_frequency})"
@@ -249,12 +262,13 @@ class TemporalAwarePruning(PruningStrategy):
         self.maxspan = maxspan
         self.min_support_fraction = min_support_fraction
 
+    @override
     def should_prune(
         self,
         candidate: Tuple[str, ...],
         support_count: int,
         total_transactions: int,
-        context: Optional[Dict] = None,
+        context: Optional[PruningContext] = None,
     ) -> bool:
         """
         Prune candidates based on temporal feasibility and support.
@@ -277,9 +291,11 @@ class TemporalAwarePruning(PruningStrategy):
             min_support_count = int(math.ceil(total_transactions * self.min_support_fraction))
             if support_count < min_support_count:
                 return True
-        elif context and "min_support_count" in context:
-            if support_count < context["min_support_count"]:
-                return True
+        elif context is not None:
+            min_support_value = context.get("min_support_count")
+            if isinstance(min_support_value, (int, float)):
+                if support_count < int(math.ceil(min_support_value)):
+                    return True
 
         # Check temporal feasibility
         # If we have maxspan and mingap, check if pattern length is feasible
@@ -292,9 +308,10 @@ class TemporalAwarePruning(PruningStrategy):
 
         return False
 
+    @override
     def get_description(self) -> str:
         """Get description of this pruning strategy."""
-        parts = []
+        parts: List[str] = []
         if self.mingap is not None:
             parts.append(f"mingap={self.mingap}")
         if self.maxgap is not None:
@@ -330,12 +347,13 @@ class CombinedPruning(PruningStrategy):
             raise ValueError("At least one pruning strategy must be provided")
         self.strategies = strategies
 
+    @override
     def should_prune(
         self,
         candidate: Tuple[str, ...],
         support_count: int,
         total_transactions: int,
-        context: Optional[Dict] = None,
+        context: Optional[PruningContext] = None,
     ) -> bool:
         """
         Prune candidate if ANY strategy recommends pruning.
@@ -354,9 +372,10 @@ class CombinedPruning(PruningStrategy):
                 return True
         return False
 
+    @override
     def get_description(self) -> str:
         """Get description of this combined pruning strategy."""
-        strategy_descs = [s.get_description() for s in self.strategies]
+        strategy_descs: List[str] = [s.get_description() for s in self.strategies]
         return f"CombinedPruning([{', '.join(strategy_descs)}])"
 
 
