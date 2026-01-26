@@ -73,7 +73,7 @@ jobs:
 
       - name: Label draft PRs
         if: github.event.pull_request.draft == true
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             await github.rest.issues.addLabels({
@@ -85,7 +85,7 @@ jobs:
 
       - name: Remove draft label when ready
         if: github.event.pull_request.draft == false && github.event.action == 'ready_for_review'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             try {
@@ -136,7 +136,7 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
     steps:
       - name: Check for blocked keywords in comments
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const blockedKeywords = [
@@ -300,7 +300,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PRs needing review
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const pr = context.payload.pull_request;
