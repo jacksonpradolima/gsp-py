@@ -94,6 +94,20 @@ class TestSupportBasedPruning:
         pruner2 = SupportBasedPruning()
         assert "dynamic" in pruner2.get_description()
 
+    def test_user_fraction_overrides_context(self):
+        """Test that user-provided min_support_fraction takes precedence over context."""
+        # User specifies min_support_fraction=0.5 (requires support >= 5 for 10 transactions)
+        pruner = SupportBasedPruning(min_support_fraction=0.5)
+        
+        # Context suggests min_support_count=2 (like search with min_support=0.2)
+        context = {"min_support_count": 2}
+        
+        # User's 0.5 should take precedence, requiring support >= 5
+        assert pruner.should_prune(("A", "B"), 4, 10, context)  # 4 < 5, should prune
+        assert pruner.should_prune(("A", "B"), 2, 10, context)  # 2 < 5, should prune
+        assert not pruner.should_prune(("A", "B"), 5, 10, context)  # 5 >= 5, should not prune
+        assert not pruner.should_prune(("A", "B"), 6, 10, context)  # 6 >= 5, should not prune
+
 
 class TestFrequencyBasedPruning:
     """Test FrequencyBasedPruning strategy."""

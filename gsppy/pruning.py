@@ -146,11 +146,11 @@ class SupportBasedPruning(PruningStrategy):
         Returns:
             bool: True if support_count < min_support_count, False otherwise.
         """
-        # Use min_support_count from context if provided, otherwise calculate from fraction
-        if context and "min_support_count" in context:
-            min_support_count = context["min_support_count"]
-        elif self.min_support_fraction is not None:
+        # Prioritize user-provided min_support_fraction if set, otherwise use context
+        if self.min_support_fraction is not None:
             min_support_count = int(math.ceil(total_transactions * self.min_support_fraction))
+        elif context and "min_support_count" in context:
+            min_support_count = context["min_support_count"]
         else:
             # If no threshold specified, don't prune
             return False
