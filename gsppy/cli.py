@@ -80,10 +80,6 @@ def setup_logging(verbose: bool) -> None:
         handlers=[logging.StreamHandler(sys.stdout)],
         force=True,  # Force reconfiguration even if already configured
     )
-    
-    # Set logger level for CLI module
-    logger = logging.getLogger(__name__)
-    logger.setLevel(log_level)
 
 
 logger: logging.Logger = logging.getLogger(__name__)

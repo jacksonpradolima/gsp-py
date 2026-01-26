@@ -412,8 +412,6 @@ def test_cli_verbose_flag_formatting() -> None:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
-
-    import subprocess
     
     # Run the CLI using subprocess to capture actual output
     cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
@@ -450,8 +448,6 @@ def test_cli_non_verbose_simple_output() -> None:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
-
-    import subprocess
     
     # Run the CLI without --verbose flag
     cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))

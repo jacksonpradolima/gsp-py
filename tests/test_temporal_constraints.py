@@ -377,13 +377,9 @@ class TestTemporalConstraintsFuzzing:
             transactions = _generate_test_transactions(n_transactions, vocab_size, data)
 
             # Create GSP with the constraint
+            kwargs = {constraint_type: constraint_value}
             try:
-                if constraint_type == "mingap":
-                    gsp = GSP(transactions, mingap=constraint_value)
-                elif constraint_type == "maxgap":
-                    gsp = GSP(transactions, maxgap=constraint_value)
-                else:  # maxspan
-                    gsp = GSP(transactions, maxspan=constraint_value)
+                gsp = GSP(transactions, **kwargs)
                 result = gsp.search(min_support=min_support)
 
                 # Validate result properties
@@ -587,9 +583,9 @@ class TestTemporalConstraintsFuzzingEdgeCases:
                 count_relaxed = sum(len(level) for level in result_relaxed)
 
                 # Relaxed constraints should find at least as many patterns
-                assert (
-                    count_relaxed >= count_strict
-                ), f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
+                assert count_relaxed >= count_strict, (
+                    f"Relaxing maxgap should not decrease patterns: strict={count_strict}, relaxed={count_relaxed}"
+                )
             except ValueError:
                 # Some combinations may be invalid
                 pass

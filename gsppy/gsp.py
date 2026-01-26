@@ -170,17 +170,17 @@ class GSP:
         """
         Configure logging for the GSP instance based on verbosity setting.
 
-        When verbose is True, sets logger to DEBUG level with detailed formatting.
-        When verbose is False, sets logger to WARNING level for minimal output.
+        When verbose is True, sets the module logger to DEBUG level for detailed output.
+        When verbose is False, sets the module logger to WARNING level for minimal output.
+
+        This method intentionally avoids modifying the root logger to prevent
+        unexpected global logging side effects, especially in multiprocessing
+        environments.
         """
         if self.verbose:
             logger.setLevel(logging.DEBUG)
-            # Also set root logger to propagate debug messages
-            logging.getLogger().setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.WARNING)
-            # Set gsppy logger level back to WARNING
-            logging.getLogger().setLevel(logging.WARNING)
 
     def _validate_temporal_constraints(self) -> None:
         """

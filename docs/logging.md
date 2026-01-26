@@ -7,6 +7,16 @@ GSP-Py provides explicit verbosity control and standardized logging output for b
 - **Default Mode**: Minimal output (WARNING level and above) for clean, production-ready execution
 - **Verbose Mode**: Detailed structured logging with timestamps, log levels, process IDs, and execution context
 
+## Implementation Notes
+
+This implementation uses Python's standard `logging` module rather than third-party alternatives like Loguru. This design choice was made to:
+- Avoid additional dependencies, keeping the library lightweight
+- Ensure compatibility with existing logging infrastructure in user applications
+- Leverage the well-understood and widely-adopted standard library
+- Maintain predictable behavior in multiprocessing environments
+
+Users who prefer Loguru or other logging frameworks can easily integrate GSP-Py by configuring custom handlers for the `gsppy` logger namespace.
+
 ## CLI Usage
 
 ### Basic Usage (Non-Verbose)
@@ -37,11 +47,11 @@ gsppy --file transactions.json --min_support 0.3 --verbose
 
 Output example with structured logging:
 ```
-2026-01-25T23:09:50 | INFO     | PID:4179 | gsppy.gsp | Pre-processing transactions...
-2026-01-25T23:09:50 | DEBUG    | PID:4179 | gsppy.gsp | Unique candidates: [('Bread',), ('Milk',), ...]
-2026-01-25T23:09:50 | INFO     | PID:4179 | gsppy.gsp | Starting GSP algorithm with min_support=0.3...
-2026-01-25T23:09:50 | INFO     | PID:4179 | gsppy.gsp | Run 1: 6 candidates filtered to 5.
-2026-01-25T23:09:50 | INFO     | PID:4179 | gsppy.gsp | Run 2: 20 candidates filtered to 8.
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Pre-processing transactions...
+YYYY-MM-DDTHH:MM:SS | DEBUG    | PID:4179 | gsppy.gsp | Unique candidates: [('Bread',), ('Milk',), ...]
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Starting GSP algorithm with min_support=0.3...
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Run 1: 6 candidates filtered to 5.
+YYYY-MM-DDTHH:MM:SS | INFO     | PID:4179 | gsppy.gsp | Run 2: 20 candidates filtered to 8.
 ...
 ```
 
