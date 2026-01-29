@@ -11,34 +11,24 @@ from gsppy.cli import (
     detect_and_read_file,
     read_transactions_from_csv,
     read_transactions_from_json,
-    read_transactions_from_parquet,
     read_transactions_from_arrow,
+    read_transactions_from_parquet,
 )
 from gsppy.gsp import GSP
 from gsppy.pruning import (
+    CombinedPruning,
     PruningStrategy,
     SupportBasedPruning,
-    FrequencyBasedPruning,
     TemporalAwarePruning,
-    CombinedPruning,
+    FrequencyBasedPruning,
     create_default_pruning_strategy,
 )
-
-# DataFrame adapters are optional - import only if dependencies are available
-try:
-    from gsppy.dataframe_adapters import (
-        dataframe_to_transactions,
-        polars_to_transactions,
-        pandas_to_transactions,
-        DataFrameAdapterError,
-    )
-    _DATAFRAME_AVAILABLE = True
-except ImportError:
-    _DATAFRAME_AVAILABLE = False
-    dataframe_to_transactions = None  # type: ignore
-    polars_to_transactions = None  # type: ignore
-    pandas_to_transactions = None  # type: ignore
-    DataFrameAdapterError = None  # type: ignore
+from gsppy.dataframe_adapters import (
+    DataFrameAdapterError,
+    pandas_to_transactions,
+    polars_to_transactions,
+    dataframe_to_transactions,
+)
 
 try:
     __version__ = importlib_metadata.version("gsppy")
@@ -60,14 +50,8 @@ __all__ = [
     "TemporalAwarePruning",
     "CombinedPruning",
     "create_default_pruning_strategy",
+    "dataframe_to_transactions",
+    "polars_to_transactions",
+    "pandas_to_transactions",
+    "DataFrameAdapterError",
 ]
-
-# Add DataFrame adapters to __all__ if available
-if _DATAFRAME_AVAILABLE:
-    __all__.extend([
-        "dataframe_to_transactions",
-        "polars_to_transactions",
-        "pandas_to_transactions",
-        "DataFrameAdapterError",
-    ])
-

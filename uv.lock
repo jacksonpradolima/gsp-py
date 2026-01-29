@@ -584,15 +584,15 @@ version = "3.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "pandas" },
+    { name = "pandas-stubs" },
+    { name = "polars" },
+    { name = "pyarrow" },
+    { name = "pyright" },
     { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
-dataframe = [
-    { name = "pandas" },
-    { name = "polars" },
-    { name = "pyarrow" },
-]
 dev = [
     { name = "cython" },
     { name = "hatch" },
@@ -635,10 +635,12 @@ requires-dist = [
     { name = "mkdocs-literate-nav", marker = "extra == 'docs'", specifier = ">=0.6,<1" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5,<10" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.26,<1.1" },
-    { name = "pandas", marker = "extra == 'dataframe'", specifier = ">=3.0.0" },
-    { name = "polars", marker = "extra == 'dataframe'", specifier = ">=1.37.1" },
-    { name = "pyarrow", marker = "extra == 'dataframe'", specifier = ">=10.0.0" },
+    { name = "pandas", specifier = ">=3.0.0" },
+    { name = "pandas-stubs", specifier = ">=2.3.3.260113" },
+    { name = "polars", specifier = ">=1.37.1" },
+    { name = "pyarrow", specifier = ">=10.0.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = "==4.0.4" },
+    { name = "pyright", specifier = ">=1.1.408" },
     { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.408" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
     { name = "pytest-benchmark", marker = "extra == 'dev'", specifier = "==5.2.3" },
@@ -648,7 +650,7 @@ requires-dist = [
     { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.12" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
 ]
-provides-extras = ["dev", "docs", "rust", "gpu", "dataframe"]
+provides-extras = ["dev", "docs", "rust", "gpu"]
 
 [[package]]
 name = "h11"
@@ -1330,6 +1332,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pandas-stubs"
+version = "2.3.3.260113"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "types-pytz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/5d/be23854a73fda69f1dbdda7bc10fbd6f930bd1fa87aaec389f00c901c1e8/pandas_stubs-2.3.3.260113.tar.gz", hash = "sha256:076e3724bcaa73de78932b012ec64b3010463d377fa63116f4e6850643d93800", size = 116131, upload-time = "2026-01-13T22:30:16.704Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/c6/df1fe324248424f77b89371116dab5243db7f052c32cc9fe7442ad9c5f75/pandas_stubs-2.3.3.260113-py3-none-any.whl", hash = "sha256:ec070b5c576e1badf12544ae50385872f0631fc35d99d00dc598c2954ec564d3", size = 168246, upload-time = "2026-01-13T22:30:15.244Z" },
+]
+
+[[package]]
 name = "pathspec"
 version = "1.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1896,6 +1911,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/31/e9/2ecbe56826759845a7c21d80aa28187865ea62bc9757b056f6cbc06f78ed/ty-0.0.12-py3-none-win32.whl", hash = "sha256:a91c24fd75c0f1796d8ede9083e2c0ec96f106dbda73a09fe3135e075d31f742", size = 9140115, upload-time = "2026-01-14T22:30:38.903Z" },
     { url = "https://files.pythonhosted.org/packages/5d/6d/d9531eff35a5c0ec9dbc10231fac21f9dd6504814048e81d6ce1c84dc566/ty-0.0.12-py3-none-win_amd64.whl", hash = "sha256:df151894be55c22d47068b0f3b484aff9e638761e2267e115d515fcc9c5b4a4b", size = 9884532, upload-time = "2026-01-14T22:30:25.112Z" },
     { url = "https://files.pythonhosted.org/packages/e9/f3/20b49e75967023b123a221134548ad7000f9429f13fdcdda115b4c26305f/ty-0.0.12-py3-none-win_arm64.whl", hash = "sha256:cea99d334b05629de937ce52f43278acf155d3a316ad6a35356635f886be20ea", size = 9313974, upload-time = "2026-01-14T22:30:27.44Z" },
+]
+
+[[package]]
+name = "types-pytz"
+version = "2025.2.0.20251108"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/ff/c047ddc68c803b46470a357454ef76f4acd8c1088f5cc4891cdd909bfcf6/types_pytz-2025.2.0.20251108.tar.gz", hash = "sha256:fca87917836ae843f07129567b74c1929f1870610681b4c92cb86a3df5817bdb", size = 10961, upload-time = "2025-11-08T02:55:57.001Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/c1/56ef16bf5dcd255155cc736d276efa6ae0a5c26fd685e28f0412a4013c01/types_pytz-2025.2.0.20251108-py3-none-any.whl", hash = "sha256:0f1c9792cab4eb0e46c52f8845c8f77cf1e313cb3d68bf826aa867fe4717d91c", size = 10116, upload-time = "2025-11-08T02:55:56.194Z" },
 ]
 
 [[package]]

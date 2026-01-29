@@ -85,22 +85,17 @@ Version:
 - Current Version: 2.0
 """
 
+from __future__ import annotations
+
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Union, Optional, cast, Any, TYPE_CHECKING
+from typing import Dict, List, Tuple, Union, Optional, cast
 from itertools import chain
 from collections import Counter
 
-if TYPE_CHECKING:
-    try:
-        import polars as pl
-    except ImportError:
-        pl = None  # type: ignore
-    try:
-        import pandas as pd
-    except ImportError:
-        pd = None  # type: ignore
+import pandas as pd
+import polars as pl
 
 from gsppy.utils import (
     has_timestamps,
@@ -137,11 +132,7 @@ class GSP:
     def __init__(
         self,
         raw_transactions: Union[
-            List[List[str]], 
-            List[List[Tuple[str, float]]], 
-            "pl.DataFrame",
-            "pl.LazyFrame", 
-            "pd.DataFrame"
+            List[List[str]], List[List[Tuple[str, float]]], pl.DataFrame, pl.LazyFrame, pd.DataFrame
         ],
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
@@ -162,11 +153,11 @@ class GSP:
                 - A list of transactions where each transaction is a list of items (e.g., [['A', 'B'], ['B', 'C', 'D']])
                 - A list of transactions with timestamps (e.g., [[('A', 1.0), ('B', 2.0)]])
                 - A Polars or Pandas DataFrame (requires 'gsppy[dataframe]' installation)
-                
+
                 When using DataFrames, you must specify either:
                 - `sequence_col`: Column containing complete sequences (list format)
                 - `transaction_col` and `item_col`: Columns for grouped format
-                
+
             mingap (Optional[float]): Minimum time gap required between consecutive items in patterns.
             maxgap (Optional[float]): Maximum time gap allowed between consecutive items in patterns.
             maxspan (Optional[float]): Maximum time span from first to last item in patterns.
@@ -194,38 +185,38 @@ class GSP:
 
         Examples:
             Basic usage with lists:
-            
+
             ```python
             from gsppy.gsp import GSP
-            
+
             transactions = [["A", "B"], ["B", "C", "D"]]
             gsp = GSP(transactions)
             patterns = gsp.search(min_support=0.5)
             ```
-            
+
             Using Polars DataFrame (grouped format):
-            
+
             ```python
             import polars as pl
             from gsppy.gsp import GSP
-            
-            df = pl.DataFrame({
-                "transaction_id": [1, 1, 2, 2, 2],
-                "item": ["A", "B", "A", "C", "D"],
-            })
+
+            df = pl.DataFrame(
+                {
+                    "transaction_id": [1, 1, 2, 2, 2],
+                    "item": ["A", "B", "A", "C", "D"],
+                }
+            )
             gsp = GSP(df, transaction_col="transaction_id", item_col="item")
             patterns = gsp.search(min_support=0.5)
             ```
-            
+
             Using Pandas DataFrame (sequence format):
-            
+
             ```python
             import pandas as pd
             from gsppy.gsp import GSP
-            
-            df = pd.DataFrame({
-                "sequence": [["A", "B"], ["A", "C", "D"]]
-            })
+
+            df = pd.DataFrame({"sequence": [["A", "B"], ["A", "C", "D"]]})
             gsp = GSP(df, sequence_col="sequence")
             patterns = gsp.search(min_support=0.5)
             ```
@@ -238,12 +229,12 @@ class GSP:
         self.pruning_strategy: PruningStrategy
         self._configure_logging()
         self._validate_temporal_constraints()
-        
+
         # Convert DataFrame to transaction list if necessary
         transactions_to_process = self._convert_input_data(
             raw_transactions, transaction_col, item_col, timestamp_col, sequence_col
         )
-        
+
         self._pre_processing(transactions_to_process)
         # Initialize default pruning strategy if none provided
         if pruning_strategy is None:
@@ -257,11 +248,7 @@ class GSP:
     def _convert_input_data(
         self,
         raw_transactions: Union[
-            List[List[str]], 
-            List[List[Tuple[str, float]]], 
-            "pl.DataFrame",
-            "pl.LazyFrame",
-            "pd.DataFrame"
+            List[List[str]], List[List[Tuple[str, float]]], pl.DataFrame, pl.LazyFrame, pd.DataFrame
         ],
         transaction_col: Optional[str],
         item_col: Optional[str],
@@ -270,27 +257,27 @@ class GSP:
     ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
         """
         Convert input data to the expected transaction list format.
-        
+
         This method handles both traditional list inputs and DataFrame inputs
         (Polars or Pandas). DataFrames are converted using the dataframe_adapters module.
-        
+
         Parameters:
             raw_transactions: Input data (list or DataFrame)
             transaction_col: Column name for transaction IDs (DataFrame grouped format)
             item_col: Column name for items (DataFrame grouped format)
             timestamp_col: Column name for timestamps (DataFrame)
             sequence_col: Column name for sequences (DataFrame sequence format)
-            
+
         Returns:
             Transaction list in the expected format
-            
+
         Raises:
             ValueError: If DataFrame parameters are specified for non-DataFrame input
                        or if DataFrame conversion fails
         """
         # Check if any DataFrame-specific parameters are provided
         df_params_provided = any([transaction_col, item_col, timestamp_col, sequence_col])
-        
+
         # If it's a list, validate that no DataFrame parameters were provided
         if isinstance(raw_transactions, list):
             if df_params_provided:
@@ -299,11 +286,11 @@ class GSP:
                     "cannot be used with list input"
                 )
             return raw_transactions
-        
+
         # Otherwise, try to convert as DataFrame
+        from gsppy.dataframe_adapters import DataFrameAdapterError, dataframe_to_transactions
+
         try:
-            from gsppy.dataframe_adapters import dataframe_to_transactions, DataFrameAdapterError
-            
             logger.debug("Converting DataFrame input to transaction list")
             transactions = dataframe_to_transactions(
                 raw_transactions,
@@ -408,8 +395,7 @@ class GSP:
         # Validate temporal constraints are only used with timestamps
         if (self.mingap is not None or self.maxgap is not None or self.maxspan is not None) and not self.has_timestamps:
             logger.warning(
-                "Temporal constraints specified but transactions do not have timestamps. "
-                "Constraints will be ignored."
+                "Temporal constraints specified but transactions do not have timestamps. Constraints will be ignored."
             )
             # Clear temporal constraints since they cannot be applied
             self.mingap = None
