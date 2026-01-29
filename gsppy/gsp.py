@@ -285,7 +285,7 @@ class GSP:
                     "DataFrame parameters (transaction_col, item_col, timestamp_col, sequence_col) "
                     "cannot be used with list input"
                 )
-            return raw_transactions
+            return cast(Union[List[List[str]], List[List[Tuple[str, float]]]], raw_transactions)  # pyright: ignore[reportUnnecessaryCast]
 
         # Otherwise, try to convert as DataFrame
         from gsppy.dataframe_adapters import DataFrameAdapterError, dataframe_to_transactions
