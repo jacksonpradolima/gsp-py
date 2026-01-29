@@ -350,7 +350,7 @@ def _pandas_sequence_format(
         for seq in sequences:
             if not isinstance(seq, list):
                 raise DataFrameAdapterError(f"Column '{sequence_col}' must contain lists")
-            result_simple.append([str(item) for item in seq])
+            result_simple.append([str(item) for item in seq])  # pyright: ignore[reportUnknownArgumentType,reportUnknownVariableType]
         return result_simple
 
 
