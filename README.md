@@ -4,7 +4,7 @@
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/gsppy.svg?style=flat-square)](https://pypi.org/project/gsppy/)
 [![PyPI version](https://badge.fury.io/py/gsppy.svg)](https://pypi.org/project/gsppy)
-![](https://img.shields.io/badge/python-3.10+-blue.svg)
+![](https://img.shields.io/badge/python-3.11+-blue.svg)
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/jacksonpradolima/gsp-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/jacksonpradolima/gsp-py)
 [![SLSA provenance](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml/badge.svg)](https://github.com/jacksonpradolima/gsp-py/actions/workflows/slsa-provenance.yml)
@@ -22,7 +22,7 @@
 Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal mining, and user journey discovery.
 
 > [!IMPORTANT]
-> GSP-Py is compatible with Python 3.10 and later versions!
+> GSP-Py is compatible with Python 3.11 and later versions!
 
 ---
 
@@ -726,7 +726,7 @@ GSP-Py supports **time-constrained sequential pattern mining** with three powerf
 ### Temporal Constraint Parameters
 
 - **`mingap`**: Minimum time gap required between consecutive items in a pattern
-- **`maxgap`**: Maximum time gap allowed between consecutive items in a pattern  
+- **`maxgap`**: Maximum time gap allowed between consecutive items in a pattern
 - **`maxspan`**: Maximum time span from the first to the last item in a pattern
 
 ### Using Temporal Constraints

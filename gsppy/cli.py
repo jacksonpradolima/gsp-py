@@ -28,6 +28,8 @@ This CLI empowers users to perform sequential pattern mining on transactional da
 a simple command-line interface.
 """
 
+from __future__ import annotations
+
 import os
 import csv
 import sys
@@ -36,6 +38,7 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, Optional, cast
 
 import click
+import polars as pl
 
 from gsppy.gsp import GSP
 from gsppy.utils import has_timestamps
@@ -44,15 +47,15 @@ from gsppy.utils import has_timestamps
 def setup_logging(verbose: bool) -> None:
     """
     Configure logging with standardized format based on verbosity level.
-    
+
     When verbose is enabled, provides detailed structured logging with:
     - Timestamps (ISO 8601 format)
     - Log levels
     - Process ID for traceability
     - Module context
-    
+
     When verbose is disabled, uses simple format with just the message.
-    
+
     Parameters:
         verbose: Whether to enable verbose logging with detailed formatting.
     """
@@ -60,7 +63,7 @@ def setup_logging(verbose: bool) -> None:
     root_logger = logging.getLogger()
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     if verbose:
         # Detailed format with timestamps, levels, PID, and context for verbose mode
         log_format = "%(asctime)s | %(levelname)-8s | PID:%(process)d | %(name)s | %(message)s"
@@ -71,7 +74,7 @@ def setup_logging(verbose: bool) -> None:
         log_format = "%(message)s"
         date_format = None
         log_level = logging.INFO
-    
+
     # Configure logging with the appropriate format
     logging.basicConfig(
         level=log_level,
@@ -214,16 +217,15 @@ def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tup
 
     if file_extension == ".csv":
         return read_transactions_from_csv(file_path)
-    
+
     if file_extension in [".parquet", ".pq"]:
         return read_transactions_from_parquet(file_path)
-    
+
     if file_extension in [".arrow", ".feather"]:
         return read_transactions_from_arrow(file_path)
 
     raise ValueError(
-        f"Unsupported file format '{file_extension}'. "
-        "Supported formats: .json, .csv, .parquet, .arrow, .feather"
+        f"Unsupported file format '{file_extension}'. Supported formats: .json, .csv, .parquet, .arrow, .feather"
     )
 
 
@@ -252,15 +254,12 @@ def read_transactions_from_parquet(
         ValueError: If the file cannot be read or Polars is not installed.
     """
     try:
-        import polars as pl
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
-        raise ValueError(
-            "Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'"
-        ) from e
+        raise ValueError("Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
 
     try:
-        df = pl.read_parquet(file_path)
+        df: Any = pl.read_parquet(file_path)
         return polars_to_transactions(
             df,
             transaction_col=transaction_col,
@@ -299,15 +298,12 @@ def read_transactions_from_arrow(
         ValueError: If the file cannot be read or Polars is not installed.
     """
     try:
-        import polars as pl
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
-        raise ValueError(
-            "Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'"
-        ) from e
+        raise ValueError("Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
 
     try:
-        df = pl.read_ipc(file_path)
+        df: Any = pl.read_ipc(file_path)
         return polars_to_transactions(
             df,
             transaction_col=transaction_col,
@@ -423,16 +419,16 @@ def main(
         gsppy --file temporal_data.json --min_support 0.3 --maxgap 10
         gsppy --file events.json --min_support 0.5 --mingap 2 --maxgap 10 --maxspan 20
         ```
-        
+
         With Parquet files (grouped format):
-        
+
         ```bash
         gsppy --file data.parquet --min_support 0.3 \
               --transaction-col txn_id --item-col product
         ```
-        
+
         With Arrow files (sequence format):
-        
+
         ```bash
         gsppy --file sequences.arrow --min_support 0.3 \
               --sequence-col items

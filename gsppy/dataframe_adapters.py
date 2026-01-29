@@ -34,30 +34,27 @@ import polars as pl
 from gsppy.dataframe_adapters import polars_to_transactions
 
 # Grouped format with transaction_id and item columns
-df = pl.DataFrame({
-    "transaction_id": [1, 1, 2, 2, 2, 3],
-    "item": ["A", "B", "A", "C", "D", "B"],
-})
+df = pl.DataFrame(
+    {
+        "transaction_id": [1, 1, 2, 2, 2, 3],
+        "item": ["A", "B", "A", "C", "D", "B"],
+    }
+)
 transactions = polars_to_transactions(df, transaction_col="transaction_id", item_col="item")
 
 # Sequence format with list column
-df = pl.DataFrame({
-    "sequence": [["A", "B"], ["A", "C", "D"], ["B"]]
-})
+df = pl.DataFrame({"sequence": [["A", "B"], ["A", "C", "D"], ["B"]]})
 transactions = polars_to_transactions(df, sequence_col="sequence")
 
 # With timestamps
-df = pl.DataFrame({
-    "transaction_id": [1, 1, 2, 2],
-    "item": ["A", "B", "C", "D"],
-    "timestamp": [1.0, 2.0, 1.5, 3.0],
-})
-transactions = polars_to_transactions(
-    df, 
-    transaction_col="transaction_id", 
-    item_col="item", 
-    timestamp_col="timestamp"
+df = pl.DataFrame(
+    {
+        "transaction_id": [1, 1, 2, 2],
+        "item": ["A", "B", "C", "D"],
+        "timestamp": [1.0, 2.0, 1.5, 3.0],
+    }
 )
+transactions = polars_to_transactions(df, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp")
 ```
 
 Author:
@@ -70,63 +67,27 @@ License:
 This implementation is distributed under the MIT License.
 """
 
-from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
+from __future__ import annotations
 
-if TYPE_CHECKING:
-    # Import for type checking only
-    try:
-        import polars as pl
-    except ImportError:
-        pl = None  # type: ignore
-    try:
-        import pandas as pd
-    except ImportError:
-        pd = None  # type: ignore
+from typing import Any, List, Tuple, Optional, cast
 
-# Runtime imports - these can fail
-try:
-    import polars as pl_runtime
-    POLARS_AVAILABLE = True
-except ImportError:
-    POLARS_AVAILABLE = False
-    pl_runtime = None  # type: ignore
-
-try:
-    import pandas as pd_runtime
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-    pd_runtime = None  # type: ignore
+import pandas as pd
+import polars as pl
 
 
 class DataFrameAdapterError(Exception):
     """Exception raised for errors in DataFrame conversion."""
+
     pass
 
 
-def _validate_polars_available() -> None:
-    """Validate that Polars is installed."""
-    if not POLARS_AVAILABLE:
-        raise DataFrameAdapterError(
-            "Polars is not installed. Install it with: pip install 'gsppy[dataframe]'"
-        )
-
-
-def _validate_pandas_available() -> None:
-    """Validate that Pandas is installed."""
-    if not PANDAS_AVAILABLE:
-        raise DataFrameAdapterError(
-            "Pandas is not installed. Install it with: pip install 'gsppy[dataframe]'"
-        )
-
-
 def polars_to_transactions(
-    df: Union["pl.DataFrame", "pl.LazyFrame"],
+    df: pl.DataFrame | pl.LazyFrame,
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
     sequence_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert a Polars DataFrame to GSP transaction format.
 
@@ -152,10 +113,12 @@ def polars_to_transactions(
     Examples:
         >>> import polars as pl
         >>> # Grouped format
-        >>> df = pl.DataFrame({
-        ...     "txn_id": [1, 1, 2, 2],
-        ...     "item": ["A", "B", "C", "D"],
-        ... })
+        >>> df = pl.DataFrame(
+        ...     {
+        ...         "txn_id": [1, 1, 2, 2],
+        ...         "item": ["A", "B", "C", "D"],
+        ...     }
+        ... )
         >>> polars_to_transactions(df, transaction_col="txn_id", item_col="item")
         [['A', 'B'], ['C', 'D']]
 
@@ -164,61 +127,55 @@ def polars_to_transactions(
         >>> polars_to_transactions(df, sequence_col="seq")
         [['A', 'B'], ['C', 'D']]
     """
-    _validate_polars_available()
-    
     if sequence_col is not None:
         return _polars_sequence_format(df, sequence_col, timestamp_col)
     elif transaction_col is not None and item_col is not None:
         return _polars_grouped_format(df, transaction_col, item_col, timestamp_col)
     else:
-        raise DataFrameAdapterError(
-            "Must specify either 'sequence_col' or both 'transaction_col' and 'item_col'"
-        )
+        raise DataFrameAdapterError("Must specify either 'sequence_col' or both 'transaction_col' and 'item_col'")
 
 
 def _polars_sequence_format(
-    df: Union["pl.DataFrame", "pl.LazyFrame"],
+    df: pl.DataFrame | pl.LazyFrame,
     sequence_col: str,
     timestamp_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert Polars DataFrame in sequence format.
 
     Parameters:
-        df: Polars DataFrame or LazyFrame
+        df: Polars DataFrame or pl.LazyFrame
         sequence_col: Column containing sequences
         timestamp_col: Optional column containing timestamps per sequence
 
     Returns:
         List of transactions
     """
-    # Collect LazyFrame if needed
-    if pl_runtime is not None and isinstance(df, pl_runtime.LazyFrame):
+    # Collect pl.LazyFrame if needed
+    if isinstance(df, pl.LazyFrame):
         df = df.collect()
-    
+
     if sequence_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{sequence_col}' not found in DataFrame")
 
-    sequences = df[sequence_col].to_list()
-    
+    sequences: List[Any] = df[sequence_col].to_list()
+
     if timestamp_col is not None:
         if timestamp_col not in df.columns:
             raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
-        
-        timestamps = df[timestamp_col].to_list()
-        
+
+        timestamps: List[Any] = df[timestamp_col].to_list()
+
         # Create timestamped transactions
         result: List[List[Tuple[str, float]]] = []
-        for seq, times in zip(sequences, timestamps):
+        for seq, times in zip(sequences, timestamps, strict=True):
             if not isinstance(seq, list) or not isinstance(times, list):
-                raise DataFrameAdapterError(
-                    f"Both '{sequence_col}' and '{timestamp_col}' must contain lists"
-                )
-            if len(seq) != len(times):
-                raise DataFrameAdapterError(
-                    f"Sequence and timestamp lists must have the same length"
-                )
-            result.append([(str(item), float(ts)) for item, ts in zip(seq, times)])
+                raise DataFrameAdapterError(f"Both '{sequence_col}' and '{timestamp_col}' must contain lists")
+            seq_list: List[Any] = cast(List[Any], seq)
+            times_list: List[Any] = cast(List[Any], times)
+            if len(seq_list) != len(times_list):
+                raise DataFrameAdapterError(f"Sequence and timestamp lists must have the same length")
+            result.append([(str(item), float(ts)) for item, ts in zip(seq_list, times_list, strict=True)])
         return result
     else:
         # Create non-timestamped transactions
@@ -226,21 +183,22 @@ def _polars_sequence_format(
         for seq in sequences:
             if not isinstance(seq, list):
                 raise DataFrameAdapterError(f"Column '{sequence_col}' must contain lists")
-            result_simple.append([str(item) for item in seq])
+            seq_list_simple: List[Any] = cast(List[Any], seq)
+            result_simple.append([str(item) for item in seq_list_simple])
         return result_simple
 
 
 def _polars_grouped_format(
-    df: Union["pl.DataFrame", "pl.LazyFrame"],
+    df: pl.DataFrame | pl.LazyFrame,
     transaction_col: str,
     item_col: str,
     timestamp_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert Polars DataFrame in grouped format.
 
     Parameters:
-        df: Polars DataFrame or LazyFrame
+        df: Polars DataFrame or pl.LazyFrame
         transaction_col: Column containing transaction IDs
         item_col: Column containing items
         timestamp_col: Optional column containing timestamps
@@ -248,45 +206,45 @@ def _polars_grouped_format(
     Returns:
         List of transactions
     """
-    # Collect LazyFrame if needed
-    if pl_runtime is not None and isinstance(df, pl_runtime.LazyFrame):
+    # Collect pl.LazyFrame if needed
+    if isinstance(df, pl.LazyFrame):
         df = df.collect()
-    
+
     # Validate required columns exist
     if transaction_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{transaction_col}' not found in DataFrame")
     if item_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{item_col}' not found in DataFrame")
-    
+
     # Sort by transaction and optionally timestamp
     sort_cols = [transaction_col]
     if timestamp_col is not None:
         if timestamp_col not in df.columns:
             raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
         sort_cols.append(timestamp_col)
-    
+
     df_sorted = df.sort(sort_cols)
-    
+
     # Group by transaction
     if timestamp_col is not None:
         # Create timestamped transactions
-        grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg([
-            pl_runtime.col(item_col).alias("items"),
-            pl_runtime.col(timestamp_col).alias("timestamps"),
-        ])
-        
+        grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg(
+            [
+                pl.col(item_col).alias("items"),
+                pl.col(timestamp_col).alias("timestamps"),
+            ]
+        )
+
         result: List[List[Tuple[str, float]]] = []
         for row in grouped.iter_rows(named=True):
             items = row["items"]
             timestamps = row["timestamps"]
-            result.append([(str(item), float(ts)) for item, ts in zip(items, timestamps)])
+            result.append([(str(item), float(ts)) for item, ts in zip(items, timestamps, strict=False)])
         return result
     else:
         # Create non-timestamped transactions
-        grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg(
-            pl_runtime.col(item_col).alias("items")
-        )
-        
+        grouped = df_sorted.group_by(transaction_col, maintain_order=True).agg(pl.col(item_col).alias("items"))
+
         result_simple: List[List[str]] = []
         for row in grouped.iter_rows(named=True):
             items = row["items"]
@@ -295,12 +253,12 @@ def _polars_grouped_format(
 
 
 def pandas_to_transactions(
-    df: "pd.DataFrame",
+    df: pd.DataFrame,
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
     sequence_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert a Pandas DataFrame to GSP transaction format.
 
@@ -326,10 +284,12 @@ def pandas_to_transactions(
     Examples:
         >>> import pandas as pd
         >>> # Grouped format
-        >>> df = pd.DataFrame({
-        ...     "txn_id": [1, 1, 2, 2],
-        ...     "item": ["A", "B", "C", "D"],
-        ... })
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "txn_id": [1, 1, 2, 2],
+        ...         "item": ["A", "B", "C", "D"],
+        ...     }
+        ... )
         >>> pandas_to_transactions(df, transaction_col="txn_id", item_col="item")
         [['A', 'B'], ['C', 'D']]
 
@@ -338,23 +298,19 @@ def pandas_to_transactions(
         >>> pandas_to_transactions(df, sequence_col="seq")
         [['A', 'B'], ['C', 'D']]
     """
-    _validate_pandas_available()
-    
     if sequence_col is not None:
         return _pandas_sequence_format(df, sequence_col, timestamp_col)
     elif transaction_col is not None and item_col is not None:
         return _pandas_grouped_format(df, transaction_col, item_col, timestamp_col)
     else:
-        raise DataFrameAdapterError(
-            "Must specify either 'sequence_col' or both 'transaction_col' and 'item_col'"
-        )
+        raise DataFrameAdapterError("Must specify either 'sequence_col' or both 'transaction_col' and 'item_col'")
 
 
 def _pandas_sequence_format(
-    df: "pd.DataFrame",
+    df: pd.DataFrame,
     sequence_col: str,
     timestamp_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert Pandas DataFrame in sequence format.
 
@@ -369,26 +325,24 @@ def _pandas_sequence_format(
     if sequence_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{sequence_col}' not found in DataFrame")
 
-    sequences = df[sequence_col].tolist()
-    
+    sequences: List[Any] = df[sequence_col].tolist()
+
     if timestamp_col is not None:
         if timestamp_col not in df.columns:
             raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
-        
-        timestamps = df[timestamp_col].tolist()
-        
+
+        timestamps: List[Any] = df[timestamp_col].tolist()
+
         # Create timestamped transactions
         result: List[List[Tuple[str, float]]] = []
-        for seq, times in zip(sequences, timestamps):
+        for seq, times in zip(sequences, timestamps, strict=True):
             if not isinstance(seq, list) or not isinstance(times, list):
-                raise DataFrameAdapterError(
-                    f"Both '{sequence_col}' and '{timestamp_col}' must contain lists"
-                )
-            if len(seq) != len(times):
-                raise DataFrameAdapterError(
-                    f"Sequence and timestamp lists must have the same length"
-                )
-            result.append([(str(item), float(ts)) for item, ts in zip(seq, times)])
+                raise DataFrameAdapterError(f"Both '{sequence_col}' and '{timestamp_col}' must contain lists")
+            seq_list: List[Any] = cast(List[Any], seq)
+            times_list: List[Any] = cast(List[Any], times)
+            if len(seq_list) != len(times_list):
+                raise DataFrameAdapterError(f"Sequence and timestamp lists must have the same length")
+            result.append([(str(item), float(ts)) for item, ts in zip(seq_list, times_list, strict=True)])
         return result
     else:
         # Create non-timestamped transactions
@@ -401,11 +355,11 @@ def _pandas_sequence_format(
 
 
 def _pandas_grouped_format(
-    df: "pd.DataFrame",
+    df: pd.DataFrame,
     transaction_col: str,
     item_col: str,
     timestamp_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert Pandas DataFrame in grouped format.
 
@@ -423,33 +377,33 @@ def _pandas_grouped_format(
         raise DataFrameAdapterError(f"Column '{transaction_col}' not found in DataFrame")
     if item_col not in df.columns:
         raise DataFrameAdapterError(f"Column '{item_col}' not found in DataFrame")
-    
+
     # Sort by transaction and optionally timestamp
     sort_cols = [transaction_col]
     if timestamp_col is not None:
         if timestamp_col not in df.columns:
             raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
         sort_cols.append(timestamp_col)
-    
+
     df_sorted = df.sort_values(by=sort_cols)
-    
+
     # Group by transaction
     if timestamp_col is not None:
         # Create timestamped transactions
         grouped = df_sorted.groupby(transaction_col, sort=False)
         result: List[List[Tuple[str, float]]] = []
         for _, group in grouped:
-            items = group[item_col].tolist()
-            timestamps = group[timestamp_col].tolist()
-            result.append([(str(item), float(ts)) for item, ts in zip(items, timestamps)])
+            items: List[Any] = group[item_col].tolist()
+            timestamps_list: List[Any] = group[timestamp_col].tolist()
+            result.append([(str(item), float(ts)) for item, ts in zip(items, timestamps_list, strict=True)])
         return result
     else:
         # Create non-timestamped transactions
         grouped = df_sorted.groupby(transaction_col, sort=False)
         result_simple: List[List[str]] = []
         for _, group in grouped:
-            items = group[item_col].tolist()
-            result_simple.append([str(item) for item in items])
+            items_list: List[Any] = group[item_col].tolist()
+            result_simple.append([str(item) for item in items_list])
         return result_simple
 
 
@@ -463,24 +417,22 @@ def detect_dataframe_type(data: Any) -> Optional[str]:
     Returns:
         'polars' if Polars DataFrame, 'pandas' if Pandas DataFrame, None otherwise
     """
-    if POLARS_AVAILABLE and pl_runtime is not None:
-        if isinstance(data, (pl_runtime.DataFrame, pl_runtime.LazyFrame)):
-            return "polars"
-    
-    if PANDAS_AVAILABLE and pd_runtime is not None:
-        if isinstance(data, pd_runtime.DataFrame):
-            return "pandas"
-    
+    if isinstance(data, (pl.DataFrame, pl.LazyFrame)):
+        return "polars"
+
+    if isinstance(data, pd.DataFrame):
+        return "pandas"
+
     return None
 
 
 def dataframe_to_transactions(
-    df: Union["pl.DataFrame", "pl.LazyFrame", "pd.DataFrame"],
+    df: pl.DataFrame | pl.LazyFrame | pd.DataFrame,
     transaction_col: Optional[str] = None,
     item_col: Optional[str] = None,
     timestamp_col: Optional[str] = None,
     sequence_col: Optional[str] = None,
-) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+) -> List[List[str]] | List[List[Tuple[str, float]]]:
     """
     Convert any supported DataFrame to GSP transaction format.
 
@@ -501,11 +453,11 @@ def dataframe_to_transactions(
         DataFrameAdapterError: If the input is not a recognized DataFrame type
     """
     df_type = detect_dataframe_type(df)
-    
+
     if df_type == "polars":
-        return polars_to_transactions(df, transaction_col, item_col, timestamp_col, sequence_col)
+        return polars_to_transactions(df, transaction_col, item_col, timestamp_col, sequence_col)  # type: ignore
     elif df_type == "pandas":
-        return pandas_to_transactions(df, transaction_col, item_col, timestamp_col, sequence_col)
+        return pandas_to_transactions(df, transaction_col, item_col, timestamp_col, sequence_col)  # type: ignore
     else:
         raise DataFrameAdapterError(
             "Input must be a Polars or Pandas DataFrame. "

@@ -29,7 +29,12 @@ classifiers = [
 
 dependencies = [
     "click>=8.0.0",
-    "typing_extensions>=4.0.0"
+    "pandas>=3.0.0",
+    "pandas-stubs>=2.3.3.260113",
+    "polars>=1.37.1",
+    "pyarrow>=10.0.0",
+    "pyright>=1.1.408",
+    "typing_extensions>=4.0.0",
 ]
 
 [project.urls]
@@ -65,11 +70,6 @@ rust = [
 ]
 gpu = [
     "cupy>=11,<14"
-]
-dataframe = [
-    "polars>=1.37.1",
-    "pandas>=3.0.0",
-    "pyarrow>=10.0.0"
 ]
 
 [tool.hatch.build]
@@ -158,7 +158,7 @@ known-first-party = ["gsp", "tests"]
 # there are a couple of flags that are still disabled by
 # default in strict mode as they are experimental and niche.
 typeCheckingMode = "strict"
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 include = [
     "gsppy",
 ]
