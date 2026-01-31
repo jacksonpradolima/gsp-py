@@ -23,12 +23,22 @@ from gsppy.pruning import (
     FrequencyBasedPruning,
     create_default_pruning_strategy,
 )
-from gsppy.dataframe_adapters import (
-    DataFrameAdapterError,
-    pandas_to_transactions,
-    polars_to_transactions,
-    dataframe_to_transactions,
-)
+
+# DataFrame adapters are optional - import only if dependencies are available
+try:
+    from gsppy.dataframe_adapters import (
+        DataFrameAdapterError,
+        pandas_to_transactions,
+        polars_to_transactions,
+        dataframe_to_transactions,
+    )
+    _DATAFRAME_AVAILABLE = True
+except ImportError:
+    _DATAFRAME_AVAILABLE = False
+    DataFrameAdapterError = None  # type: ignore
+    pandas_to_transactions = None  # type: ignore
+    polars_to_transactions = None  # type: ignore
+    dataframe_to_transactions = None  # type: ignore
 
 try:
     __version__ = importlib_metadata.version("gsppy")
@@ -50,8 +60,13 @@ __all__ = [
     "TemporalAwarePruning",
     "CombinedPruning",
     "create_default_pruning_strategy",
-    "dataframe_to_transactions",
-    "polars_to_transactions",
-    "pandas_to_transactions",
-    "DataFrameAdapterError",
 ]
+
+# Add DataFrame adapters to __all__ if available
+if _DATAFRAME_AVAILABLE:
+    __all__.extend([
+        "dataframe_to_transactions",
+        "polars_to_transactions",
+        "pandas_to_transactions",
+        "DataFrameAdapterError",
+    ])

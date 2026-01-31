@@ -94,9 +94,6 @@ from typing import Dict, List, Tuple, Union, Optional, cast
 from itertools import chain
 from collections import Counter
 
-import pandas as pd
-import polars as pl
-
 from gsppy.utils import (
     has_timestamps,
     split_into_batches,

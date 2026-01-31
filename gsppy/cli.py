@@ -38,7 +38,6 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, Optional, cast
 
 import click
-import polars as pl
 
 from gsppy.gsp import GSP
 from gsppy.enums import (
@@ -259,6 +258,7 @@ def read_transactions_from_parquet(
         ValueError: If the file cannot be read or Polars is not installed.
     """
     try:
+        import polars as pl
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
@@ -303,6 +303,7 @@ def read_transactions_from_arrow(
         ValueError: If the file cannot be read or Polars is not installed.
     """
     try:
+        import polars as pl
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
