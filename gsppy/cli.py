@@ -45,6 +45,7 @@ from gsppy.enums import (
     PARQUET_EXTENSIONS,
     DATAFRAME_EXTENSIONS,
     SUPPORTED_EXTENSIONS_MESSAGE,
+    FileFormat,
     FileExtension,
 )
 from gsppy.utils import has_timestamps
@@ -418,8 +419,8 @@ def read_transactions_from_arrow(
 )
 @click.option(
     "--format",
-    type=click.Choice(["auto", "json", "csv", "spm", "parquet", "arrow"], case_sensitive=False),
-    default="auto",
+    type=click.Choice([fmt.value for fmt in FileFormat], case_sensitive=False),
+    default=FileFormat.AUTO.value,
     show_default=True,
     help="File format to use. 'auto' detects format from file extension.",
 )
@@ -444,6 +445,7 @@ def main(
     Supports multiple file formats:
     - JSON/CSV/SPM: Traditional transaction formats
     - Parquet/Arrow: Modern DataFrame formats (requires 'gsppy[dataframe]')
+    - Polars/Pandas DataFrames: Can be passed directly (requires 'gsppy[dataframe]')
 
     Supports both simple transactions (items only) and timestamped transactions
     (item-timestamp pairs) for temporal pattern mining.
@@ -494,13 +496,13 @@ def main(
         # Handle explicit format specification
         file_format = format.lower()
         
-        if file_format == "spm":
+        if file_format == FileFormat.SPM.value:
             transactions = read_transactions_from_spm(file_path)
-        elif file_format == "json":
+        elif file_format == FileFormat.JSON.value:
             transactions = read_transactions_from_json(file_path)
-        elif file_format == "csv":
+        elif file_format == FileFormat.CSV.value:
             transactions = read_transactions_from_csv(file_path)
-        elif file_format == "parquet":
+        elif file_format == FileFormat.PARQUET.value:
             transactions = read_transactions_from_parquet(
                 file_path,
                 transaction_col=transaction_col,
@@ -508,7 +510,7 @@ def main(
                 timestamp_col=timestamp_col,
                 sequence_col=sequence_col,
             )
-        elif file_format == "arrow":
+        elif file_format == FileFormat.ARROW.value:
             transactions = read_transactions_from_arrow(
                 file_path,
                 transaction_col=transaction_col,
@@ -516,7 +518,7 @@ def main(
                 timestamp_col=timestamp_col,
                 sequence_col=sequence_col,
             )
-        elif file_format == "auto":
+        elif file_format == FileFormat.AUTO.value:
             # Auto-detect format
             if is_dataframe_format:
                 # For DataFrame formats, pass column parameters

@@ -24,6 +24,16 @@ class FileExtension(str, Enum):
     FEATHER = ".feather"
 
 
+class FileFormat(str, Enum):
+    """Supported file formats for loading transaction data."""
+    AUTO = "auto"
+    JSON = "json"
+    CSV = "csv"
+    SPM = "spm"
+    PARQUET = "parquet"
+    ARROW = "arrow"
+
+
 DATAFRAME_EXTENSIONS = {
     FileExtension.PARQUET.value,
     FileExtension.PQ.value,

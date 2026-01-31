@@ -312,6 +312,12 @@ Your input file should be either:
   D -1 E F -1 -2
   ```
 
+- **Parquet/Arrow Files**: Modern columnar data formats (requires 'gsppy[dataframe]')
+  ```bash
+  pip install 'gsppy[dataframe]'
+  ```
+  This installs optional dependencies: `polars`, `pandas`, and `pyarrow` for DataFrame support.
+
 ### Running the CLI
 
 Use the following command to run GSPPy on your data:

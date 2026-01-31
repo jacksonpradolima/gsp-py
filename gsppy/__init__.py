@@ -16,7 +16,6 @@ from gsppy.cli import (
     read_transactions_from_parquet,
 )
 from gsppy.gsp import GSP
-from gsppy.utils import TokenMapper
 from gsppy.pruning import (
     CombinedPruning,
     PruningStrategy,
@@ -25,6 +24,7 @@ from gsppy.pruning import (
     FrequencyBasedPruning,
     create_default_pruning_strategy,
 )
+from gsppy.token_mapper import TokenMapper
 
 # DataFrame adapters are optional - import only if dependencies are available
 try:
