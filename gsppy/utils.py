@@ -533,7 +533,7 @@ def read_transactions_from_spm(
         mapper = TokenMapper() if return_mappings else None
         
         with open(path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
+            for line in f:
                 line = line.strip()
                 
                 # Skip empty lines

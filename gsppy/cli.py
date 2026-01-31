@@ -285,6 +285,7 @@ def read_transactions_from_parquet(
     """
     try:
         import polars as pl
+
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
@@ -330,6 +331,7 @@ def read_transactions_from_arrow(
     """
     try:
         import polars as pl
+
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
