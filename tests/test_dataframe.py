@@ -8,9 +8,20 @@ Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
 
-import pandas as pd
-import polars as pl
 import pytest
+
+# Check if optional dependencies are available
+try:
+    import polars as pl
+    POLARS_AVAILABLE = True
+except ImportError:
+    POLARS_AVAILABLE = False
+
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 from gsppy.gsp import GSP
 
@@ -25,6 +36,7 @@ def _assert_has_common_singletons(result: list[dict], *items: str) -> None:
         assert any(item in pattern for pattern in result[0].keys())
 
 
+@pytest.mark.skipif(not POLARS_AVAILABLE, reason="Polars not installed")
 class TestPolarsDataFrame:
     """Tests for Polars DataFrame input."""
 
@@ -103,6 +115,7 @@ class TestPolarsDataFrame:
             GSP(df)
 
 
+@pytest.mark.skipif(not PANDAS_AVAILABLE, reason="Pandas not installed")
 class TestPandasDataFrame:
     """Tests for Pandas DataFrame input."""
 
@@ -193,6 +206,7 @@ class TestDataFrameCompatibility:
         _assert_has_patterns(result)
 
 
+@pytest.mark.skipif(not POLARS_AVAILABLE or not PANDAS_AVAILABLE, reason="Both Polars and Pandas required")
 class TestDataFrameInteroperability:
     """Tests comparing Polars and Pandas results."""
 
@@ -221,6 +235,7 @@ class TestDataFrameInteroperability:
             assert set(level_polars.keys()) == set(level_pandas.keys())
 
 
+@pytest.mark.skipif(not POLARS_AVAILABLE, reason="Polars not installed")
 class TestPolarsAdvancedFeatures:
     """Tests for advanced Polars-specific features."""
 
@@ -291,6 +306,7 @@ class TestPolarsAdvancedFeatures:
         _assert_has_patterns(result)
 
 
+@pytest.mark.skipif(not PANDAS_AVAILABLE, reason="Pandas not installed")
 class TestPandasAdvancedFeatures:
     """Tests for advanced Pandas-specific features."""
 
