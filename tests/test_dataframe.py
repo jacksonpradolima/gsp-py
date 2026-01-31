@@ -15,6 +15,16 @@ import pytest
 from gsppy.gsp import GSP
 
 
+def _assert_has_patterns(result: list[dict]) -> None:
+    assert len(result) > 0
+
+
+def _assert_has_common_singletons(result: list[dict], *items: str) -> None:
+    _assert_has_patterns(result)
+    for item in items:
+        assert any(item in pattern for pattern in result[0].keys())
+
+
 class TestPolarsDataFrame:
     """Tests for Polars DataFrame input."""
 
@@ -30,11 +40,7 @@ class TestPolarsDataFrame:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
-        # Check that singleton patterns include common items
-        assert any("A" in pattern for pattern in result[0].keys())
-        assert any("B" in pattern for pattern in result[0].keys())
+        _assert_has_common_singletons(result, "A", "B")
 
     def test_polars_grouped_format_with_timestamps(self):
         """Test Polars DataFrame with timestamps in grouped format."""
@@ -49,8 +55,7 @@ class TestPolarsDataFrame:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp", maxgap=5.0)
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_polars_sequence_format(self):
         """Test Polars DataFrame with sequence format (list column)."""
@@ -59,9 +64,7 @@ class TestPolarsDataFrame:
         gsp = GSP(df, sequence_col="sequence")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
-        # Check singleton patterns
+        _assert_has_patterns(result)
         assert ("A",) in result[0] or ("B",) in result[0] or ("D",) in result[0]
 
     def test_polars_sequence_format_with_timestamps(self):
@@ -76,8 +79,7 @@ class TestPolarsDataFrame:
         gsp = GSP(df, sequence_col="sequence", timestamp_col="timestamps")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_polars_missing_column_error(self):
         """Test error handling for missing columns."""
@@ -116,11 +118,7 @@ class TestPandasDataFrame:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
-        # Check that singleton patterns include common items
-        assert any("A" in pattern for pattern in result[0].keys())
-        assert any("B" in pattern for pattern in result[0].keys())
+        _assert_has_common_singletons(result, "A", "B")
 
     def test_pandas_grouped_format_with_timestamps(self):
         """Test Pandas DataFrame with timestamps in grouped format."""
@@ -135,8 +133,7 @@ class TestPandasDataFrame:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp", maxgap=5.0)
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_pandas_sequence_format(self):
         """Test Pandas DataFrame with sequence format (list column)."""
@@ -145,9 +142,7 @@ class TestPandasDataFrame:
         gsp = GSP(df, sequence_col="sequence")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
-        # Check singleton patterns
+        _assert_has_patterns(result)
         assert ("A",) in result[0] or ("B",) in result[0] or ("D",) in result[0]
 
     def test_pandas_sequence_format_with_timestamps(self):
@@ -162,8 +157,7 @@ class TestPandasDataFrame:
         gsp = GSP(df, sequence_col="sequence", timestamp_col="timestamps")
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_pandas_missing_column_error(self):
         """Test error handling for missing columns."""
@@ -196,8 +190,7 @@ class TestDataFrameCompatibility:
         gsp = GSP(transactions)
         result = gsp.search(min_support=0.5)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
 
 class TestDataFrameInteroperability:
@@ -255,8 +248,7 @@ class TestPolarsAdvancedFeatures:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item")
         result = gsp.search(min_support=0.1)
 
-        # Check that we got patterns
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_polars_sorted_by_timestamp(self):
         """Test that timestamps are properly sorted."""
@@ -286,8 +278,7 @@ class TestPolarsAdvancedFeatures:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item")
         result = gsp.search(min_support=0.5)
 
-        # Check that LazyFrame works correctly
-        assert len(result) > 0
+        _assert_has_patterns(result)
         assert ("A",) in result[0]
 
     def test_polars_lazyframe_sequence_format(self):
@@ -297,8 +288,7 @@ class TestPolarsAdvancedFeatures:
         gsp = GSP(df, sequence_col="sequence")
         result = gsp.search(min_support=0.5)
 
-        # Check that LazyFrame works correctly
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
 
 class TestPandasAdvancedFeatures:
@@ -317,8 +307,7 @@ class TestPandasAdvancedFeatures:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item")
         result = gsp.search(min_support=0.5)
 
-        # Should work correctly regardless of index
-        assert len(result) > 0
+        _assert_has_patterns(result)
 
     def test_pandas_dtypes_conversion(self):
         """Test that various dtypes are handled correctly."""
@@ -333,5 +322,4 @@ class TestPandasAdvancedFeatures:
         gsp = GSP(df, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp")
         result = gsp.search(min_support=0.5)
 
-        # Should work with integer timestamps
-        assert len(result) > 0
+        _assert_has_patterns(result)

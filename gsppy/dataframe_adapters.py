@@ -69,7 +69,7 @@ This implementation is distributed under the MIT License.
 
 from __future__ import annotations
 
-from typing import Any, List, Tuple, Optional, cast
+from typing import Any, List, Tuple, Iterable, Optional, Collection, cast
 
 import pandas as pd
 import polars as pl
@@ -79,6 +79,40 @@ class DataFrameAdapterError(Exception):
     """Exception raised for errors in DataFrame conversion."""
 
     pass
+
+
+def _require_columns(columns: Collection[str], *names: str) -> None:
+    for name in names:
+        if name not in columns:
+            raise DataFrameAdapterError(f"Column '{name}' not found in DataFrame")
+
+
+def _build_timestamped_transactions(
+    sequences: Iterable[Any],
+    timestamps: Iterable[Any],
+    sequence_col: str,
+    timestamp_col: str,
+) -> List[List[Tuple[str, float]]]:
+    result: List[List[Tuple[str, float]]] = []
+    for seq, times in zip(sequences, timestamps, strict=True):
+        if not isinstance(seq, list) or not isinstance(times, list):
+            raise DataFrameAdapterError(f"Both '{sequence_col}' and '{timestamp_col}' must contain lists")
+        seq_list: List[Any] = cast(List[Any], seq)
+        times_list: List[Any] = cast(List[Any], times)
+        if len(seq_list) != len(times_list):
+            raise DataFrameAdapterError("Sequence and timestamp lists must have the same length")
+        result.append([(str(item), float(ts)) for item, ts in zip(seq_list, times_list, strict=True)])
+    return result
+
+
+def _build_simple_transactions(sequences: Iterable[Any], sequence_col: str) -> List[List[str]]:
+    result: List[List[str]] = []
+    for seq in sequences:
+        if not isinstance(seq, list):
+            raise DataFrameAdapterError(f"Column '{sequence_col}' must contain lists")
+        seq_list: List[Any] = cast(List[Any], seq)
+        result.append([str(item) for item in seq_list])
+    return result
 
 
 def polars_to_transactions(
@@ -155,37 +189,20 @@ def _polars_sequence_format(
     if isinstance(df, pl.LazyFrame):
         df = df.collect()
 
-    if sequence_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{sequence_col}' not found in DataFrame")
+    _require_columns(df.columns, sequence_col)
 
     sequences: List[Any] = df[sequence_col].to_list()
 
     if timestamp_col is not None:
-        if timestamp_col not in df.columns:
-            raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
+        _require_columns(df.columns, timestamp_col)
 
         timestamps: List[Any] = df[timestamp_col].to_list()
 
         # Create timestamped transactions
-        result: List[List[Tuple[str, float]]] = []
-        for seq, times in zip(sequences, timestamps, strict=True):
-            if not isinstance(seq, list) or not isinstance(times, list):
-                raise DataFrameAdapterError(f"Both '{sequence_col}' and '{timestamp_col}' must contain lists")
-            seq_list: List[Any] = cast(List[Any], seq)
-            times_list: List[Any] = cast(List[Any], times)
-            if len(seq_list) != len(times_list):
-                raise DataFrameAdapterError(f"Sequence and timestamp lists must have the same length")
-            result.append([(str(item), float(ts)) for item, ts in zip(seq_list, times_list, strict=True)])
-        return result
+        return _build_timestamped_transactions(sequences, timestamps, sequence_col, timestamp_col)
     else:
         # Create non-timestamped transactions
-        result_simple: List[List[str]] = []
-        for seq in sequences:
-            if not isinstance(seq, list):
-                raise DataFrameAdapterError(f"Column '{sequence_col}' must contain lists")
-            seq_list_simple: List[Any] = cast(List[Any], seq)
-            result_simple.append([str(item) for item in seq_list_simple])
-        return result_simple
+        return _build_simple_transactions(sequences, sequence_col)
 
 
 def _polars_grouped_format(
@@ -211,16 +228,12 @@ def _polars_grouped_format(
         df = df.collect()
 
     # Validate required columns exist
-    if transaction_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{transaction_col}' not found in DataFrame")
-    if item_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{item_col}' not found in DataFrame")
+    _require_columns(df.columns, transaction_col, item_col)
 
     # Sort by transaction and optionally timestamp
     sort_cols = [transaction_col]
     if timestamp_col is not None:
-        if timestamp_col not in df.columns:
-            raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
+        _require_columns(df.columns, timestamp_col)
         sort_cols.append(timestamp_col)
 
     df_sorted = df.sort(sort_cols)
@@ -322,36 +335,20 @@ def _pandas_sequence_format(
     Returns:
         List of transactions
     """
-    if sequence_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{sequence_col}' not found in DataFrame")
+    _require_columns(df.columns, sequence_col)
 
     sequences: List[Any] = df[sequence_col].tolist()
 
     if timestamp_col is not None:
-        if timestamp_col not in df.columns:
-            raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
+        _require_columns(df.columns, timestamp_col)
 
         timestamps: List[Any] = df[timestamp_col].tolist()
 
         # Create timestamped transactions
-        result: List[List[Tuple[str, float]]] = []
-        for seq, times in zip(sequences, timestamps, strict=True):
-            if not isinstance(seq, list) or not isinstance(times, list):
-                raise DataFrameAdapterError(f"Both '{sequence_col}' and '{timestamp_col}' must contain lists")
-            seq_list: List[Any] = cast(List[Any], seq)
-            times_list: List[Any] = cast(List[Any], times)
-            if len(seq_list) != len(times_list):
-                raise DataFrameAdapterError(f"Sequence and timestamp lists must have the same length")
-            result.append([(str(item), float(ts)) for item, ts in zip(seq_list, times_list, strict=True)])
-        return result
+        return _build_timestamped_transactions(sequences, timestamps, sequence_col, timestamp_col)
     else:
         # Create non-timestamped transactions
-        result_simple: List[List[str]] = []
-        for seq in sequences:
-            if not isinstance(seq, list):
-                raise DataFrameAdapterError(f"Column '{sequence_col}' must contain lists")
-            result_simple.append([str(item) for item in seq])  # pyright: ignore[reportUnknownArgumentType,reportUnknownVariableType]
-        return result_simple
+        return _build_simple_transactions(sequences, sequence_col)
 
 
 def _pandas_grouped_format(
@@ -373,16 +370,12 @@ def _pandas_grouped_format(
         List of transactions
     """
     # Validate required columns exist
-    if transaction_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{transaction_col}' not found in DataFrame")
-    if item_col not in df.columns:
-        raise DataFrameAdapterError(f"Column '{item_col}' not found in DataFrame")
+    _require_columns(df.columns, transaction_col, item_col)
 
     # Sort by transaction and optionally timestamp
     sort_cols = [transaction_col]
     if timestamp_col is not None:
-        if timestamp_col not in df.columns:
-            raise DataFrameAdapterError(f"Column '{timestamp_col}' not found in DataFrame")
+        _require_columns(df.columns, timestamp_col)
         sort_cols.append(timestamp_col)
 
     df_sorted = df.sort_values(by=sort_cols)
