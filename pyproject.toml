@@ -34,6 +34,7 @@ dependencies = [
     "polars>=1.37.1",
     "pyarrow>=10.0.0",
     "pyright>=1.1.408",
+    "ruff>=0.14.13",
     "typing_extensions>=4.0.0",
 ]
 
@@ -54,9 +55,9 @@ dev = [
     "pytest==9.0.2",
     "pytest-benchmark==5.2.3",
     "pytest-cov==7.0.0",
-    "ruff==0.14.13",
+    "ruff==0.14.14",
     "tox==4.34.1",
-    "ty==0.0.12",
+    "ty==0.0.14",
 ]
 docs = [
     "mkdocs>=1.6,<2",
@@ -223,3 +224,8 @@ prerelease = false
 name = "origin"
 type = "github"
 ignore_token_for_push = false
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.13",
+]
