@@ -435,7 +435,7 @@ def main(
     item_col: Optional[str],
     timestamp_col: Optional[str],
     sequence_col: Optional[str],
-    format: str,
+    format: str,  # noqa: A002
     verbose: bool,
 ) -> None:
     """
@@ -492,13 +492,15 @@ def main(
     # Automatically detect and load transactions
     try:
         # Handle explicit format specification
-        if format.lower() == "spm":
+        file_format = format.lower()
+        
+        if file_format == "spm":
             transactions = read_transactions_from_spm(file_path)
-        elif format.lower() == "json":
+        elif file_format == "json":
             transactions = read_transactions_from_json(file_path)
-        elif format.lower() == "csv":
+        elif file_format == "csv":
             transactions = read_transactions_from_csv(file_path)
-        elif format.lower() == "parquet":
+        elif file_format == "parquet":
             transactions = read_transactions_from_parquet(
                 file_path,
                 transaction_col=transaction_col,
@@ -506,7 +508,7 @@ def main(
                 timestamp_col=timestamp_col,
                 sequence_col=sequence_col,
             )
-        elif format.lower() == "arrow":
+        elif file_format == "arrow":
             transactions = read_transactions_from_arrow(
                 file_path,
                 transaction_col=transaction_col,
@@ -514,7 +516,7 @@ def main(
                 timestamp_col=timestamp_col,
                 sequence_col=sequence_col,
             )
-        elif format.lower() == "auto":
+        elif file_format == "auto":
             # Auto-detect format
             if is_dataframe_format:
                 # For DataFrame formats, pass column parameters

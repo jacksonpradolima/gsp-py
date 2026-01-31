@@ -10,12 +10,12 @@ This module tests the following functionalities:
 
 import os
 import tempfile
-from typing import Any, Generator
+from typing import Generator
 
 import pytest
 
-from gsppy.utils import read_transactions_from_spm, TokenMapper
 from gsppy.cli import read_transactions_from_spm as cli_read_spm
+from gsppy.utils import TokenMapper, read_transactions_from_spm
 
 
 class TestTokenMapper:
@@ -89,7 +89,7 @@ class TestSPMFormatBasic:
     """Test basic SPM format parsing."""
     
     @pytest.fixture
-    def simple_spm_file(self) -> Generator[Any, Any, Any]:
+    def simple_spm_file(self) -> Generator[str, None, None]:
         """Fixture to create a simple SPM format file."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 2 -1 3 -1 -2\n")
@@ -127,7 +127,7 @@ class TestSPMFormatEdgeCases:
     """Test edge cases in SPM format parsing."""
     
     @pytest.fixture
-    def empty_lines_file(self) -> Generator[Any, Any, Any]:
+    def empty_lines_file(self) -> Generator[str, None, None]:
         """Fixture with empty lines."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 2 -1 -2\n")
@@ -149,7 +149,7 @@ class TestSPMFormatEdgeCases:
         assert transactions[2] == ['5']
     
     @pytest.fixture
-    def missing_end_delimiter_file(self) -> Generator[Any, Any, Any]:
+    def missing_end_delimiter_file(self) -> Generator[str, None, None]:
         """Fixture with missing -2 delimiter."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 2 -1 3 -1\n")  # Missing -2
@@ -167,7 +167,7 @@ class TestSPMFormatEdgeCases:
         assert transactions[1] == ['4', '5']
     
     @pytest.fixture
-    def extra_delimiters_file(self) -> Generator[Any, Any, Any]:
+    def extra_delimiters_file(self) -> Generator[str, None, None]:
         """Fixture with extra delimiters."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 -1 -1 2 -1 -2\n")  # Extra -1
@@ -185,7 +185,7 @@ class TestSPMFormatEdgeCases:
         assert transactions[1] == ['3']
     
     @pytest.fixture
-    def string_tokens_file(self) -> Generator[Any, Any, Any]:
+    def string_tokens_file(self) -> Generator[str, None, None]:
         """Fixture with string tokens instead of integers."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("A B -1 C -1 -2\n")
@@ -203,7 +203,7 @@ class TestSPMFormatEdgeCases:
         assert transactions[1] == ['D', 'E', 'F']
     
     @pytest.fixture
-    def mixed_length_elements_file(self) -> Generator[Any, Any, Any]:
+    def mixed_length_elements_file(self) -> Generator[str, None, None]:
         """Fixture with varied element lengths."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 -1 -2\n")  # Single item
@@ -232,7 +232,7 @@ class TestSPMFormatErrors:
             read_transactions_from_spm("/nonexistent/file.txt")
     
     @pytest.fixture
-    def empty_file(self) -> Generator[Any, Any, Any]:
+    def empty_file(self) -> Generator[str, None, None]:
         """Fixture with empty file."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             pass  # Empty file
@@ -250,7 +250,7 @@ class TestSPMFormatComplex:
     """Test complex SPM format scenarios."""
     
     @pytest.fixture
-    def complex_spm_file(self) -> Generator[Any, Any, Any]:
+    def complex_spm_file(self) -> Generator[str, None, None]:
         """Fixture with a more complex SPM dataset."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             # Customer purchase sequences
@@ -288,7 +288,7 @@ class TestCLIIntegration:
     """Test CLI integration with SPM format."""
     
     @pytest.fixture
-    def spm_file_for_cli(self) -> Generator[Any, Any, Any]:
+    def spm_file_for_cli(self) -> Generator[str, None, None]:
         """Fixture for CLI testing."""
         with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as f:
             f.write("1 2 -1 3 -1 -2\n")
