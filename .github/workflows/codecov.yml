@@ -29,7 +29,7 @@ jobs:
 
             -   name: Install dependencies
                 run: |
-                    uv sync --frozen --extra dev
+                    uv sync --frozen --extra dev --extra dataframe
                     uv pip install -e .
 
             -   name: Install Rust toolchain (optional)
@@ -92,7 +92,7 @@ jobs:
 
             -   name: Install dependencies
                 run: |
-                    uv sync --frozen --extra dev
+                    uv sync --frozen --extra dev --extra dataframe
                     uv pip install -e .
 
             -   name: Build Rust extension

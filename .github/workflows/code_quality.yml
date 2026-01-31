@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --frozen --extra dev
+          uv sync --frozen --extra dev --extra dataframe
 
       - name: Check lockfile freshness
         if: matrix.python-version == '3.12'
@@ -78,7 +78,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --frozen --extra dev
+          uv sync --frozen --extra dev --extra dataframe
 
       - name: Build Rust extension
         run: |
