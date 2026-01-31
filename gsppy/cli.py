@@ -199,11 +199,11 @@ def read_transactions_from_csv(file_path: str) -> List[List[str]]:
 def read_transactions_from_spm(file_path: str) -> List[List[str]]:
     """
     Read transactions from an SPM/GSP format file.
-    
+
     The SPM/GSP format uses delimiters:
     - `-1`: End of element (item set)
     - `-2`: End of sequence (transaction)
-    
+
     Parameters:
         file_path (str): Path to the file containing transactions.
 
@@ -215,7 +215,9 @@ def read_transactions_from_spm(file_path: str) -> List[List[str]]:
     """
     try:
         from gsppy.utils import read_transactions_from_spm as read_spm
-        return read_spm(file_path, return_mappings=False)
+
+        transactions, _, _ = read_spm(file_path, return_mappings=False)
+        return transactions
     except Exception as e:
         msg = f"Error reading transaction data from SPM file '{file_path}': {e}"
         logging.error(msg)
@@ -477,9 +479,9 @@ def main(
         gsppy --file sequences.arrow --min_support 0.3 \
               --sequence-col items
         ```
-        
+
         With SPM format files:
-        
+
         ```bash
         gsppy --file data.txt --format spm --min_support 0.3
         ```
@@ -495,7 +497,7 @@ def main(
     try:
         # Handle explicit format specification
         file_format = format.lower()
-        
+
         if file_format == FileFormat.SPM.value:
             transactions = read_transactions_from_spm(file_path)
         elif file_format == FileFormat.JSON.value:

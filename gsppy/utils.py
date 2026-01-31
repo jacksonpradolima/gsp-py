@@ -389,52 +389,45 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
 
 
 def read_transactions_from_spm(
-    path: str,
-    return_mappings: bool = False
-) -> Union[
-    List[List[str]], 
-    Tuple[List[List[str]], Dict[str, int], Dict[int, str]]
-]:
+    path: str, return_mappings: bool = False
+) -> Tuple[List[List[str]], Dict[str, int], Dict[int, str]]:
     """
     Read transactions from an SPM/GSP format file.
-    
+
     The SPM/GSP format uses delimiters:
     - `-1`: End of element (item set)
     - `-2`: End of sequence (transaction)
-    
+
     Each line represents one sequence/transaction. Items are space-separated integers
     (or strings), with -1 marking the end of an element and -2 marking the end of a sequence.
-    
+
     Format examples:
         Simple sequence: `1 2 -1 3 -1 -2` represents [[1, 2], [3]]
         Multiple items: `A -1 B C -1 -2` represents [[A], [B, C]]
-    
+
     Parameters:
         path: Path to the SPM format file
         return_mappings: If True, return token mappings (str→int, int→str) along with dataset
-        
+
     Returns:
-        If return_mappings is False:
-            List[List[str]]: Parsed dataset as nested list of lists (sequences of elements)
-        If return_mappings is True:
-            Tuple containing:
-                - List[List[str]]: Parsed dataset
-                - Dict[str, int]: String to integer mapping
-                - Dict[int, str]: Integer to string mapping
-    
+        Tuple containing:
+            - List[List[str]]: Parsed dataset as nested list of lists (sequences of elements)
+            - Dict[str, int]: String to integer mapping (empty if return_mappings=False)
+            - Dict[int, str]: Integer to string mapping (empty if return_mappings=False)
+
     Raises:
         ValueError: If file cannot be read or contains invalid format
         FileNotFoundError: If file does not exist
-    
+
     Examples:
         >>> # File content: "1 2 -1 3 -1 -2"
         >>> transactions = read_transactions_from_spm("data.txt")
         >>> print(transactions)
         [['1', '2', '3']]
-        
+
         >>> # With mappings
         >>> transactions, str_to_int, int_to_str = read_transactions_from_spm("data.txt", return_mappings=True)
-    
+
     Notes:
         - Empty lines are skipped
         - Extra or trailing delimiters are handled gracefully
@@ -444,31 +437,31 @@ def read_transactions_from_spm(
     try:
         transactions: List[List[str]] = []
         mapper = TokenMapper() if return_mappings else None
-        
-        with open(path, 'r', encoding='utf-8') as f:
+
+        with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                
+
                 # Skip empty lines
                 if not line:
                     continue
-                
+
                 # Split line into tokens
                 tokens = line.split()
-                
+
                 # Parse the sequence
                 sequence: List[str] = []
                 current_element: List[str] = []
-                
+
                 for token in tokens:
-                    if token == '-2':
+                    if token == "-2":
                         # End of sequence
                         # Add any remaining items in current element
                         if current_element:
                             sequence.extend(current_element)
                             current_element = []
                         break
-                    elif token == '-1':
+                    elif token == "-1":
                         # End of element
                         if current_element:
                             sequence.extend(current_element)
@@ -478,19 +471,19 @@ def read_transactions_from_spm(
                         current_element.append(token)
                         if mapper:
                             mapper.add_token(token)
-                
+
                 # Add any remaining items if -2 was missing
                 if current_element:
                     sequence.extend(current_element)
-                
+
                 # Add non-empty sequences
                 if sequence:
                     transactions.append(sequence)
-        
+
         if return_mappings and mapper:
             return transactions, mapper.get_str_to_int(), mapper.get_int_to_str()
-        return transactions
-        
+        return transactions, {}, {}
+
     except FileNotFoundError as e:
         raise FileNotFoundError(f"SPM file '{path}' does not exist.") from e
     except Exception as e:
