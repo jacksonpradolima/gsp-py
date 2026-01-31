@@ -382,3 +382,203 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
         for pattern1, pattern2 in product(keys, repeat=2)
         if pattern1[1:] == pattern2[:-1] and not (len(pattern1) == 1 and pattern1 == pattern2)
     ]
+
+
+class TokenMapper:
+    """
+    Utility class for mapping between string tokens and integer IDs.
+    
+    Provides bidirectional mapping between string tokens and internal integer representations,
+    useful for compatibility and workflow integration.
+    
+    Attributes:
+        str_to_int (Dict[str, int]): Map from string tokens to integer IDs
+        int_to_str (Dict[int, str]): Map from integer IDs to string tokens
+    
+    Examples:
+        >>> mapper = TokenMapper()
+        >>> mapper.add_token("A")
+        0
+        >>> mapper.add_token("B")
+        1
+        >>> mapper.to_int("A")
+        0
+        >>> mapper.to_str(1)
+        'B'
+        >>> mapper.get_str_to_int()
+        {'A': 0, 'B': 1}
+    """
+    
+    def __init__(self) -> None:
+        """Initialize empty token mappings."""
+        self.str_to_int: Dict[str, int] = {}
+        self.int_to_str: Dict[int, str] = {}
+        self._next_id = 0
+    
+    def add_token(self, token: str) -> int:
+        """
+        Add a token to the mapping, returning its integer ID.
+        
+        If the token already exists, returns its existing ID.
+        
+        Parameters:
+            token: String token to add
+            
+        Returns:
+            int: Integer ID for the token
+        """
+        if token in self.str_to_int:
+            return self.str_to_int[token]
+        
+        token_id = self._next_id
+        self.str_to_int[token] = token_id
+        self.int_to_str[token_id] = token
+        self._next_id += 1
+        return token_id
+    
+    def to_int(self, token: str) -> int:
+        """
+        Get the integer ID for a string token.
+        
+        Parameters:
+            token: String token to lookup
+            
+        Returns:
+            int: Integer ID for the token
+            
+        Raises:
+            KeyError: If token not found in mapping
+        """
+        return self.str_to_int[token]
+    
+    def to_str(self, token_id: int) -> str:
+        """
+        Get the string token for an integer ID.
+        
+        Parameters:
+            token_id: Integer ID to lookup
+            
+        Returns:
+            str: String token for the ID
+            
+        Raises:
+            KeyError: If ID not found in mapping
+        """
+        return self.int_to_str[token_id]
+    
+    def get_str_to_int(self) -> Dict[str, int]:
+        """Get a copy of the string-to-int mapping."""
+        return self.str_to_int.copy()
+    
+    def get_int_to_str(self) -> Dict[int, str]:
+        """Get a copy of the int-to-string mapping."""
+        return self.int_to_str.copy()
+
+
+def read_transactions_from_spm(
+    path: str,
+    return_mappings: bool = False
+) -> Union[
+    List[List[str]], 
+    Tuple[List[List[str]], Dict[str, int], Dict[int, str]]
+]:
+    """
+    Read transactions from an SPM/GSP format file.
+    
+    The SPM/GSP format uses delimiters:
+    - `-1`: End of element (item set)
+    - `-2`: End of sequence (transaction)
+    
+    Each line represents one sequence/transaction. Items are space-separated integers
+    (or strings), with -1 marking the end of an element and -2 marking the end of a sequence.
+    
+    Format examples:
+        Simple sequence: `1 2 -1 3 -1 -2` represents [[1, 2], [3]]
+        Multiple items: `A -1 B C -1 -2` represents [[A], [B, C]]
+    
+    Parameters:
+        path: Path to the SPM format file
+        return_mappings: If True, return token mappings (str→int, int→str) along with dataset
+        
+    Returns:
+        If return_mappings is False:
+            List[List[str]]: Parsed dataset as nested list of lists (sequences of elements)
+        If return_mappings is True:
+            Tuple containing:
+                - List[List[str]]: Parsed dataset
+                - Dict[str, int]: String to integer mapping
+                - Dict[int, str]: Integer to string mapping
+    
+    Raises:
+        ValueError: If file cannot be read or contains invalid format
+        FileNotFoundError: If file does not exist
+    
+    Examples:
+        >>> # File content: "1 2 -1 3 -1 -2"
+        >>> transactions = read_transactions_from_spm("data.txt")
+        >>> print(transactions)
+        [['1', '2', '3']]
+        
+        >>> # With mappings
+        >>> transactions, str_to_int, int_to_str = read_transactions_from_spm("data.txt", return_mappings=True)
+    
+    Notes:
+        - Empty lines are skipped
+        - Extra or trailing delimiters are handled gracefully
+        - Elements within a sequence are flattened into a single list
+        - All tokens are returned as strings for consistency
+    """
+    try:
+        transactions: List[List[str]] = []
+        mapper = TokenMapper() if return_mappings else None
+        
+        with open(path, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                
+                # Skip empty lines
+                if not line:
+                    continue
+                
+                # Split line into tokens
+                tokens = line.split()
+                
+                # Parse the sequence
+                sequence: List[str] = []
+                current_element: List[str] = []
+                
+                for token in tokens:
+                    if token == '-2':
+                        # End of sequence
+                        # Add any remaining items in current element
+                        if current_element:
+                            sequence.extend(current_element)
+                            current_element = []
+                        break
+                    elif token == '-1':
+                        # End of element
+                        if current_element:
+                            sequence.extend(current_element)
+                            current_element = []
+                    else:
+                        # Regular item
+                        current_element.append(token)
+                        if mapper:
+                            mapper.add_token(token)
+                
+                # Add any remaining items if -2 was missing
+                if current_element:
+                    sequence.extend(current_element)
+                
+                # Add non-empty sequences
+                if sequence:
+                    transactions.append(sequence)
+        
+        if return_mappings and mapper:
+            return transactions, mapper.get_str_to_int(), mapper.get_int_to_str()
+        return transactions
+        
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"SPM file '{path}' does not exist.") from e
+    except Exception as e:
+        raise ValueError(f"Error reading SPM format file '{path}': {e}") from e
