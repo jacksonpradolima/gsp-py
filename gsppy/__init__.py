@@ -32,13 +32,13 @@ try:
         polars_to_transactions,
         dataframe_to_transactions,
     )
-    _DATAFRAME_AVAILABLE = True
 except ImportError:
-    _DATAFRAME_AVAILABLE = False
     DataFrameAdapterError = None  # type: ignore
     pandas_to_transactions = None  # type: ignore
     polars_to_transactions = None  # type: ignore
     dataframe_to_transactions = None  # type: ignore
+
+_DATAFRAME_AVAILABLE = DataFrameAdapterError is not None
 
 try:
     __version__ = importlib_metadata.version("gsppy")
@@ -64,9 +64,11 @@ __all__ = [
 
 # Add DataFrame adapters to __all__ if available
 if _DATAFRAME_AVAILABLE:
-    __all__.extend([
-        "dataframe_to_transactions",
-        "polars_to_transactions",
-        "pandas_to_transactions",
-        "DataFrameAdapterError",
-    ])
+    __all__.extend(
+        [
+            "dataframe_to_transactions",
+            "polars_to_transactions",
+            "pandas_to_transactions",
+            "DataFrameAdapterError",
+        ]
+    )

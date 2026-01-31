@@ -90,7 +90,7 @@ from __future__ import annotations
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Union, Optional, cast, Any
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union, Optional, cast
 from itertools import chain
 from collections import Counter
 
@@ -103,6 +103,10 @@ from gsppy.utils import (
 )
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
 from gsppy.accelerate import support_counts as support_counts_accel
+
+if TYPE_CHECKING:
+    import pandas as pd
+    import polars as pl
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -129,7 +133,11 @@ class GSP:
     def __init__(
         self,
         raw_transactions: Union[
-            List[List[str]], List[List[Tuple[str, float]]], Any  # polars.DataFrame, polars.LazyFrame, pandas.DataFrame
+            List[List[str]],
+            List[List[Tuple[str, float]]],
+            "pl.DataFrame",
+            "pl.LazyFrame",
+            "pd.DataFrame",
         ],
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
@@ -245,7 +253,11 @@ class GSP:
     def _convert_input_data(
         self,
         raw_transactions: Union[
-            List[List[str]], List[List[Tuple[str, float]]], Any  # polars.DataFrame, polars.LazyFrame, pandas.DataFrame
+            List[List[str]],
+            List[List[Tuple[str, float]]],
+            "pl.DataFrame",
+            "pl.LazyFrame",
+            "pd.DataFrame",
         ],
         transaction_col: Optional[str],
         item_col: Optional[str],
