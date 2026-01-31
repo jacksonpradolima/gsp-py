@@ -9,9 +9,13 @@ Requirements:
 """
 
 import tempfile
-import polars as pl
+
 import pandas as pd
+import polars as pl
+
 from gsppy import GSP
+
+INPUT_DATAFRAME_LABEL = "Input DataFrame:"
 
 print("=" * 70)
 print("GSP-Py DataFrame Examples")
@@ -21,12 +25,14 @@ print("=" * 70)
 print("\n1. Polars DataFrame (Grouped Format)")
 print("-" * 70)
 
-df_polars = pl.DataFrame({
-    "transaction_id": [1, 1, 2, 2, 2, 3, 3, 4, 4],
-    "item": ["Bread", "Milk", "Bread", "Diaper", "Beer", "Milk", "Coke", "Bread", "Beer"],
-})
+df_polars = pl.DataFrame(
+    {
+        "transaction_id": [1, 1, 2, 2, 2, 3, 3, 4, 4],
+        "item": ["Bread", "Milk", "Bread", "Diaper", "Beer", "Milk", "Coke", "Bread", "Beer"],
+    }
+)
 
-print("Input DataFrame:")
+print(INPUT_DATAFRAME_LABEL)
 print(df_polars)
 
 gsp_polars = GSP(df_polars, transaction_col="transaction_id", item_col="item")
@@ -43,16 +49,18 @@ print("\n" + "=" * 70)
 print("2. Pandas DataFrame (Sequence Format)")
 print("-" * 70)
 
-df_pandas = pd.DataFrame({
-    "transaction": [
-        ["Login", "Browse", "AddToCart", "Purchase"],
-        ["Login", "Browse", "Purchase"],
-        ["Browse", "AddToCart", "Purchase"],
-        ["Login", "AddToCart", "Purchase"],
-    ]
-})
+df_pandas = pd.DataFrame(
+    {
+        "transaction": [
+            ["Login", "Browse", "AddToCart", "Purchase"],
+            ["Login", "Browse", "Purchase"],
+            ["Browse", "AddToCart", "Purchase"],
+            ["Login", "AddToCart", "Purchase"],
+        ]
+    }
+)
 
-print("Input DataFrame:")
+print(INPUT_DATAFRAME_LABEL)
 print(df_pandas)
 
 gsp_pandas = GSP(df_pandas, sequence_col="transaction")
@@ -69,23 +77,19 @@ print("\n" + "=" * 70)
 print("3. Polars DataFrame with Timestamps (Temporal Mining)")
 print("-" * 70)
 
-df_temporal = pl.DataFrame({
-    "transaction_id": [1, 1, 1, 2, 2, 2, 3, 3, 3],
-    "item": ["A", "B", "C", "A", "B", "C", "A", "B", "C"],
-    "timestamp": [1, 2, 5, 1, 3, 15, 1, 2, 4],  # Note: Transaction 2 has large gap
-})
+df_temporal = pl.DataFrame(
+    {
+        "transaction_id": [1, 1, 1, 2, 2, 2, 3, 3, 3],
+        "item": ["A", "B", "C", "A", "B", "C", "A", "B", "C"],
+        "timestamp": [1, 2, 5, 1, 3, 15, 1, 2, 4],  # Note: Transaction 2 has large gap
+    }
+)
 
-print("Input DataFrame:")
+print(INPUT_DATAFRAME_LABEL)
 print(df_temporal)
 
 # Find patterns where consecutive items occur within 5 time units
-gsp_temporal = GSP(
-    df_temporal,
-    transaction_col="transaction_id",
-    item_col="item",
-    timestamp_col="timestamp",
-    maxgap=5
-)
+gsp_temporal = GSP(df_temporal, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp", maxgap=5)
 patterns_temporal = gsp_temporal.search(min_support=0.5)
 
 print("\nFrequent Patterns with maxgap=5 (min_support=0.5):")
@@ -103,6 +107,7 @@ print("-" * 70)
 
 # Save DataFrame to Parquet using secure temporary directory
 import os
+
 parquet_file = os.path.join(tempfile.gettempdir(), "example_transactions.parquet")
 df_polars.write_parquet(parquet_file)
 print(f"Saved DataFrame to {parquet_file}")
@@ -132,10 +137,12 @@ for txn_id in range(1, n_transactions + 1):
         transaction_ids.append(txn_id)
         items.append(chr(65 + (i % 10)))  # A-J
 
-df_large = pl.DataFrame({
-    "transaction_id": transaction_ids,
-    "item": items,
-})
+df_large = pl.DataFrame(
+    {
+        "transaction_id": transaction_ids,
+        "item": items,
+    }
+)
 
 # Method 1: Direct DataFrame input
 start = time.time()
@@ -145,6 +152,7 @@ time_df = time.time() - start
 
 # Method 2: Convert to list first (traditional approach)
 from gsppy.dataframe_adapters import polars_to_transactions
+
 transactions_list = polars_to_transactions(df_large, transaction_col="transaction_id", item_col="item")
 
 start = time.time()
