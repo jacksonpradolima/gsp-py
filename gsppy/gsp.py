@@ -90,7 +90,7 @@ from __future__ import annotations
 import math
 import logging
 import multiprocessing as mp
-from typing import Dict, List, Tuple, Union, Optional, cast
+from typing import Dict, List, Tuple, Union, Optional, cast, Any
 from itertools import chain
 from collections import Counter
 
@@ -129,7 +129,7 @@ class GSP:
     def __init__(
         self,
         raw_transactions: Union[
-            List[List[str]], List[List[Tuple[str, float]]], pl.DataFrame, pl.LazyFrame, pd.DataFrame
+            List[List[str]], List[List[Tuple[str, float]]], Any  # polars.DataFrame, polars.LazyFrame, pandas.DataFrame
         ],
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
@@ -245,7 +245,7 @@ class GSP:
     def _convert_input_data(
         self,
         raw_transactions: Union[
-            List[List[str]], List[List[Tuple[str, float]]], pl.DataFrame, pl.LazyFrame, pd.DataFrame
+            List[List[str]], List[List[Tuple[str, float]]], Any  # polars.DataFrame, polars.LazyFrame, pandas.DataFrame
         ],
         transaction_col: Optional[str],
         item_col: Optional[str],
