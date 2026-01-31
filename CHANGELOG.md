@@ -1,6 +1,111 @@
 # CHANGELOG
 
 
+## v3.6.1 (2026-01-31)
+
+### Bug Fixes
+
+- Typing for polars and pandas
+  ([`0773992`](https://github.com/jacksonpradolima/gsp-py/commit/07739921d074e55c8436a88a73e510b1d8761510))
+
+### Build System
+
+- **deps**: Bump actions/checkout in /.github/workflows
+  ([`7af193d`](https://github.com/jacksonpradolima/gsp-py/commit/7af193d515972eeca5d8e354e91a60e488357cfb))
+
+Bumps [actions/checkout](https://github.com/actions/checkout) from 4.3.1 to 6.0.2. - [Release
+  notes](https://github.com/actions/checkout/releases) -
+  [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/actions/checkout/compare/v4.3.1...de0fac2e4500dabe0009e67214ff5f5447ce83dd)
+
+--- updated-dependencies: - dependency-name: actions/checkout dependency-version: 6.0.2
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump actions/github-script in /.github/workflows
+  ([`03a7588`](https://github.com/jacksonpradolima/gsp-py/commit/03a7588301421369731d3d543f81b93c25c292ef))
+
+Bumps [actions/github-script](https://github.com/actions/github-script) from 7.0.1 to 8.0.0. -
+  [Release notes](https://github.com/actions/github-script/releases) -
+  [Commits](https://github.com/actions/github-script/compare/60a0d83039c74a4aee543508d2ffcb1c3799cdea...ed597411d8f924073f98dfc5c65a23a2325f34cd)
+
+--- updated-dependencies: - dependency-name: actions/github-script dependency-version: 8.0.0
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump actions/setup-python in /.github/workflows
+  ([`75771bf`](https://github.com/jacksonpradolima/gsp-py/commit/75771bff660b3842f2c8d84bdaeb013941e5abe0))
+
+Bumps [actions/setup-python](https://github.com/actions/setup-python) from 5.6.0 to 6.2.0. -
+  [Release notes](https://github.com/actions/setup-python/releases) -
+  [Commits](https://github.com/actions/setup-python/compare/v5.6.0...a309ff8b426b58ec0e2a45f0f869d46889d02405)
+
+--- updated-dependencies: - dependency-name: actions/setup-python dependency-version: 6.2.0
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump actions/stale in /.github/workflows
+  ([`e699ccd`](https://github.com/jacksonpradolima/gsp-py/commit/e699ccdac689734b4694665d924ace8bba479253))
+
+Bumps [actions/stale](https://github.com/actions/stale) from 9.0.0 to 10.1.1. - [Release
+  notes](https://github.com/actions/stale/releases) -
+  [Changelog](https://github.com/actions/stale/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/actions/stale/compare/28ca1036281a5e5922ead5184a1bbf96e5fc984e...997185467fa4f803885201cee163a9f38240193d)
+
+--- updated-dependencies: - dependency-name: actions/stale dependency-version: 10.1.1
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump actions/upload-artifact in /.github/workflows
+  ([`17efaff`](https://github.com/jacksonpradolima/gsp-py/commit/17efaffc755c017e066c0286464899ead6e2cae4))
+
+Bumps [actions/upload-artifact](https://github.com/actions/upload-artifact) from 4.6.2 to 6.0.0. -
+  [Release notes](https://github.com/actions/upload-artifact/releases) -
+  [Commits](https://github.com/actions/upload-artifact/compare/v4.6.2...b7c566a772e6b6bfb58ed0dc250532a479d7789f)
+
+--- updated-dependencies: - dependency-name: actions/upload-artifact dependency-version: 6.0.0
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+### Chores
+
+- Update uv.lock for version 3.6.0
+  ([`4c2a5e5`](https://github.com/jacksonpradolima/gsp-py/commit/4c2a5e5967482443c2db645c9ba4744bd2110dd1))
+
+- **deps**: Bump ty and ruff
+  ([`07a20df`](https://github.com/jacksonpradolima/gsp-py/commit/07a20df9fb4ff3a3b022d28d152b586ca45383c8))
+
+
 ## v3.6.0 (2026-01-26)
 
 ### Chores
