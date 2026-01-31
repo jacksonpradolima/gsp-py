@@ -41,6 +41,13 @@ import click
 import polars as pl
 
 from gsppy.gsp import GSP
+from gsppy.enums import (
+    ARROW_EXTENSIONS,
+    PARQUET_EXTENSIONS,
+    DATAFRAME_EXTENSIONS,
+    SUPPORTED_EXTENSIONS_MESSAGE,
+    FileExtension,
+)
 from gsppy.utils import has_timestamps
 
 
@@ -212,21 +219,19 @@ def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tup
     _, file_extension = os.path.splitext(file_path)
     file_extension = file_extension.lower()
 
-    if file_extension == ".json":
+    if file_extension == FileExtension.JSON.value:
         return read_transactions_from_json(file_path)
 
-    if file_extension == ".csv":
+    if file_extension == FileExtension.CSV.value:
         return read_transactions_from_csv(file_path)
 
-    if file_extension in [".parquet", ".pq"]:
+    if file_extension in PARQUET_EXTENSIONS:
         return read_transactions_from_parquet(file_path)
 
-    if file_extension in [".arrow", ".feather"]:
+    if file_extension in ARROW_EXTENSIONS:
         return read_transactions_from_arrow(file_path)
 
-    raise ValueError(
-        f"Unsupported file format '{file_extension}'. Supported formats: .json, .csv, .parquet, .arrow, .feather"
-    )
+    raise ValueError(SUPPORTED_EXTENSIONS_MESSAGE.format(extension=file_extension))
 
 
 def read_transactions_from_parquet(
@@ -439,13 +444,13 @@ def main(
     # Detect file extension to determine if DataFrame column params are needed
     _, file_extension = os.path.splitext(file_path)
     file_extension = file_extension.lower()
-    is_dataframe_format = file_extension in [".parquet", ".pq", ".arrow", ".feather"]
+    is_dataframe_format = file_extension in DATAFRAME_EXTENSIONS
 
     # Automatically detect and load transactions
     try:
         if is_dataframe_format:
             # For DataFrame formats, pass column parameters
-            if file_extension in [".parquet", ".pq"]:
+            if file_extension in PARQUET_EXTENSIONS:
                 transactions = read_transactions_from_parquet(
                     file_path,
                     transaction_col=transaction_col,
