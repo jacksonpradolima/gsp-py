@@ -673,7 +673,7 @@ def _parse_spm_line(line: str, mapper: Optional[TokenMapper], preserve_itemsets:
 
 
 def read_transactions_from_spm(
-    path: str, return_mappings: bool = False, preserve_itemsets: bool = True
+    path: str, return_mappings: bool = False, preserve_itemsets: bool = False
 ) -> Union[List[List[str]], List[List[List[str]]], Tuple[Union[List[List[str]], List[List[List[str]]]], Dict[str, int], Dict[int, str]]]:
     """
     Read transactions from an SPM/GSP format file.
@@ -692,7 +692,7 @@ def read_transactions_from_spm(
     Parameters:
         path: Path to the SPM format file
         return_mappings: If True, return token mappings (str→int, int→str) along with dataset
-        preserve_itemsets: If True, preserve itemset structure; if False, flatten sequences (default: True)
+        preserve_itemsets: If True, preserve itemset structure; if False, flatten sequences (default: False for backward compatibility)
 
     Returns:
         If return_mappings is False:
@@ -709,14 +709,15 @@ def read_transactions_from_spm(
 
     Examples:
         >>> # File content: "1 2 -1 3 -1 -2"
+        >>> # Default: flatten for backward compatibility
+        >>> transactions = read_transactions_from_spm("data.txt")
+        >>> print(transactions)
+        [['1', '2', '3']]
+        
+        >>> # Preserve itemsets
         >>> transactions = read_transactions_from_spm("data.txt", preserve_itemsets=True)
         >>> print(transactions)
         [[['1', '2'], ['3']]]
-        
-        >>> # Flatten itemsets for backward compatibility
-        >>> transactions = read_transactions_from_spm("data.txt", preserve_itemsets=False)
-        >>> print(transactions)
-        [['1', '2', '3']]
 
         >>> # With mappings
         >>> transactions, str_to_int, int_to_str = read_transactions_from_spm("data.txt", return_mappings=True)
@@ -724,7 +725,8 @@ def read_transactions_from_spm(
     Notes:
         - Empty lines are skipped
         - Extra or trailing delimiters are handled gracefully
-        - When preserve_itemsets=False, elements within a sequence are flattened into a single list
+        - When preserve_itemsets=False (default), elements within a sequence are flattened into a single list for backward compatibility
+        - When preserve_itemsets=True, the itemset structure is preserved
         - All tokens are returned as strings for consistency
     """
     try:
