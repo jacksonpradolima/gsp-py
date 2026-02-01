@@ -527,8 +527,8 @@ class GSP:
             # Convert flat pattern to itemset pattern (each item in its own itemset)
             pattern_as_itemsets = tuple((elem,) for elem in item)
             
-            if has_timestamps_flag and has_temporal:
-                # Itemset with timestamps and temporal constraints
+            if has_timestamps_flag:
+                # Use timestamped matching (with or without temporal constraints)
                 frequency = sum(
                     1
                     for t in transactions
@@ -537,7 +537,7 @@ class GSP:
                     )
                 )
             else:
-                # Itemset without temporal constraints (standard case)
+                # Itemset without timestamps (standard case)
                 frequency = sum(
                     1 for t in transactions if is_subsequence_with_itemsets(pattern_as_itemsets, t)
                 )

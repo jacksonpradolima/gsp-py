@@ -151,14 +151,19 @@ def test_worker_batch_static_method(supermarket_transactions: List[List[str]]) -
         - Candidates below the minimum support are filtered out.
         - Candidates meeting the minimum support are returned with correct counts.
     """
+    from gsppy.utils import normalize_to_itemsets
+    
     batch = [("Bread",), ("Milk",), ("Diaper",), ("Eggs",)]  # 1-sequence candidates
-    transactions = [tuple(t) for t in supermarket_transactions]
+    
+    # Normalize transactions to itemsets (as GSP does internally)
+    transactions = [normalize_to_itemsets(t) for t in supermarket_transactions]
+    
     min_support = 3  # Absolute support count
     expected = [(("Bread",), 4), (("Milk",), 4), (("Diaper",), 4)]
 
-    # Call the '_worker_batch' method
+    # Call the '_worker_batch' method with itemset matching enabled
     # This test accesses `_worker_batch` to test internal functionality
-    results = GSP._worker_batch(batch, transactions, min_support)  # pylint: disable=protected-access
+    results = GSP._worker_batch(batch, transactions, min_support, use_itemset_matching=True)  # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 
