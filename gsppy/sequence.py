@@ -18,8 +18,8 @@ Email: jacksonpradolima@gmail.com
 
 from __future__ import annotations
 
-from typing import Tuple, Optional, List, Union, Set, Any
-from dataclasses import dataclass, field
+from typing import Any, List, Tuple, Union, Optional
+from dataclasses import field, dataclass
 
 
 @dataclass(frozen=True, slots=True)

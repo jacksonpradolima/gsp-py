@@ -102,8 +102,8 @@ from gsppy.utils import (
     is_subsequence_in_list_with_time_constraints,
 )
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
-from gsppy.accelerate import support_counts as support_counts_accel
 from gsppy.sequence import Sequence, dict_to_sequences
+from gsppy.accelerate import support_counts as support_counts_accel
 
 if TYPE_CHECKING:
     import pandas as pd
