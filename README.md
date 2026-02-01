@@ -39,6 +39,7 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
     - [📊 DataFrame Input Support](#dataframe-input-support)
+    - [🔗 Itemset Support](#itemset-support)
     - [⏱️ Temporal Constraints](#temporal-constraints)
 7. [⌨️ Typing](#typing)
 8. [🌟 Planned Features](#planned-features)
@@ -904,6 +905,150 @@ gsp = GSP(transactions, transaction_col="txn")  # ValueError: DataFrame paramete
 For complete examples and edge cases, see:
 - [`tests/test_dataframe.py`](tests/test_dataframe.py) - Comprehensive test suite
 - DataFrame adapter documentation in [`gsppy/dataframe_adapters.py`](gsppy/dataframe_adapters.py)
+
+---
+
+## 🔗 Itemset Support
+
+GSP-Py supports **itemsets** within sequence elements, enabling you to capture **co-occurrence** of multiple items at the same time step. This is crucial for applications where items occur together rather than in strict sequential order.
+
+### What are Itemsets?
+
+- **Flat sequences**: `['A', 'B', 'C']` - each item occurs at a separate time step
+- **Itemset sequences**: `[['A', 'B'], ['C']]` - items A and B occur together at the first time step, then C occurs later
+
+### Why Use Itemsets?
+
+Itemsets are essential when temporal co-occurrence matters in your domain:
+
+- **Market basket analysis**: Customers buy multiple items in a single shopping trip, then return for more items later
+- **Web analytics**: Users open multiple pages in parallel tabs before moving to the next set of pages
+- **Event logs**: Multiple events can occur simultaneously in complex systems
+- **Purchase patterns**: Items bought together vs. items bought in sequence
+
+### Using Itemsets
+
+#### Basic Example
+
+```python
+from gsppy import GSP
+
+# Itemset format: nested lists where inner lists are items that occur together
+transactions = [
+    [['Bread', 'Milk'], ['Eggs']],  # Bought Bread & Milk together, then Eggs later
+    [['Bread', 'Milk', 'Butter']],  # Bought all three items together
+    [['Bread', 'Milk'], ['Eggs']],  # Same pattern as customer 1
+]
+
+gsp = GSP(transactions)
+patterns = gsp.search(min_support=0.5)
+
+# Pattern ('Bread',) will match any itemset containing Bread
+# Pattern ('Bread', 'Eggs') will match sequences where Bread appears before Eggs
+# (even if they're in different itemsets)
+```
+
+#### Backward Compatibility with Flat Sequences
+
+GSP-Py automatically normalizes flat sequences to itemsets internally, ensuring full backward compatibility:
+
+```python
+from gsppy import GSP
+
+# These are equivalent after normalization:
+flat_transactions = [['A', 'B', 'C']]  # Flat format
+itemset_transactions = [[['A'], ['B'], ['C']]]  # Equivalent itemset format
+
+# Both produce the same results
+gsp1 = GSP(flat_transactions)
+gsp2 = GSP(itemset_transactions)
+
+# Patterns are identical
+patterns1 = gsp1.search(min_support=0.5)
+patterns2 = gsp2.search(min_support=0.5)
+```
+
+### Itemset Matching Semantics
+
+Pattern matching with itemsets uses **subset semantics**:
+
+- A pattern element matches a sequence element if all items in the pattern element are present in the sequence element
+- Example: Pattern `[['A', 'B']]` matches sequence element `['A', 'B', 'C']` because {A, B} ⊆ {A, B, C}
+- Pattern elements must appear in order across the sequence
+
+```python
+from gsppy import GSP
+
+transactions = [
+    [['A', 'B', 'D'], ['E'], ['C', 'F']],  # A,B,D together, then E, then C,F together
+]
+
+gsp = GSP(transactions)
+
+# Pattern ('A', 'C') will match because:
+# - 'A' is in first itemset ['A', 'B', 'D'] ✓
+# - 'C' appears later in third itemset ['C', 'F'] ✓
+# - Order is preserved ✓
+```
+
+### Reading Itemsets from SPM Format
+
+The SPM/GSP format supports itemsets using delimiters:
+
+- `-1`: End of itemset
+- `-2`: End of sequence
+
+```python
+from gsppy.utils import read_transactions_from_spm
+
+# SPM file content:
+# 1 2 -1 3 -1 -2
+# 1 -1 3 4 -1 -2
+
+# Read with itemsets preserved
+transactions = read_transactions_from_spm("data.txt", preserve_itemsets=True)
+# Result: [[['1', '2'], ['3']], [['1'], ['3', '4']]]
+
+# Read with itemsets flattened (backward compatible)
+transactions = read_transactions_from_spm("data.txt", preserve_itemsets=False)
+# Result: [['1', '2', '3'], ['1', '3', '4']]
+```
+
+### Itemsets with Timestamps
+
+Itemsets work seamlessly with temporal constraints:
+
+```python
+from gsppy import GSP
+
+# Itemsets with timestamps: [(item, timestamp), ...]
+transactions = [
+    [[('Login', 0), ('Home', 0)], [('Product', 5)], [('Checkout', 10)]],
+    [[('Login', 0)], [('Home', 2), ('Product', 2)], [('Checkout', 15)]],
+]
+
+# Find patterns where events in the same itemset occur together
+# and subsequent itemsets occur within maxgap time units
+gsp = GSP(transactions, maxgap=10)
+patterns = gsp.search(min_support=0.5)
+```
+
+### Complete Example
+
+See [examples/itemset_example.py](examples/itemset_example.py) for comprehensive examples including:
+
+- Market basket analysis with itemsets
+- Web clickstream with parallel page views
+- Comparison of flat vs. itemset semantics
+- Reading and processing SPM format files
+
+### Key Takeaways
+
+✓ **Itemsets capture co-occurrence** of items at the same time step  
+✓ **Flat sequences are automatically normalized** to itemsets internally  
+✓ **Both formats work seamlessly** with GSP-Py  
+✓ **Use itemsets when temporal co-occurrence matters** in your domain  
+✓ **SPM format supports** both flat and itemset representations
 
 ---
 
