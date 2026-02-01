@@ -100,6 +100,10 @@ from gsppy.utils import (
     is_subsequence_in_list,
     generate_candidates_from_previous,
     is_subsequence_in_list_with_time_constraints,
+    is_itemset_format,
+    normalize_to_itemsets,
+    is_subsequence_with_itemsets,
+    is_subsequence_with_itemsets_and_timestamps,
 )
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
 from gsppy.sequence import Sequence, dict_to_sequences
@@ -355,23 +359,27 @@ class GSP:
         if self.mingap is not None and self.maxgap is not None and self.mingap > self.maxgap:
             raise ValueError("mingap cannot be greater than maxgap")
 
-    def _pre_processing(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]]]) -> None:
+    def _pre_processing(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]]) -> None:
         """
         Validate and preprocess the input transactional dataset.
 
         This method ensures that the dataset is formatted correctly and converts the transactions
         into tuples while counting unique singleton candidates for initial support computation steps.
-        It handles both simple transactions (items only) and timestamped transactions.
+        It handles:
+        - Simple flat transactions (items only): ['A', 'B', 'C']
+        - Timestamped flat transactions: [('A', 1.0), ('B', 2.0)]
+        - Itemset transactions: [['A', 'B'], ['C']]
+        - Timestamped itemset transactions: [[('A', 1.0), ('B', 1.0)], [('C', 2.0)]]
 
         Parameters:
-            raw_transactions (Union[List[List[str]], List[List[Tuple[str, float]]]]):
-                Input transactional data (with or without timestamps).
+            raw_transactions: Input transactional data in any supported format
 
         Attributes Set:
-            - `transactions`: The preprocessed transactions converted to tuples.
-            - `unique_candidates`: A list of unique singleton candidates derived from the dataset.
-            - `max_size`: The length of the largest transaction in the data.
-            - `has_timestamps`: Boolean indicating if transactions include timestamps.
+            - `transactions`: The preprocessed transactions converted to tuples (itemset format internally)
+            - `unique_candidates`: A list of unique singleton candidates derived from the dataset
+            - `max_size`: The length of the largest transaction in the data (number of itemsets)
+            - `has_timestamps`: Boolean indicating if transactions include timestamps
+            - `has_itemsets`: Boolean indicating if transactions use itemset format
 
         Raises:
             ValueError: If the dataset is empty, improperly formatted, or contains fewer than 2 transactions.
@@ -392,14 +400,37 @@ class GSP:
 
         logger.info("Pre-processing transactions...")
 
-        # Detect if transactions have timestamps by checking non-empty transactions
+        # Detect if transactions have itemsets and/or timestamps by checking non-empty transactions
         self.has_timestamps = False
+        self.has_itemsets = False
+        
         for tx in raw_transactions:
             if tx:  # Check non-empty transactions
-                tx_sequence = cast(List[Union[str, Tuple[str, float]]], tx)
-                self.has_timestamps = has_timestamps(tx_sequence)
-                if self.has_timestamps:
-                    logger.debug("Detected timestamped transactions")
+                # Check for itemset format first
+                self.has_itemsets = is_itemset_format(tx)
+                
+                if self.has_itemsets:
+                    # For itemset format, check if items within itemsets have timestamps
+                    first_itemset = tx[0]
+                    if first_itemset and isinstance(first_itemset, (list, tuple)):
+                        first_item = first_itemset[0]
+                        if isinstance(first_item, (tuple, list)) and len(first_item) == 2:
+                            try:
+                                float(first_item[1])
+                                self.has_timestamps = True
+                                logger.debug("Detected timestamped itemset transactions")
+                            except (TypeError, ValueError):
+                                pass
+                        if not self.has_timestamps:
+                            logger.debug("Detected itemset transactions (no timestamps)")
+                else:
+                    # Flat format - check for timestamps
+                    tx_sequence = cast(List[Union[str, Tuple[str, float]]], tx)
+                    self.has_timestamps = has_timestamps(tx_sequence)
+                    if self.has_timestamps:
+                        logger.debug("Detected timestamped flat transactions")
+                    else:
+                        logger.debug("Detected flat transactions (no timestamps)")
                 break
 
         # Validate temporal constraints are only used with timestamps
@@ -412,20 +443,32 @@ class GSP:
             self.maxgap = None
             self.maxspan = None
 
-        self.max_size: int = max(len(item) for item in raw_transactions)
-
-        if self.has_timestamps:
-            # For timestamped transactions, convert to tuples and extract items for counting
-            timestamped_txs = cast(List[List[Tuple[str, float]]], raw_transactions)
-            self.transactions = [tuple(transaction) for transaction in timestamped_txs]
-            # Extract just the items for counting unique candidates
-            all_items = chain.from_iterable([[item for item, _ in tx] for tx in timestamped_txs])
-            counts: Counter[str] = Counter(all_items)
-        else:
-            # For non-timestamped transactions, process as before
-            simple_txs = cast(List[List[str]], raw_transactions)
-            self.transactions = [tuple(transaction) for transaction in simple_txs]
-            counts: Counter[str] = Counter(chain.from_iterable(simple_txs))
+        # Normalize all transactions to itemset format for internal processing
+        normalized_transactions = []
+        all_items_list = []
+        
+        for tx in raw_transactions:
+            normalized_tx = normalize_to_itemsets(tx)
+            normalized_transactions.append(normalized_tx)
+            
+            # Extract items for counting (handling both timestamped and non-timestamped)
+            if self.has_timestamps:
+                # Extract items from timestamped itemsets
+                for itemset in normalized_tx:
+                    for item_tuple in itemset:
+                        if isinstance(item_tuple, tuple) and len(item_tuple) == 2:
+                            all_items_list.append(item_tuple[0])
+            else:
+                # Extract items from non-timestamped itemsets
+                for itemset in normalized_tx:
+                    for item in itemset:
+                        all_items_list.append(item)
+        
+        self.transactions = normalized_transactions
+        self.max_size = max(len(tx) for tx in normalized_transactions)
+        
+        # Count unique items for singleton candidates
+        counts: Counter[str] = Counter(all_items_list)
 
         # Start with singleton candidates (1-sequences)
         self.unique_candidates: List[Tuple[str, ...]] = [(item,) for item in counts.keys()]
@@ -434,54 +477,70 @@ class GSP:
     @staticmethod
     def _worker_batch(
         batch: List[Tuple[str, ...]],
-        transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]],
+        transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...], Tuple[Tuple[str, ...], ...], Tuple[Tuple[Tuple[str, float], ...], ...]]],
         min_support: int,
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
         maxspan: Optional[float] = None,
+        use_itemset_matching: bool = True,
     ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
 
         This method iterates over the candidates in the given batch and checks their frequency
         of appearance across all transactions. Candidates meeting the user-defined minimum
-        support threshold are returned. Supports temporal constraints when timestamps are present.
+        support threshold are returned. Supports temporal constraints when timestamps are present
+        and itemset matching when itemsets are present.
 
         Parameters:
-            batch (List[Tuple]): A batch of candidate sequences, where each sequence is represented as a tuple.
-            transactions (List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...]]]):
-                Preprocessed transactions as tuples (with or without timestamps).
-            min_support (int): Absolute minimum support count required for a candidate to be considered frequent.
-            mingap (Optional[float]): Minimum time gap between consecutive items.
-            maxgap (Optional[float]): Maximum time gap between consecutive items.
-            maxspan (Optional[float]): Maximum time span from first to last item.
+            batch: A batch of candidate sequences (flat patterns as tuples)
+            transactions: Preprocessed transactions (always in itemset format internally)
+            min_support: Absolute minimum support count required for a candidate to be considered frequent
+            mingap: Minimum time gap between consecutive items
+            maxgap: Maximum time gap between consecutive items
+            maxspan: Maximum time span from first to last item
+            use_itemset_matching: Whether to use itemset matching (always True for normalized transactions)
 
         Returns:
-            List[Tuple[Tuple, int]]: A list of tuples where each tuple contains:
-                                     - A candidate sequence.
-                                     - The candidate's support count.
+            List of tuples containing (candidate sequence, support count) for frequent patterns
         """
         results: List[Tuple[Tuple[str, ...], int]] = []
         has_temporal = mingap is not None or maxgap is not None or maxspan is not None
 
-        # Detect if transactions have timestamps using the helper function,
-        # based on the first non-empty transaction in the batch.
+        # Detect if transactions have timestamps
         first_non_empty_tx = next((t for t in transactions if t), None)
-        has_timestamps_flag = bool(first_non_empty_tx and has_timestamps(first_non_empty_tx))
+        
+        # Check if timestamps are present in the itemset format
+        has_timestamps_flag = False
+        if first_non_empty_tx and len(first_non_empty_tx) > 0:
+            first_itemset = first_non_empty_tx[0]
+            if first_itemset and len(first_itemset) > 0:
+                first_item = first_itemset[0]
+                if isinstance(first_item, tuple) and len(first_item) == 2:
+                    try:
+                        float(first_item[1])
+                        has_timestamps_flag = True
+                    except (TypeError, ValueError):
+                        pass
 
         for item in batch:
-            if has_timestamps_flag or has_temporal:
-                # Use temporal-aware checking for timestamped transactions
+            # Convert flat pattern to itemset pattern (each item in its own itemset)
+            pattern_as_itemsets = tuple((elem,) for elem in item)
+            
+            if has_timestamps_flag and has_temporal:
+                # Itemset with timestamps and temporal constraints
                 frequency = sum(
                     1
                     for t in transactions
-                    if is_subsequence_in_list_with_time_constraints(
-                        item, t, mingap=mingap, maxgap=maxgap, maxspan=maxspan
+                    if is_subsequence_with_itemsets_and_timestamps(
+                        pattern_as_itemsets, t, mingap=mingap, maxgap=maxgap, maxspan=maxspan
                     )
                 )
             else:
-                # Use standard non-temporal checking for simple transactions
-                frequency = sum(1 for t in transactions if is_subsequence_in_list(item, t))
+                # Itemset without temporal constraints (standard case)
+                frequency = sum(
+                    1 for t in transactions if is_subsequence_with_itemsets(pattern_as_itemsets, t)
+                )
 
             if frequency >= min_support:
                 results.append((item, frequency))
@@ -509,7 +568,7 @@ class GSP:
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [(batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan) for batch in batches],
+                [(batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan, True) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary
@@ -524,26 +583,15 @@ class GSP:
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences using the fastest available backend.
-        This will try the Rust extension if available (and configured), otherwise fall back to
-        the Python multiprocessing implementation.
+        
+        Since transactions are always normalized to itemset format internally, we always use
+        the Python implementation which supports itemset matching.
 
-        Note: When temporal constraints are active or transactions have timestamps,
-        the Python implementation is always used as the accelerated backends do not yet
-        support temporal constraints or timestamped transactions.
+        Note: Accelerated backends are not used because transactions are internally normalized
+        to itemset format for consistency.
         """
-        # Use Python implementation when temporal constraints are active or timestamps present
-        has_temporal = self.mingap is not None or self.maxgap is not None or self.maxspan is not None
-        if has_temporal or self.has_timestamps:
-            return self._support_python(items, min_support, batch_size)
-
-        # For non-timestamped transactions, we can use accelerated support counting
-        # Cast is safe here because we've confirmed no timestamps above
-        non_timestamped_transactions = cast(List[Tuple[str, ...]], self.transactions)
-        try:
-            return support_counts_accel(non_timestamped_transactions, items, min_support, batch_size, backend=backend)
-        except Exception:
-            # Fallback to Python implementation on any acceleration failure
-            return self._support_python(items, min_support, batch_size)
+        # Always use Python implementation since we normalize to itemsets internally
+        return self._support_python(items, min_support, batch_size)
 
     def _apply_pruning(
         self, freq_patterns: Dict[Tuple[str, ...], int], min_support_count: int

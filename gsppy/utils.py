@@ -67,6 +67,93 @@ def has_timestamps(
     return False
 
 
+def is_itemset_format(transaction: Union[List, Tuple]) -> bool:
+    """
+    Check if a transaction is in itemset format (nested lists/tuples).
+    
+    Itemset format: Each element is itself a list/tuple of items that occur together.
+    Example: [['A', 'B'], ['C']] or [[('A', 1.0), ('B', 1.0)], [('C', 2.0)]]
+    
+    Flat format: Simple list of items.
+    Example: ['A', 'B', 'C'] or [('A', 1.0), ('B', 2.0), ('C', 3.0)]
+    
+    Parameters:
+        transaction: A transaction to check
+        
+    Returns:
+        bool: True if transaction is in itemset format, False if flat format
+        
+    Examples:
+        >>> is_itemset_format([['A', 'B'], ['C']])
+        True
+        >>> is_itemset_format(['A', 'B', 'C'])
+        False
+        >>> is_itemset_format([[('A', 1.0), ('B', 1.0)], [('C', 2.0)]])
+        True
+        >>> is_itemset_format([('A', 1.0), ('B', 2.0)])
+        False
+    """
+    if not transaction:
+        return False
+    
+    # Check if first element is a list or tuple (but not a timestamp tuple)
+    first_item = transaction[0]
+    
+    # If it's a tuple with 2 elements where second is numeric, it's a timestamp, not an itemset
+    if isinstance(first_item, (tuple, list)):
+        if len(first_item) == 2:
+            try:
+                float(first_item[1])
+                # This is a timestamp tuple like ('A', 1.0)
+                return False
+            except (TypeError, ValueError, IndexError):
+                # Not a timestamp, could be an itemset
+                pass
+        # It's a list/tuple, so this is itemset format
+        return True
+    
+    return False
+
+
+def normalize_to_itemsets(
+    transaction: Union[List[str], List[Tuple[str, float]], List[List[str]], List[List[Tuple[str, float]]]]
+) -> Union[Tuple[Tuple[str, ...], ...], Tuple[Tuple[Tuple[str, float], ...], ...]]:
+    """
+    Normalize a transaction to itemset format.
+    
+    Converts flat sequences to itemset format where each item becomes its own itemset.
+    Already itemset-formatted data is converted to tuples for immutability.
+    
+    Flat input: ['A', 'B', 'C'] -> (('A',), ('B',), ('C',))
+    Itemset input: [['A', 'B'], ['C']] -> (('A', 'B'), ('C',))
+    Timestamped flat: [('A', 1.0), ('B', 2.0)] -> ((('A', 1.0),), (('B', 2.0),))
+    Timestamped itemset: [[('A', 1.0), ('B', 1.0)], [('C', 2.0)]] -> ((('A', 1.0), ('B', 1.0)), (('C', 2.0),))
+    
+    Parameters:
+        transaction: Input transaction in any supported format
+        
+    Returns:
+        Tuple of tuples representing itemsets
+        
+    Examples:
+        >>> normalize_to_itemsets(['A', 'B', 'C'])
+        (('A',), ('B',), ('C',))
+        >>> normalize_to_itemsets([['A', 'B'], ['C']])
+        (('A', 'B'), ('C',))
+        >>> normalize_to_itemsets([('A', 1.0), ('B', 2.0)])
+        ((('A', 1.0),), (('B', 2.0),))
+    """
+    if not transaction:
+        return tuple()
+    
+    if is_itemset_format(transaction):
+        # Already in itemset format, just convert to tuples
+        return tuple(tuple(itemset) for itemset in transaction)
+    else:
+        # Flat format - each item becomes its own itemset
+        return tuple((item,) for item in transaction)
+
+
 def split_into_batches(
     items: Sequence[Tuple[str, ...]], batch_size: int
 ) -> Generator[Sequence[Tuple[str, ...]], None, None]:
@@ -124,6 +211,152 @@ def is_subsequence_in_list(subsequence: Tuple[str, ...], sequence: Tuple[str, ..
             sub_idx += 1
             if sub_idx == len_sub:
                 return True
+    return False
+
+
+@lru_cache(maxsize=None)
+def is_subsequence_with_itemsets(
+    pattern: Tuple[Tuple[str, ...], ...],
+    sequence: Tuple[Tuple[str, ...], ...]
+) -> bool:
+    """
+    Check if a pattern (sequence of itemsets) matches a sequence (sequence of itemsets).
+    
+    An itemset pattern matches a sequence itemset if all items in the pattern itemset
+    are present in the sequence itemset (subset matching).
+    
+    The pattern must match in order across the sequence, but itemsets need not be contiguous.
+    
+    Parameters:
+        pattern: Pattern as tuple of itemsets, e.g. (('A', 'B'), ('C',))
+        sequence: Sequence as tuple of itemsets, e.g. (('A', 'B', 'D'), ('E',), ('C', 'F'))
+        
+    Returns:
+        bool: True if pattern matches sequence with itemset semantics
+        
+    Examples:
+        >>> # Pattern (A,B) then C matches sequence with (A,B,D) then (E) then (C,F)
+        >>> is_subsequence_with_itemsets((('A', 'B'), ('C',)), (('A', 'B', 'D'), ('E',), ('C', 'F')))
+        True
+        >>> # Pattern (A,B) then C does NOT match sequence with (A) then (B) then (C)
+        >>> is_subsequence_with_itemsets((('A', 'B'), ('C',)), (('A',), ('B',), ('C',)))
+        False
+        >>> # Single item per itemset behaves like flat matching
+        >>> is_subsequence_with_itemsets((('A',), ('C',)), (('A',), ('B',), ('C',)))
+        True
+    """
+    if not pattern:
+        return False
+    
+    len_pattern = len(pattern)
+    len_sequence = len(sequence)
+    
+    if len_pattern > len_sequence:
+        return False
+    
+    # Two-pointer approach for itemset matching
+    pattern_idx = 0
+    for seq_idx in range(len_sequence):
+        # Check if current pattern itemset is a subset of current sequence itemset
+        pattern_itemset = set(pattern[pattern_idx])
+        sequence_itemset = set(sequence[seq_idx])
+        
+        if pattern_itemset.issubset(sequence_itemset):
+            pattern_idx += 1
+            if pattern_idx == len_pattern:
+                return True
+    
+    return False
+
+
+@lru_cache(maxsize=None)
+def is_subsequence_with_itemsets_and_timestamps(
+    pattern: Tuple[Tuple[str, ...], ...],
+    sequence: Tuple[Tuple[Tuple[str, float], ...], ...],
+    mingap: Optional[float] = None,
+    maxgap: Optional[float] = None,
+    maxspan: Optional[float] = None,
+) -> bool:
+    """
+    Check if a pattern matches a timestamped itemset sequence with temporal constraints.
+    
+    This extends itemset matching to support timestamps and temporal constraints.
+    Each itemset element contains (item, timestamp) tuples.
+    
+    Parameters:
+        pattern: Pattern as tuple of itemsets (items only, no timestamps)
+        sequence: Timestamped sequence as tuple of itemsets with (item, timestamp) tuples
+        mingap: Minimum time gap between consecutive pattern elements
+        maxgap: Maximum time gap between consecutive pattern elements
+        maxspan: Maximum time span from first to last pattern element
+        
+    Returns:
+        bool: True if pattern matches with itemset and temporal constraints
+        
+    Examples:
+        >>> pattern = (('A',), ('C',))
+        >>> sequence = (((('A', 1.0),)), ((('B', 2.0),)), ((('C', 3.0),)))
+        >>> is_subsequence_with_itemsets_and_timestamps(pattern, sequence, mingap=0.5, maxgap=2.0)
+        True
+    """
+    if not pattern:
+        return False
+    
+    len_pattern = len(pattern)
+    len_sequence = len(sequence)
+    
+    if len_pattern > len_sequence:
+        return False
+    
+    # Try to find a match starting from each position
+    for start_idx in range(len_sequence - len_pattern + 1):
+        # Try to match pattern starting from this position
+        pattern_idx = 0
+        matched_positions: List[int] = []
+        
+        for seq_idx in range(start_idx, len_sequence):
+            if pattern_idx >= len_pattern:
+                break
+                
+            # Extract items from timestamped sequence itemset
+            pattern_itemset = set(pattern[pattern_idx])
+            sequence_items = set(item for item, _ in sequence[seq_idx])
+            
+            if pattern_itemset.issubset(sequence_items):
+                matched_positions.append(seq_idx)
+                pattern_idx += 1
+        
+        # Check if we matched all pattern elements
+        if pattern_idx == len_pattern:
+            # Validate temporal constraints
+            if len(matched_positions) < 2:
+                # Single item or empty - no temporal constraints to check
+                return True
+            
+            # Get timestamps for matched positions
+            # Use the earliest timestamp in each itemset for gap checking
+            matched_timestamps = [
+                min(ts for _, ts in sequence[pos])
+                for pos in matched_positions
+            ]
+            
+            # Check mingap and maxgap constraints
+            for i in range(len(matched_timestamps) - 1):
+                gap = matched_timestamps[i + 1] - matched_timestamps[i]
+                
+                if mingap is not None and gap < mingap:
+                    break  # mingap violated, try next start position
+                if maxgap is not None and gap > maxgap:
+                    break  # maxgap violated, try next start position
+            else:
+                # All gap constraints satisfied, check maxspan
+                if maxspan is not None:
+                    span = matched_timestamps[-1] - matched_timestamps[0]
+                    if span > maxspan:
+                        continue  # maxspan violated, try next start position
+                
+                return True  # All constraints satisfied
+    
     return False
 
 
@@ -388,31 +621,38 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
     ]
 
 
-def _parse_spm_line(line: str, mapper: Optional[TokenMapper]) -> List[str]:
+def _parse_spm_line(line: str, mapper: Optional[TokenMapper], preserve_itemsets: bool = True) -> Union[List[str], List[List[str]]]:
     """
     Parse a single line from an SPM format file.
     
     Parameters:
         line: Line to parse
         mapper: Optional TokenMapper to track tokens
+        preserve_itemsets: If True, preserve itemset structure; if False, flatten to single list
         
     Returns:
-        List[str]: Parsed sequence as a flat list
+        Union[List[str], List[List[str]]]: Parsed sequence as itemsets or flat list
+        
+    Examples:
+        >>> _parse_spm_line("1 2 -1 3 -1 -2", None, preserve_itemsets=True)
+        [['1', '2'], ['3']]
+        >>> _parse_spm_line("1 2 -1 3 -1 -2", None, preserve_itemsets=False)
+        ['1', '2', '3']
     """
     tokens = line.split()
-    sequence: List[str] = []
+    sequence: List[List[str]] = []
     current_element: List[str] = []
     
     for token in tokens:
         if token == "-2":
             # End of sequence
             if current_element:
-                sequence.extend(current_element)
+                sequence.append(current_element[:])
             break
         elif token == "-1":
             # End of element
             if current_element:
-                sequence.extend(current_element)
+                sequence.append(current_element[:])
                 current_element = []
         else:
             # Regular item
@@ -422,14 +662,19 @@ def _parse_spm_line(line: str, mapper: Optional[TokenMapper]) -> List[str]:
     
     # Add any remaining items if -2 was missing
     if current_element:
-        sequence.extend(current_element)
+        sequence.append(current_element)
     
-    return sequence
+    # Return based on preserve_itemsets flag
+    if preserve_itemsets:
+        return sequence
+    else:
+        # Flatten for backward compatibility
+        return [item for itemset in sequence for item in itemset]
 
 
 def read_transactions_from_spm(
-    path: str, return_mappings: bool = False
-) -> Union[List[List[str]], Tuple[List[List[str]], Dict[str, int], Dict[int, str]]]:
+    path: str, return_mappings: bool = False, preserve_itemsets: bool = True
+) -> Union[List[List[str]], List[List[List[str]]], Tuple[Union[List[List[str]], List[List[List[str]]]], Dict[str, int], Dict[int, str]]]:
     """
     Read transactions from an SPM/GSP format file.
 
@@ -447,13 +692,14 @@ def read_transactions_from_spm(
     Parameters:
         path: Path to the SPM format file
         return_mappings: If True, return token mappings (str→int, int→str) along with dataset
+        preserve_itemsets: If True, preserve itemset structure; if False, flatten sequences (default: True)
 
     Returns:
         If return_mappings is False:
-            List[List[str]]: Parsed dataset as flattened sequences
+            List[List[str]] or List[List[List[str]]]: Parsed dataset (flat or itemset format)
         If return_mappings is True:
             Tuple containing:
-                - List[List[str]]: Parsed dataset as flattened sequences
+                - Dataset (flat or itemset format)
                 - Dict[str, int]: String to integer mapping
                 - Dict[int, str]: Integer to string mapping
 
@@ -463,7 +709,12 @@ def read_transactions_from_spm(
 
     Examples:
         >>> # File content: "1 2 -1 3 -1 -2"
-        >>> transactions = read_transactions_from_spm("data.txt")
+        >>> transactions = read_transactions_from_spm("data.txt", preserve_itemsets=True)
+        >>> print(transactions)
+        [[['1', '2'], ['3']]]
+        
+        >>> # Flatten itemsets for backward compatibility
+        >>> transactions = read_transactions_from_spm("data.txt", preserve_itemsets=False)
         >>> print(transactions)
         [['1', '2', '3']]
 
@@ -473,11 +724,11 @@ def read_transactions_from_spm(
     Notes:
         - Empty lines are skipped
         - Extra or trailing delimiters are handled gracefully
-        - Elements within a sequence are flattened into a single list
+        - When preserve_itemsets=False, elements within a sequence are flattened into a single list
         - All tokens are returned as strings for consistency
     """
     try:
-        transactions: List[List[str]] = []
+        transactions: List[Union[List[str], List[List[str]]]] = []
         mapper = TokenMapper() if return_mappings else None
 
         with open(path, "r", encoding="utf-8") as f:
@@ -488,7 +739,7 @@ def read_transactions_from_spm(
                 if not line:
                     continue
                 
-                sequence = _parse_spm_line(line, mapper)
+                sequence = _parse_spm_line(line, mapper, preserve_itemsets=preserve_itemsets)
                 
                 # Add non-empty sequences
                 if sequence:
