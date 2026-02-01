@@ -232,7 +232,8 @@ def is_subsequence_with_itemsets(
         sequence: Sequence as tuple of itemsets, e.g. (('A', 'B', 'D'), ('E',), ('C', 'F'))
         
     Returns:
-        bool: True if pattern matches sequence with itemset semantics
+        bool: True if pattern matches sequence with itemset semantics, False otherwise.
+              Returns False for empty patterns.
         
     Examples:
         >>> # Pattern (A,B) then C matches sequence with (A,B,D) then (E) then (C,F)
@@ -291,7 +292,8 @@ def is_subsequence_with_itemsets_and_timestamps(
         maxspan: Maximum time span from first to last pattern element
         
     Returns:
-        bool: True if pattern matches with itemset and temporal constraints
+        bool: True if pattern matches with itemset and temporal constraints, False otherwise.
+              Returns False for empty patterns.
         
     Examples:
         >>> pattern = (('A',), ('C',))

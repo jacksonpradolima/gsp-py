@@ -582,13 +582,11 @@ class GSP:
         backend: Optional[str] = None,
     ) -> Dict[Tuple[str, ...], int]:
         """
-        Calculate support counts for candidate sequences using the fastest available backend.
+        Calculate support counts for candidate sequences.
         
-        Since transactions are always normalized to itemset format internally, we always use
-        the Python implementation which supports itemset matching.
-
-        Note: Accelerated backends are not used because transactions are internally normalized
-        to itemset format for consistency.
+        Note: Since transactions are internally normalized to itemset format for consistency,
+        this method always uses the Python multiprocessing implementation which fully supports
+        itemset matching semantics. Accelerated backends are not used in this version.
         """
         # Always use Python implementation since we normalize to itemsets internally
         return self._support_python(items, min_support, batch_size)
