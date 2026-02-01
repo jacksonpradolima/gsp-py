@@ -90,15 +90,11 @@ class Sequence:
     @property
     def first_item(self) -> str:
         """Return the first item in the sequence."""
-        if not self.items:
-            raise IndexError("Cannot get first item from empty sequence")
         return self.items[0]
 
     @property
     def last_item(self) -> str:
         """Return the last item in the sequence."""
-        if not self.items:
-            raise IndexError("Cannot get last item from empty sequence")
         return self.items[-1]
 
     def as_tuple(self) -> Tuple[str, ...]:
