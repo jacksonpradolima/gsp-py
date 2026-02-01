@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v4.0.0 (2026-02-01)
+
+### Chores
+
+- Add additional VSCode extensions for improved development experience
+  ([`107dfa4`](https://github.com/jacksonpradolima/gsp-py/commit/107dfa422005f4cdec4655a9751fd0d6e597773f))
+
+- Update uv.lock for version 3.6.1
+  ([`d8d7394`](https://github.com/jacksonpradolima/gsp-py/commit/d8d73947d570844c02e9d974b626da26f07cf1e6))
+
+### Features
+
+- Add SPM/GSP delimiter format loader and token mapping utilities
+  ([`4ac1d34`](https://github.com/jacksonpradolima/gsp-py/commit/4ac1d34d166f21d30968872cf16c1bde3ff1f2aa))
+
+### Refactoring
+
+- Add type casting for return values in read_transactions_from_spm
+  ([`2099bfd`](https://github.com/jacksonpradolima/gsp-py/commit/2099bfd5253a1dc058dd46bd0da077810958fa76))
+
+- Update read_transactions_from_spm to return mappings and adjust tests
+  ([`373b8ff`](https://github.com/jacksonpradolima/gsp-py/commit/373b8ff0d7f131140bcdbd039fae0d02572e86b7))
+
+
 ## v3.6.1 (2026-01-31)
 
 ### Bug Fixes
