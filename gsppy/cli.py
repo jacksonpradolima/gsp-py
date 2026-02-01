@@ -428,11 +428,7 @@ def _load_transactions_by_format(
         return read_transactions_from_json(file_path)
     elif file_format == FileFormat.CSV.value:
         return read_transactions_from_csv(file_path)
-    elif file_format == FileFormat.PARQUET.value:
-        return _load_dataframe_format(
-            file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
-        )
-    elif file_format == FileFormat.ARROW.value:
+    elif file_format in (FileFormat.PARQUET.value, FileFormat.ARROW.value):
         return _load_dataframe_format(
             file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
         )
