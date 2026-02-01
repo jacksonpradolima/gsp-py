@@ -58,6 +58,20 @@ class TestItemsetDetection:
         transaction = [['A', 'B', 'C']]
         assert is_itemset_format(transaction)
 
+    def test_numeric_itemset(self) -> None:
+        """Numeric itemsets should be detected correctly, not confused with timestamps."""
+        # Integer itemsets
+        transaction = [[1, 2], [3]]
+        assert is_itemset_format(transaction)
+        
+        # String number itemsets  
+        transaction_str = [['1', '2'], ['3']]
+        assert is_itemset_format(transaction_str)
+        
+        # Should still detect timestamps correctly
+        timestamp_transaction = [('A', 1.0), ('B', 2.0)]
+        assert not is_itemset_format(timestamp_transaction)
+
 
 class TestTransactionNormalization:
     """Tests for normalizing transactions to itemset format."""

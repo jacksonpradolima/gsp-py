@@ -99,13 +99,18 @@ def is_itemset_format(transaction: Union[List, Tuple]) -> bool:
     # Check if first element is a list or tuple (but not a timestamp tuple)
     first_item = transaction[0]
     
-    # If it's a tuple with 2 elements where second is numeric, it's a timestamp, not an itemset
+    # If it's a tuple/list with 2 elements, need to distinguish timestamp from itemset
     if isinstance(first_item, (tuple, list)):
         if len(first_item) == 2:
+            # Check if first element is a string (item) and second is numeric (timestamp)
+            # Itemsets like [1, 2] or ['A', 'B'] have both elements as items, not (item, timestamp)
             try:
-                float(first_item[1])
-                # This is a timestamp tuple like ('A', 1.0)
-                return False
+                # A timestamp tuple has format (item, numeric_timestamp)
+                # where item is a string and timestamp is numeric
+                if isinstance(first_item[0], str) and not isinstance(first_item[1], str):
+                    float(first_item[1])
+                    # This is a timestamp tuple like ('A', 1.0)
+                    return False
             except (TypeError, ValueError, IndexError):
                 # Not a timestamp, could be an itemset
                 pass
