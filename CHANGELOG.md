@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v4.2.0 (2026-02-01)
+
+### Chores
+
+- Update uv.lock for version 4.1.0
+  ([`5ed3d9e`](https://github.com/jacksonpradolima/gsp-py/commit/5ed3d9e46cf158a2261462cb8974b6bbb452f32e))
+
+### Features
+
+- Add itemset support for co-occurrence semantics in sequence mining
+  ([`90805b1`](https://github.com/jacksonpradolima/gsp-py/commit/90805b190f40ebf34a72da0bbe949cb627140337))
+
+
 ## v4.1.0 (2026-02-01)
 
 ### Bug Fixes
