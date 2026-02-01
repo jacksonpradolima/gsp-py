@@ -6,6 +6,7 @@ Pattern (GSP) algorithm. Use this site to install the library, explore the CLI, 
 ## Highlights
 
 - **Sequence mining** with support-based pruning and candidate generation.
+- **Sequence abstraction** for typed pattern representation with rich metadata support.
 - **Multiple data formats** including JSON, CSV, SPM/GSP, Parquet, and Arrow.
 - **Token mapping utilities** for transparent string ↔ integer conversion.
 - **Optional acceleration** via Rust and GPU backends.
@@ -31,6 +32,29 @@ transactions = [
 patterns = GSP(transactions).search(min_support=0.3)
 for level, freq_patterns in enumerate(patterns, start=1):
     print(f"Level {level}: {freq_patterns}")
+```
+
+### Using Sequence Objects (New in 4.0+)
+
+Get richer pattern representation with typed Sequence objects:
+
+```python
+from gsppy import GSP
+
+transactions = [
+    ["Bread", "Milk"],
+    ["Bread", "Diaper", "Beer", "Eggs"],
+    ["Milk", "Diaper", "Beer", "Coke"],
+]
+
+# Enable Sequence objects
+patterns = GSP(transactions).search(min_support=0.3, return_sequences=True)
+
+for level_patterns in patterns:
+    for seq in level_patterns:
+        print(f"{seq.items} (support={seq.support}, length={seq.length})")
+        if "Milk" in seq:
+            enriched = seq.with_metadata(confidence=0.85)
 ```
 
 ### Loading from SPM/GSP Format

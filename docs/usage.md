@@ -138,6 +138,115 @@ model = GSP(transactions)
 frequent = model.search(min_support=0.5)
 ```
 
+## Using Sequence Objects
+
+GSP-Py 4.0+ introduces a **Sequence abstraction** that provides a richer, more maintainable way to work with sequential patterns. The Sequence class encapsulates pattern items, support counts, and optional metadata.
+
+### Traditional Dict-based Output (Default)
+
+By default, GSP returns patterns as dictionaries mapping tuples to support counts:
+
+```python
+from gsppy import GSP
+
+transactions = [
+    ["Bread", "Milk"],
+    ["Bread", "Diaper", "Beer", "Eggs"],
+    ["Milk", "Diaper", "Beer", "Coke"],
+]
+
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3)
+
+# Returns: [{('Bread',): 4, ('Milk',): 4, ...}, ...]
+for level_patterns in result:
+    for pattern, support in level_patterns.items():
+        print(f"Pattern: {pattern}, Support: {support}")
+```
+
+### Sequence Objects (New Feature)
+
+Enable the new Sequence objects by setting `return_sequences=True`:
+
+```python
+from gsppy import GSP
+
+transactions = [
+    ["Bread", "Milk"],
+    ["Bread", "Diaper", "Beer", "Eggs"],
+    ["Milk", "Diaper", "Beer", "Coke"],
+]
+
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3, return_sequences=True)
+
+# Returns: [[Sequence(('Bread',), support=4), ...], ...]
+for level_patterns in result:
+    for seq in level_patterns:
+        print(f"Pattern: {seq.items}")
+        print(f"Support: {seq.support}")
+        print(f"Length: {seq.length}")
+        
+        # Rich API
+        if "Milk" in seq:
+            print("Contains Milk!")
+```
+
+### Sequence Properties and Methods
+
+The Sequence class provides a rich API:
+
+```python
+from gsppy import Sequence
+
+# Create sequences
+seq = Sequence.from_tuple(("A", "B", "C"), support=5)
+
+# Access properties
+print(seq.items)        # ('A', 'B', 'C')
+print(seq.support)      # 5
+print(seq.length)       # 3
+print(seq.first_item)   # 'A'
+print(seq.last_item)    # 'C'
+
+# Operations
+extended = seq.extend("D")  # Sequence(('A', 'B', 'C', 'D'))
+updated = seq.with_support(10)
+enriched = seq.with_metadata(confidence=0.85, lift=1.5)
+
+# Check membership
+if "B" in seq:
+    print("Sequence contains B")
+
+# Iterate over items
+for item in seq:
+    print(item)
+
+# Convert to tuple for compatibility
+tuple_form = seq.as_tuple()  # ('A', 'B', 'C')
+```
+
+### Converting Between Formats
+
+Use utility functions to convert between Sequence objects and dict format:
+
+```python
+from gsppy import sequences_to_dict, dict_to_sequences
+
+# Get results as Sequences
+result = gsp.search(min_support=0.3, return_sequences=True)
+
+# Convert to dict format for compatibility
+dict_format = sequences_to_dict(result[0])
+# {('Bread',): 4, ('Milk',): 4, ...}
+
+# Convert back to Sequences
+sequences = dict_to_sequences(dict_format)
+# [Sequence(('Bread',), support=4), ...]
+```
+
+For a complete example demonstrating all Sequence features, see `examples/sequence_example.py` in the repository.
+
 ## Verbose Mode
 
 Enable detailed logging to track algorithm progress and debug issues:
