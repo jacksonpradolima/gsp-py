@@ -417,18 +417,25 @@ class GSP:
     
     def _extract_items_from_transaction(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
         """Extract items from a normalized transaction for counting."""
-        items = []
         if self.has_timestamps:
-            # Extract items from timestamped itemsets
-            for itemset in normalized_tx:
-                for item_tuple in itemset:
-                    if isinstance(item_tuple, tuple) and len(item_tuple) == 2:
-                        items.append(item_tuple[0])
-        else:
-            # Extract items from non-timestamped itemsets
-            for itemset in normalized_tx:
-                for item in itemset:
-                    items.append(item)
+            return self._extract_items_from_timestamped(normalized_tx)
+        return self._extract_items_from_simple(normalized_tx)
+    
+    def _extract_items_from_timestamped(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
+        """Extract items from timestamped itemsets."""
+        items = []
+        for itemset in normalized_tx:
+            for item_tuple in itemset:
+                if isinstance(item_tuple, tuple) and len(item_tuple) == 2:
+                    items.append(item_tuple[0])
+        return items
+    
+    def _extract_items_from_simple(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
+        """Extract items from non-timestamped itemsets."""
+        items = []
+        for itemset in normalized_tx:
+            for item in itemset:
+                items.append(item)
         return items
 
     def _pre_processing(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]]) -> None:
