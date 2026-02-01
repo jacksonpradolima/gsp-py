@@ -94,7 +94,7 @@ class TestTransactionNormalization:
         """Empty transaction should return empty tuple."""
         transaction: List = []
         result = normalize_to_itemsets(transaction)
-        assert result == tuple()
+        assert result == ()
 
     def test_normalize_preserves_immutability(self) -> None:
         """Normalized result should be immutable (tuples)."""
@@ -145,7 +145,7 @@ class TestItemsetSubsequenceMatching:
 
     def test_empty_pattern(self) -> None:
         """Empty pattern should not match any sequence."""
-        pattern = tuple()
+        pattern = ()
         sequence = (('A',), ('B',))
         assert not is_subsequence_with_itemsets(pattern, sequence)
 

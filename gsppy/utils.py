@@ -144,7 +144,7 @@ def normalize_to_itemsets(
         ((('A', 1.0),), (('B', 2.0),))
     """
     if not transaction:
-        return tuple()
+        return ()
     
     if is_itemset_format(transaction):
         # Already in itemset format, just convert to tuples
@@ -271,6 +271,7 @@ def is_subsequence_with_itemsets(
 
 
 @lru_cache(maxsize=None)
+@lru_cache(maxsize=None)
 def is_subsequence_with_itemsets_and_timestamps(
     pattern: Tuple[Tuple[str, ...], ...],
     sequence: Tuple[Tuple[Tuple[str, float], ...], ...],
@@ -312,54 +313,88 @@ def is_subsequence_with_itemsets_and_timestamps(
     
     # Try to find a match starting from each position
     for start_idx in range(len_sequence - len_pattern + 1):
-        # Try to match pattern starting from this position
-        pattern_idx = 0
-        matched_positions: List[int] = []
-        
-        for seq_idx in range(start_idx, len_sequence):
-            if pattern_idx >= len_pattern:
-                break
-                
-            # Extract items from timestamped sequence itemset
-            pattern_itemset = set(pattern[pattern_idx])
-            sequence_items = set(item for item, _ in sequence[seq_idx])
-            
-            if pattern_itemset.issubset(sequence_items):
-                matched_positions.append(seq_idx)
-                pattern_idx += 1
-        
-        # Check if we matched all pattern elements
-        if pattern_idx == len_pattern:
-            # Validate temporal constraints
-            if len(matched_positions) < 2:
-                # Single item or empty - no temporal constraints to check
-                return True
-            
-            # Get timestamps for matched positions
-            # Use the earliest timestamp in each itemset for gap checking
-            matched_timestamps = [
-                min(ts for _, ts in sequence[pos])
-                for pos in matched_positions
-            ]
-            
-            # Check mingap and maxgap constraints
-            for i in range(len(matched_timestamps) - 1):
-                gap = matched_timestamps[i + 1] - matched_timestamps[i]
-                
-                if mingap is not None and gap < mingap:
-                    break  # mingap violated, try next start position
-                if maxgap is not None and gap > maxgap:
-                    break  # maxgap violated, try next start position
-            else:
-                # All gap constraints satisfied, check maxspan
-                if maxspan is not None:
-                    span = matched_timestamps[-1] - matched_timestamps[0]
-                    if span > maxspan:
-                        continue  # maxspan violated, try next start position
-                
-                return True  # All constraints satisfied
+        if _try_match_with_temporal_constraints(pattern, sequence, start_idx, mingap, maxgap, maxspan):
+            return True
     
     return False
+
+
+def _try_match_with_temporal_constraints(
+    pattern: Tuple[Tuple[str, ...], ...],
+    sequence: Tuple[Tuple[Tuple[str, float], ...], ...],
+    start_idx: int,
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
+) -> bool:
+    """
+    Try to match pattern starting from a specific position with temporal constraints.
+    
+    Returns:
+        bool: True if match is found with constraints satisfied, False otherwise
+    """
+    pattern_idx = 0
+    matched_positions: List[int] = []
+    len_pattern = len(pattern)
+    len_sequence = len(sequence)
+    
+    for seq_idx in range(start_idx, len_sequence):
+        if pattern_idx >= len_pattern:
+            break
+            
+        # Extract items from timestamped sequence itemset
+        pattern_itemset = set(pattern[pattern_idx])
+        sequence_items = {item for item, _ in sequence[seq_idx]}
+        
+        if pattern_itemset.issubset(sequence_items):
+            matched_positions.append(seq_idx)
+            pattern_idx += 1
+    
+    # Check if we matched all pattern elements
+    if pattern_idx != len_pattern:
+        return False
+        
+    # Validate temporal constraints
+    if len(matched_positions) < 2:
+        return True  # Single item - no temporal constraints to check
+    
+    # Get timestamps for matched positions
+    matched_timestamps = [
+        min(ts for _, ts in sequence[pos])
+        for pos in matched_positions
+    ]
+    
+    return _validate_temporal_constraints(matched_timestamps, mingap, maxgap, maxspan)
+
+
+def _validate_temporal_constraints(
+    timestamps: List[float],
+    mingap: Optional[float],
+    maxgap: Optional[float],
+    maxspan: Optional[float],
+) -> bool:
+    """
+    Validate temporal constraints for a sequence of timestamps.
+    
+    Returns:
+        bool: True if all constraints are satisfied, False otherwise
+    """
+    # Check mingap and maxgap constraints
+    for i in range(len(timestamps) - 1):
+        gap = timestamps[i + 1] - timestamps[i]
+        
+        if mingap is not None and gap < mingap:
+            return False
+        if maxgap is not None and gap > maxgap:
+            return False
+    
+    # Check maxspan constraint
+    if maxspan is not None:
+        span = timestamps[-1] - timestamps[0]
+        if span > maxspan:
+            return False
+    
+    return True
 
 
 def is_subsequence_in_list_with_time_constraints(

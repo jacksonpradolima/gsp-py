@@ -34,7 +34,7 @@ def example_flat_vs_itemset():
     gsp_flat = GSP(flat_transactions)
     patterns_flat = gsp_flat.search(min_support=0.66)
     
-    print(f"   Frequent patterns (min_support=0.66):")
+    print("   Frequent patterns (min_support=0.66):")
     for i, level_patterns in enumerate(patterns_flat, start=1):
         print(f"      {i}-sequences: {level_patterns}")
     
@@ -50,7 +50,7 @@ def example_flat_vs_itemset():
     gsp_itemset = GSP(itemset_transactions)
     patterns_itemset = gsp_itemset.search(min_support=0.66)
     
-    print(f"   Frequent patterns (min_support=0.66):")
+    print("   Frequent patterns (min_support=0.66):")
     for i, level_patterns in enumerate(patterns_itemset, start=1):
         print(f"      {i}-sequences: {level_patterns}")
 
@@ -89,7 +89,7 @@ def example_market_basket():
     gsp = GSP(transactions)
     patterns = gsp.search(min_support=0.5)
     
-    print(f"\nFrequent patterns (min_support=0.5, i.e., 2+ customers):")
+    print("\nFrequent patterns (min_support=0.5, i.e., 2+ customers):")
     for i, level_patterns in enumerate(patterns, start=1):
         print(f"\n   {i}-sequences:")
         for pattern, support in level_patterns.items():
@@ -135,7 +135,7 @@ def example_clickstream():
     gsp = GSP(sessions)
     patterns = gsp.search(min_support=0.5)
     
-    print(f"\nFrequent navigation patterns (min_support=0.5):")
+    print("\nFrequent navigation patterns (min_support=0.5):")
     for i, level_patterns in enumerate(patterns, start=1):
         if level_patterns:
             print(f"\n   {i}-sequences:")
