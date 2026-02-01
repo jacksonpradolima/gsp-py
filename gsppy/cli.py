@@ -216,7 +216,7 @@ def read_transactions_from_spm(file_path: str) -> List[List[str]]:
     try:
         from gsppy.utils import read_transactions_from_spm as read_spm
 
-        return read_spm(file_path, return_mappings=False)
+        return cast(List[List[str]], read_spm(file_path, return_mappings=False))
     except Exception as e:
         msg = f"Error reading transaction data from SPM file '{file_path}': {e}"
         logging.error(msg)
@@ -363,7 +363,7 @@ def _load_dataframe_format(
 ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
     """
     Load transactions from DataFrame formats (Parquet/Arrow).
-    
+
     Parameters:
         file_path: Path to the file
         file_extension: File extension (lowercase)
@@ -371,7 +371,7 @@ def _load_dataframe_format(
         item_col: Item column name
         timestamp_col: Timestamp column name
         sequence_col: Sequence column name
-        
+
     Returns:
         Loaded transactions
     """
@@ -405,7 +405,7 @@ def _load_transactions_by_format(
 ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
     """
     Load transactions based on specified format.
-    
+
     Parameters:
         file_path: Path to the file
         file_format: Format string (lowercase)
@@ -415,10 +415,10 @@ def _load_transactions_by_format(
         item_col: Item column name
         timestamp_col: Timestamp column name
         sequence_col: Sequence column name
-        
+
     Returns:
         Loaded transactions
-        
+
     Raises:
         ValueError: If format is unknown
     """
@@ -429,9 +429,7 @@ def _load_transactions_by_format(
     elif file_format == FileFormat.CSV.value:
         return read_transactions_from_csv(file_path)
     elif file_format in (FileFormat.PARQUET.value, FileFormat.ARROW.value):
-        return _load_dataframe_format(
-            file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
-        )
+        return _load_dataframe_format(file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col)
     elif file_format == FileFormat.AUTO.value:
         # Auto-detect format
         if is_dataframe_format:

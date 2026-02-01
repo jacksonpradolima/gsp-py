@@ -10,7 +10,7 @@ This module tests the following functionalities:
 
 import os
 import tempfile
-from typing import Generator
+from typing import Generator, cast
 
 import pytest
 
@@ -110,7 +110,8 @@ class TestSPMFormatBasic:
 
     def test_basic_parsing_with_mappings(self, simple_spm_file: str):
         """Test SPM parsing with token mappings."""
-        transactions, str_to_int, int_to_str = read_transactions_from_spm(simple_spm_file, return_mappings=True)
+        result = cast(tuple, read_transactions_from_spm(simple_spm_file, return_mappings=True))
+        transactions, str_to_int, int_to_str = result
 
         assert len(transactions) == 3
         assert len(str_to_int) == 6  # Unique tokens: 1, 2, 3, 4, 5, 6
@@ -261,7 +262,7 @@ class TestSPMFormatComplex:
 
     def test_complex_parsing(self, complex_spm_file: str):
         """Test parsing complex SPM file."""
-        transactions = read_transactions_from_spm(complex_spm_file)
+        transactions = cast(list, read_transactions_from_spm(complex_spm_file))
 
         assert len(transactions) == 4
         assert transactions[0] == ["1", "2", "3", "1", "4", "5"]
@@ -271,7 +272,8 @@ class TestSPMFormatComplex:
 
     def test_complex_with_mappings(self, complex_spm_file: str):
         """Test complex file with mappings."""
-        transactions, str_to_int, _ = read_transactions_from_spm(complex_spm_file, return_mappings=True)
+        result = cast(tuple, read_transactions_from_spm(complex_spm_file, return_mappings=True))
+        transactions, str_to_int, _ = result
 
         assert len(transactions) == 4
         # Unique tokens: 1, 2, 3, 4, 5
