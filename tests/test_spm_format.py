@@ -101,7 +101,7 @@ class TestSPMFormatBasic:
 
     def test_basic_parsing(self, simple_spm_file: str):
         """Test basic SPM format parsing."""
-        transactions, _, _ = read_transactions_from_spm(simple_spm_file)
+        transactions = read_transactions_from_spm(simple_spm_file)
 
         assert len(transactions) == 3
         assert transactions[0] == ["1", "2", "3"]
@@ -139,7 +139,7 @@ class TestSPMFormatEdgeCases:
 
     def test_empty_lines(self, empty_lines_file: str):
         """Test that empty lines are skipped."""
-        transactions, _, _ = read_transactions_from_spm(empty_lines_file)
+        transactions = read_transactions_from_spm(empty_lines_file)
 
         assert len(transactions) == 3
         assert transactions[0] == ["1", "2"]
@@ -158,7 +158,7 @@ class TestSPMFormatEdgeCases:
 
     def test_missing_end_delimiter(self, missing_end_delimiter_file: str):
         """Test handling of missing -2 delimiter."""
-        transactions, _, _ = read_transactions_from_spm(missing_end_delimiter_file)
+        transactions = read_transactions_from_spm(missing_end_delimiter_file)
 
         assert len(transactions) == 2
         assert transactions[0] == ["1", "2", "3"]  # Should still parse
@@ -176,7 +176,7 @@ class TestSPMFormatEdgeCases:
 
     def test_extra_delimiters(self, extra_delimiters_file: str):
         """Test handling of extra delimiters."""
-        transactions, _, _ = read_transactions_from_spm(extra_delimiters_file)
+        transactions = read_transactions_from_spm(extra_delimiters_file)
 
         assert len(transactions) == 2
         assert transactions[0] == ["1", "2"]
@@ -194,7 +194,7 @@ class TestSPMFormatEdgeCases:
 
     def test_string_tokens(self, string_tokens_file: str):
         """Test parsing string tokens."""
-        transactions, _, _ = read_transactions_from_spm(string_tokens_file)
+        transactions = read_transactions_from_spm(string_tokens_file)
 
         assert len(transactions) == 2
         assert transactions[0] == ["A", "B", "C"]
@@ -213,7 +213,7 @@ class TestSPMFormatEdgeCases:
 
     def test_mixed_length_elements(self, mixed_length_elements_file: str):
         """Test parsing sequences with varied element lengths."""
-        transactions, _, _ = read_transactions_from_spm(mixed_length_elements_file)
+        transactions = read_transactions_from_spm(mixed_length_elements_file)
 
         assert len(transactions) == 3
         assert transactions[0] == ["1"]
@@ -233,14 +233,13 @@ class TestSPMFormatErrors:
     def empty_file(self) -> Generator[str, None, None]:
         """Fixture with empty file."""
         with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".txt") as f:
-            pass  # Empty file
             temp_file_name = f.name
         yield temp_file_name
         os.unlink(temp_file_name)
 
     def test_empty_file(self, empty_file: str):
         """Test parsing empty file returns empty list."""
-        transactions, _, _ = read_transactions_from_spm(empty_file)
+        transactions = read_transactions_from_spm(empty_file)
         assert transactions == []
 
 
@@ -262,7 +261,7 @@ class TestSPMFormatComplex:
 
     def test_complex_parsing(self, complex_spm_file: str):
         """Test parsing complex SPM file."""
-        transactions, _, _ = read_transactions_from_spm(complex_spm_file)
+        transactions = read_transactions_from_spm(complex_spm_file)
 
         assert len(transactions) == 4
         assert transactions[0] == ["1", "2", "3", "1", "4", "5"]

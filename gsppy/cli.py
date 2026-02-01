@@ -216,8 +216,7 @@ def read_transactions_from_spm(file_path: str) -> List[List[str]]:
     try:
         from gsppy.utils import read_transactions_from_spm as read_spm
 
-        transactions, _, _ = read_spm(file_path, return_mappings=False)
-        return transactions
+        return read_spm(file_path, return_mappings=False)
     except Exception as e:
         msg = f"Error reading transaction data from SPM file '{file_path}': {e}"
         logging.error(msg)
@@ -361,7 +360,7 @@ def read_transactions_from_arrow(
     "file_path",
     required=True,
     type=click.Path(exists=True),
-    help="Path to a JSON or CSV file containing transactions.",
+    help="Path to a transaction file (JSON, CSV, SPM, Parquet, or Arrow format).",
 )
 @click.option(
     "--min_support",

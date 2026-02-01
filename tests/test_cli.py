@@ -21,6 +21,7 @@ Pytest is utilized for parametrized testing to improve coverage and reduce redun
 """
 
 import os
+import sys
 import json
 import logging
 import tempfile
@@ -243,7 +244,7 @@ def test_main_entry_point():
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # Add project root to PYTHONPATH
 
     # Construct the command to run the script
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2"]
 
     # Run the script using subprocess
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
@@ -420,7 +421,7 @@ def test_cli_verbose_flag_formatting() -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
     
     # Verify verbose output contains expected format elements
@@ -456,7 +457,7 @@ def test_cli_non_verbose_simple_output() -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
     
     output = process.stdout
@@ -554,7 +555,7 @@ def test_cli_spm_format_subprocess():
     
     # Construct the command to run the script
     cmd = [
-        os.environ.get("PYTHON", "python"), 
+        sys.executable, 
         cli_script, 
         "--file", temp_file_name, 
         "--format", "spm",

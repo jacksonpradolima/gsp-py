@@ -390,7 +390,7 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
 
 def read_transactions_from_spm(
     path: str, return_mappings: bool = False
-) -> Tuple[List[List[str]], Dict[str, int], Dict[int, str]]:
+) -> Union[List[List[str]], Tuple[List[List[str]], Dict[str, int], Dict[int, str]]]:
     """
     Read transactions from an SPM/GSP format file.
 
@@ -410,10 +410,13 @@ def read_transactions_from_spm(
         return_mappings: If True, return token mappings (str→int, int→str) along with dataset
 
     Returns:
-        Tuple containing:
-            - List[List[str]]: Parsed dataset as nested list of lists (sequences of elements)
-            - Dict[str, int]: String to integer mapping (empty if return_mappings=False)
-            - Dict[int, str]: Integer to string mapping (empty if return_mappings=False)
+        If return_mappings is False:
+            List[List[str]]: Parsed dataset as flattened sequences
+        If return_mappings is True:
+            Tuple containing:
+                - List[List[str]]: Parsed dataset as flattened sequences
+                - Dict[str, int]: String to integer mapping
+                - Dict[int, str]: Integer to string mapping
 
     Raises:
         ValueError: If file cannot be read or contains invalid format
@@ -482,7 +485,7 @@ def read_transactions_from_spm(
 
         if return_mappings and mapper:
             return transactions, mapper.get_str_to_int(), mapper.get_int_to_str()
-        return transactions, {}, {}
+        return transactions
 
     except FileNotFoundError as e:
         raise FileNotFoundError(f"SPM file '{path}' does not exist.") from e
