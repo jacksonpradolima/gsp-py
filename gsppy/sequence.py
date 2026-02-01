@@ -18,8 +18,8 @@ Email: jacksonpradolima@gmail.com
 
 from __future__ import annotations
 
-from typing import Any, List, Tuple, Union, Optional
-from dataclasses import field, dataclass
+from typing import Any, Iterator, List, Optional, Tuple, Union
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,7 +272,7 @@ class Sequence:
         """
         return self.items[index]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterate over the items in the sequence."""
         return iter(self.items)
 

@@ -173,7 +173,6 @@ class TestGSPSequenceIntegration:
         
         # Run multiple searches
         result1 = gsp.search(min_support=0.3, return_sequences=True)
-        result2 = gsp.search(min_support=0.4, return_sequences=True)
         result3 = gsp.search(min_support=0.3, return_sequences=True)
         
         # result1 and result3 should be equivalent (same parameters)
@@ -182,9 +181,6 @@ class TestGSPSequenceIntegration:
             items_1 = {seq.items: seq.support for seq in result1[level_idx]}
             items_3 = {seq.items: seq.support for seq in result3[level_idx]}
             assert items_1 == items_3
-            
-        # result2 should have fewer or equal patterns (higher threshold)
-        # Note: result2 might have fewer levels
         
     def test_sequence_indexing_and_slicing(self, supermarket_transactions: List[List[str]]) -> None:
         """Test that Sequence objects support indexing and slicing."""

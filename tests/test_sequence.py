@@ -14,7 +14,6 @@ Email: jacksonpradolima@gmail.com
 """
 
 import pytest
-from typing import List
 
 from gsppy.sequence import (
     Sequence,
@@ -433,9 +432,6 @@ class TestSequenceBackwardCompatibility:
 
     def test_sequence_can_replace_tuple_as_dict_key(self) -> None:
         """Test that Sequence can be used where tuples were used as keys."""
-        # Old style: Dict[Tuple[str, ...], int]
-        old_patterns = {("A", "B"): 5, ("C", "D"): 3}
-
         # New style: Using Sequences
         seq1 = Sequence(items=("A", "B"), support=5)
         seq2 = Sequence(items=("C", "D"), support=3)
