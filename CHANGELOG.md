@@ -1,6 +1,63 @@
 # CHANGELOG
 
 
+## v4.1.0 (2026-02-01)
+
+### Bug Fixes
+
+- Address code review feedback - add type annotations and remove unused variables
+  ([`bf62d14`](https://github.com/jacksonpradolima/gsp-py/commit/bf62d144d8f1be1e7716291d41af955450612c81))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Chores
+
+- Update uv.lock for version 4.0.0
+  ([`f1ae2af`](https://github.com/jacksonpradolima/gsp-py/commit/f1ae2af2aa71ea44b9d8625ed647da79259ec096))
+
+### Documentation
+
+- Add Sequence documentation and examples to README
+  ([`62d0d02`](https://github.com/jacksonpradolima/gsp-py/commit/62d0d02c19c5751331df53e680cc0b9aee19677b))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Update docs/ with Sequence abstraction documentation
+  ([`2368cf3`](https://github.com/jacksonpradolima/gsp-py/commit/2368cf30239139e8e2af5457ee6acf14db30ef06))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Features
+
+- Add Sequence abstraction class with comprehensive tests
+  ([`6011bdb`](https://github.com/jacksonpradolima/gsp-py/commit/6011bdb7104755d109b58261b36e1dd1c36b2d61))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Integrate Sequence objects with GSP.search() via return_sequences parameter
+  ([`7476588`](https://github.com/jacksonpradolima/gsp-py/commit/7476588f2b277276748e0550366014f2a93d8ef5))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Introduce Sequence abstraction for typed pattern representation
+  ([`01ca37b`](https://github.com/jacksonpradolima/gsp-py/commit/01ca37b9bc4572eb7b1c1eaf6fdf26ca2324a3c5))
+
+### Refactoring
+
+- Address code review feedback - remove redundant checks
+  ([`621e940`](https://github.com/jacksonpradolima/gsp-py/commit/621e9403379ae0fd07bf45b97616b9979f2d4aa6))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Reduce cognitive complexity in sequence_example.py and fix f-string
+  ([`63ac4f9`](https://github.com/jacksonpradolima/gsp-py/commit/63ac4f9ceb869a5228cdccdcf6a9d0b9f46f0350))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Update type annotations and improve search method in GSP class
+  ([`e2e9a3f`](https://github.com/jacksonpradolima/gsp-py/commit/e2e9a3f473d1e0c5d6990c8b7c5837a251761032))
+
+
 ## v4.0.0 (2026-02-01)
 
 ### Chores
