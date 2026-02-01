@@ -103,6 +103,7 @@ from gsppy.utils import (
 )
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
 from gsppy.accelerate import support_counts as support_counts_accel
+from gsppy.sequence import Sequence, dict_to_sequences
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -596,7 +597,8 @@ class GSP:
         max_k: Optional[int] = None,
         backend: Optional[str] = None,
         verbose: Optional[bool] = None,
-    ) -> List[Dict[Tuple[str, ...], int]]:
+        return_sequences: bool = False,
+    ) -> Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
 
@@ -617,11 +619,20 @@ class GSP:
                                     Note: temporal constraints always use Python backend.
             verbose (Optional[bool]): Override instance verbosity setting for this search.
                                      If None, uses the instance's verbose setting.
+            return_sequences (bool): If True, returns patterns as Sequence objects instead of
+                                    Dict[Tuple[str, ...], int]. Defaults to False for backward
+                                    compatibility. When True, returns List[List[Sequence]] where
+                                    each Sequence contains items, support count, and can be extended
+                                    with additional metadata.
 
         Returns:
-            List[Dict[Tuple[str, ...], int]]: A list of dictionaries containing frequent patterns
-                                              at each k-sequence level, with patterns as keys
-                                              and their support counts as values.
+            Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
+                If return_sequences is False (default):
+                    A list of dictionaries containing frequent patterns at each k-sequence level,
+                    with patterns as keys and their support counts as values.
+                If return_sequences is True:
+                    A list of lists containing Sequence objects at each k-sequence level,
+                    where each Sequence encapsulates the pattern items and support count.
 
         Raises:
             ValueError: If the minimum support threshold is not in the range `(0.0, 1.0]`.
@@ -632,7 +643,7 @@ class GSP:
             - Status updates for each iteration until the algorithm terminates.
 
         Examples:
-            Basic usage without temporal constraints:
+            Basic usage without temporal constraints (default tuple-based):
 
             ```python
             from gsppy.gsp import GSP
@@ -645,6 +656,28 @@ class GSP:
 
             gsp = GSP(transactions)
             patterns = gsp.search(min_support=0.3)
+            # Returns: [{('Bread',): 4, ('Milk',): 4, ...}, {('Bread', 'Milk'): 3, ...}, ...]
+            ```
+
+            Using Sequence objects for richer pattern representation:
+
+            ```python
+            from gsppy.gsp import GSP
+
+            transactions = [
+                ["Bread", "Milk"],
+                ["Bread", "Diaper", "Beer", "Eggs"],
+                ["Milk", "Diaper", "Beer", "Coke"],
+            ]
+
+            gsp = GSP(transactions)
+            patterns = gsp.search(min_support=0.3, return_sequences=True)
+            # Returns: [[Sequence(('Bread',), support=4), Sequence(('Milk',), support=4), ...], ...]
+            
+            # Access pattern details
+            for level_patterns in patterns:
+                for seq in level_patterns:
+                    print(f"Pattern: {seq.items}, Support: {seq.support}")
             ```
 
             Usage with temporal constraints (requires timestamped transactions):
@@ -681,6 +714,9 @@ class GSP:
             logger.info(
                 f"Using temporal constraints: mingap={self.mingap}, maxgap={self.maxgap}, maxspan={self.maxspan}"
             )
+
+        # Clear freq_patterns for this search (allow reusing the GSP instance)
+        self.freq_patterns = []
 
         # Convert fractional support to absolute count (ceil to preserve threshold semantics)
         abs_min_support = int(math.ceil(len(self.transactions) * float(min_support)))
@@ -729,4 +765,9 @@ class GSP:
             self.verbose = original_verbose
             self._configure_logging()
 
-        return self.freq_patterns[:-1]
+        # Return results in the requested format
+        result = self.freq_patterns[:-1]
+        if return_sequences:
+            # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level
+            return [dict_to_sequences(level_patterns) for level_patterns in result]
+        return result
