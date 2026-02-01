@@ -251,10 +251,23 @@ class TestGSPWithItemsets:
         gsp = GSP(transactions)
         patterns = gsp.search(min_support=0.5)
         
-        # A, B, C should all be frequent as 1-patterns
+        # A, B, C should all be frequent as 1-patterns (appear in 3, 3, 3 transactions respectively)
         assert ('A',) in patterns[0]
         assert ('B',) in patterns[0]
         assert ('C',) in patterns[0]
+        
+        # Sequential patterns should be found
+        # ('A', 'C') appears in all 3 transactions
+        assert len(patterns) >= 2
+        if len(patterns) >= 2:
+            assert ('A', 'C') in patterns[1]
+            # ('B', 'C') should also be found (B before C in all transactions)
+            assert ('B', 'C') in patterns[1]
+            
+        # Note: The current GSP implementation discovers sequential patterns (item1 -> item2),
+        # not co-occurrence patterns like (A, B together). The itemset support enables
+        # matching where items in the same itemset can match pattern elements, but the
+        # output patterns remain sequential single-item patterns as per standard GSP algorithm.
 
     def test_gsp_empty_itemsets_handling(self) -> None:
         """GSP should handle transactions gracefully."""

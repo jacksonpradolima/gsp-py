@@ -425,9 +425,9 @@ class GSP:
         """Extract items from timestamped itemsets."""
         items = []
         for itemset in normalized_tx:
-            for item_tuple in itemset:
-                if isinstance(item_tuple, tuple) and len(item_tuple) == 2:
-                    items.append(item_tuple[0])
+            for item in itemset:
+                if self._is_timestamp_tuple(item):
+                    items.append(item[0])
         return items
     
     def _extract_items_from_simple(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
@@ -547,7 +547,6 @@ class GSP:
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
         maxspan: Optional[float] = None,
-        use_itemset_matching: bool = True,
     ) -> List[Tuple[Tuple[str, ...], int]]:
         """
         Evaluate a batch of candidate sequences to compute their support.
@@ -564,7 +563,6 @@ class GSP:
             mingap: Minimum time gap between consecutive items
             maxgap: Maximum time gap between consecutive items
             maxspan: Maximum time span from first to last item
-            use_itemset_matching: Whether to use itemset matching (always True for normalized transactions)
 
         Returns:
             List of tuples containing (candidate sequence, support count) for frequent patterns
@@ -619,7 +617,7 @@ class GSP:
         with mp.Pool(processes=mp.cpu_count()) as pool:
             batch_results = pool.starmap(
                 self._worker_batch,  # Process a batch at a time
-                [(batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan, True) for batch in batches],
+                [(batch, self.transactions, min_support, self.mingap, self.maxgap, self.maxspan) for batch in batches],
             )
 
         # Flatten the list of results and convert to a dictionary

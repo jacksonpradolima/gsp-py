@@ -161,9 +161,9 @@ def test_worker_batch_static_method(supermarket_transactions: List[List[str]]) -
     min_support = 3  # Absolute support count
     expected = [(("Bread",), 4), (("Milk",), 4), (("Diaper",), 4)]
 
-    # Call the '_worker_batch' method with itemset matching enabled
+    # Call the '_worker_batch' method
     # This test accesses `_worker_batch` to test internal functionality
-    results = GSP._worker_batch(batch, transactions, min_support, use_itemset_matching=True)  # pylint: disable=protected-access
+    results = GSP._worker_batch(batch, transactions, min_support)  # pylint: disable=protected-access
     assert results == expected, f"Expected results {expected}, but got {results}"
 
 

@@ -271,7 +271,6 @@ def is_subsequence_with_itemsets(
 
 
 @lru_cache(maxsize=None)
-@lru_cache(maxsize=None)
 def is_subsequence_with_itemsets_and_timestamps(
     pattern: Tuple[Tuple[str, ...], ...],
     sequence: Tuple[Tuple[Tuple[str, float], ...], ...],
