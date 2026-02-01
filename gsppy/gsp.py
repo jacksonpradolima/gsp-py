@@ -386,17 +386,25 @@ class GSP:
     def _detect_timestamps_in_itemsets(self, tx: Union[List, Tuple]) -> None:
         """Detect timestamps in itemset format transactions."""
         first_itemset = tx[0]
-        if first_itemset and isinstance(first_itemset, (list, tuple)):
-            first_item = first_itemset[0]
-            if isinstance(first_item, (tuple, list)) and len(first_item) == 2:
-                try:
-                    float(first_item[1])
-                    self.has_timestamps = True
-                    logger.debug("Detected timestamped itemset transactions")
-                except (TypeError, ValueError):
-                    pass
-            if not self.has_timestamps:
-                logger.debug("Detected itemset transactions (no timestamps)")
+        if not first_itemset or not isinstance(first_itemset, (list, tuple)):
+            return
+            
+        first_item = first_itemset[0]
+        if self._is_timestamp_tuple(first_item):
+            self.has_timestamps = True
+            logger.debug("Detected timestamped itemset transactions")
+        else:
+            logger.debug("Detected itemset transactions (no timestamps)")
+    
+    def _is_timestamp_tuple(self, item: Union[str, Tuple]) -> bool:
+        """Check if an item is a timestamp tuple (item, timestamp)."""
+        if not isinstance(item, (tuple, list)) or len(item) != 2:
+            return False
+        try:
+            float(item[1])
+            return True
+        except (TypeError, ValueError):
+            return False
     
     def _detect_timestamps_in_flat(self, tx: Union[List, Tuple]) -> None:
         """Detect timestamps in flat format transactions."""

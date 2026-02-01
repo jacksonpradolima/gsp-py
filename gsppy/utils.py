@@ -682,31 +682,39 @@ def _parse_spm_line(line: str, mapper: Optional[TokenMapper], preserve_itemsets:
     
     for token in tokens:
         if token == "-2":
-            # End of sequence
-            if current_element:
-                sequence.append(current_element[:])
+            _finalize_element(sequence, current_element)
             break
         elif token == "-1":
-            # End of element
-            if current_element:
-                sequence.append(current_element[:])
-                current_element = []
+            _finalize_element(sequence, current_element)
+            current_element = []
         else:
-            # Regular item
-            current_element.append(token)
-            if mapper:
-                mapper.add_token(token)
+            _add_token_to_element(current_element, token, mapper)
     
     # Add any remaining items if -2 was missing
-    if current_element:
-        sequence.append(current_element)
+    _finalize_element(sequence, current_element)
     
-    # Return based on preserve_itemsets flag
+    return _format_sequence(sequence, preserve_itemsets)
+
+
+def _finalize_element(sequence: List[List[str]], current_element: List[str]) -> None:
+    """Add current element to sequence if it's not empty."""
+    if current_element:
+        sequence.append(current_element[:])
+
+
+def _add_token_to_element(current_element: List[str], token: str, mapper: Optional[TokenMapper]) -> None:
+    """Add a token to the current element and update mapper if provided."""
+    current_element.append(token)
+    if mapper:
+        mapper.add_token(token)
+
+
+def _format_sequence(sequence: List[List[str]], preserve_itemsets: bool) -> Union[List[str], List[List[str]]]:
+    """Format sequence based on preserve_itemsets flag."""
     if preserve_itemsets:
         return sequence
-    else:
-        # Flatten for backward compatibility
-        return [item for itemset in sequence for item in itemset]
+    # Flatten for backward compatibility
+    return [item for itemset in sequence for item in itemset]
 
 
 def read_transactions_from_spm(
