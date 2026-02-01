@@ -18,8 +18,9 @@ Email: jacksonpradolima@gmail.com
 
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Optional, Tuple, Union
-from dataclasses import dataclass, field
+from typing import Any, Dict, List, Tuple, Union, Iterator, Optional, cast
+from dataclasses import field, dataclass
+from typing_extensions import override
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,13 +66,12 @@ class Sequence:
     items: Tuple[str, ...]
     support: int = 0
     transaction_indices: Optional[Tuple[int, ...]] = None
-    metadata: Optional[dict] = field(default=None, compare=False, hash=False)
+    metadata: Optional[Dict[str, Any]] = field(default=None, compare=False, hash=False)
 
     def __post_init__(self) -> None:
         """Validate the sequence after initialization."""
-        if not isinstance(self.items, tuple):
-            # If items is not a tuple, convert it
-            object.__setattr__(self, 'items', tuple(self.items))
+        # Normalize items to tuple for immutability
+        object.__setattr__(self, "items", tuple(self.items))
 
         if not self.items:
             raise ValueError("Sequence items cannot be empty")
@@ -79,8 +79,8 @@ class Sequence:
         if self.support < 0:
             raise ValueError("Support count cannot be negative")
 
-        if self.transaction_indices is not None and not isinstance(self.transaction_indices, tuple):
-            object.__setattr__(self, 'transaction_indices', tuple(self.transaction_indices))
+        if self.transaction_indices is not None:
+            object.__setattr__(self, "transaction_indices", tuple(self.transaction_indices))
 
     @property
     def length(self) -> int:
@@ -112,7 +112,7 @@ class Sequence:
         items: Tuple[str, ...],
         support: int = 0,
         transaction_indices: Optional[Tuple[int, ...]] = None,
-        metadata: Optional[dict] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Sequence:
         """
         Create a Sequence from a tuple of items.
@@ -234,7 +234,7 @@ class Sequence:
             >>> seq_with_meta.metadata
             {'confidence': 0.75, 'lift': 1.2}
         """
-        new_metadata = (self.metadata or {}).copy()
+        new_metadata: Dict[str, Any] = (self.metadata or {}).copy()
         new_metadata.update(kwargs)
         return Sequence(
             items=self.items,
@@ -243,6 +243,7 @@ class Sequence:
             metadata=new_metadata,
         )
 
+    @override
     def __repr__(self) -> str:
         """Return a string representation of the Sequence."""
         parts = [f"items={self.items}", f"support={self.support}"]
@@ -252,6 +253,7 @@ class Sequence:
             parts.append(f"metadata={self.metadata}")
         return f"Sequence({', '.join(parts)})"
 
+    @override
     def __str__(self) -> str:
         """Return a human-readable string representation."""
         return f"{self.items} (support={self.support})"
@@ -319,7 +321,7 @@ def dict_to_sequences(pattern_dict: dict[Tuple[str, ...], int]) -> List[Sequence
         List[Sequence]: List of Sequence objects.
 
     Examples:
-        >>> patterns = {('A',): 5, ('B',): 3}
+        >>> patterns = {("A",): 5, ("B",): 3}
         >>> seqs = dict_to_sequences(patterns)
         >>> len(seqs)
         2
@@ -340,7 +342,7 @@ def is_sequence_or_tuple(obj: Any) -> bool:
     return isinstance(obj, (Sequence, tuple))
 
 
-def to_sequence(obj: Union[Sequence, Tuple[str, ...], str], support: int = 0) -> Sequence:
+def to_sequence(obj: object, support: int = 0) -> Sequence:
     """
     Convert various input types to a Sequence object.
 
@@ -360,9 +362,10 @@ def to_sequence(obj: Union[Sequence, Tuple[str, ...], str], support: int = 0) ->
     """
     if isinstance(obj, Sequence):
         return obj
-    elif isinstance(obj, tuple):
-        return Sequence.from_tuple(obj, support=support)
-    elif isinstance(obj, str):
+    if isinstance(obj, tuple):
+        if not all(isinstance(item, str) for item in obj):  # pyright: ignore[reportUnknownVariableType]
+            raise TypeError("Tuple items must be strings")
+        return Sequence.from_tuple(cast(Tuple[str, ...], obj), support=support)
+    if isinstance(obj, str):
         return Sequence.from_item(obj, support=support)
-    else:
-        raise TypeError(f"Cannot convert {type(obj)} to Sequence")
+    raise TypeError(f"Cannot convert {type(obj)} to Sequence")

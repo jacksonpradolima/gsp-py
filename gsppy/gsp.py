@@ -90,7 +90,7 @@ from __future__ import annotations
 import math
 import logging
 import multiprocessing as mp
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union, Optional, cast
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union, Literal, Optional, cast, overload
 from itertools import chain
 from collections import Counter
 
@@ -591,12 +591,35 @@ class GSP:
         """
         logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
+    @overload
     def search(
         self,
         min_support: float = 0.2,
         max_k: Optional[int] = None,
         backend: Optional[str] = None,
         verbose: Optional[bool] = None,
+        *,
+        return_sequences: Literal[False] = False,
+    ) -> List[Dict[Tuple[str, ...], int]]: ...
+
+    @overload
+    def search(
+        self,
+        min_support: float = 0.2,
+        max_k: Optional[int] = None,
+        backend: Optional[str] = None,
+        verbose: Optional[bool] = None,
+        *,
+        return_sequences: Literal[True],
+    ) -> List[List[Sequence]]: ...
+
+    def search(
+        self,
+        min_support: float = 0.2,
+        max_k: Optional[int] = None,
+        backend: Optional[str] = None,
+        verbose: Optional[bool] = None,
+        *,
         return_sequences: bool = False,
     ) -> Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
         """
@@ -673,7 +696,7 @@ class GSP:
             gsp = GSP(transactions)
             patterns = gsp.search(min_support=0.3, return_sequences=True)
             # Returns: [[Sequence(('Bread',), support=4), Sequence(('Milk',), support=4), ...], ...]
-            
+
             # Access pattern details
             for level_patterns in patterns:
                 for seq in level_patterns:

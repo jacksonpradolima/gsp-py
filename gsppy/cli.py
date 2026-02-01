@@ -35,7 +35,7 @@ import csv
 import sys
 import json
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional, cast
+from typing import Any, List, Tuple, Union, Optional, cast
 
 import click
 
@@ -608,7 +608,7 @@ def main(
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan, verbose=verbose)
-        patterns: List[Dict[Tuple[str, ...], int]] = gsp.search(min_support=min_support)
+        patterns = gsp.search(min_support=min_support, return_sequences=False)
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")

@@ -17,9 +17,9 @@ import pytest
 
 from gsppy.sequence import (
     Sequence,
-    sequences_to_dict,
-    dict_to_sequences,
     to_sequence,
+    dict_to_sequences,
+    sequences_to_dict,
     is_sequence_or_tuple,
 )
 
@@ -370,7 +370,7 @@ class TestUtilityFunctions:
     def test_to_sequence_invalid_type(self) -> None:
         """Test that converting invalid type raises TypeError."""
         with pytest.raises(TypeError, match="Cannot convert"):
-            to_sequence([1, 2, 3])  # type: ignore
+            to_sequence([1, 2, 3])
 
 
 class TestSequenceEdgeCases:
