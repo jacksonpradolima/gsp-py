@@ -21,6 +21,7 @@ Pytest is utilized for parametrized testing to improve coverage and reduce redun
 """
 
 import os
+import sys
 import json
 import logging
 import tempfile
@@ -243,7 +244,7 @@ def test_main_entry_point():
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # Add project root to PYTHONPATH
 
     # Construct the command to run the script
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2"]
 
     # Run the script using subprocess
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
@@ -420,7 +421,7 @@ def test_cli_verbose_flag_formatting() -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
     
     # Verify verbose output contains expected format elements
@@ -456,7 +457,7 @@ def test_cli_non_verbose_simple_output() -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     
-    cmd = [os.environ.get("PYTHON", "python"), cli_script, "--file", temp_file_name, "--min_support", "0.2"]
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
     
     output = process.stdout
@@ -503,5 +504,71 @@ def test_cli_verbose_with_gsp_verbose(monkeypatch: MonkeyPatch):
         call_kwargs = mock_gsp.call_args[1]
         assert call_kwargs.get("verbose") is True, "Expected GSP to be initialized with verbose=True"
 
+    # Cleanup
+    os.unlink(temp_file_name)
+
+
+def test_cli_spm_format_flag(monkeypatch: MonkeyPatch):
+    """
+    Test CLI with --format spm option for SPM/GSP format files.
+    """
+    # Create an SPM format file
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as temp_file:
+        temp_file.write("1 2 -1 3 -1 -2\n")
+        temp_file.write("4 -1 5 6 -1 -2\n")
+        temp_file.write("1 -1 2 3 -1 -2\n")
+        temp_file_name = temp_file.name
+
+    # Mock CLI arguments with --format spm
+    monkeypatch.setattr(
+        "sys.argv", 
+        ["main", "--file", temp_file_name, "--format", "spm", "--min_support", "0.3"]
+    )
+
+    try:
+        with patch("gsppy.cli.logger.info") as mock_info:
+            with pytest.raises(SystemExit) as excinfo:
+                main()
+            assert excinfo.value.code == 0
+            # Verify that patterns were found
+            mock_info.assert_any_call("Frequent Patterns Found:")
+    finally:
+        os.unlink(temp_file_name)
+
+
+def test_cli_spm_format_subprocess():
+    """
+    Test CLI with SPM format using subprocess to verify real-world usage.
+    """
+    # Create an SPM format file
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as temp_file:
+        temp_file.write("A B -1 C -1 -2\n")
+        temp_file.write("A -1 B C -1 -2\n")
+        temp_file_name = temp_file.name
+    
+    # Get the CLI script path
+    cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
+    
+    # Set up the environment with the correct PYTHONPATH
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    
+    # Construct the command to run the script
+    cmd = [
+        sys.executable, 
+        cli_script, 
+        "--file", temp_file_name, 
+        "--format", "spm",
+        "--min_support", "0.5"
+    ]
+    
+    # Run the script using subprocess
+    process = subprocess.run(cmd, text=True, capture_output=True, env=env)
+    
+    # Assert that the output contains the expected message
+    assert process.returncode == 0
+    assert "Frequent Patterns Found:" in process.stdout
+    assert "Pattern:" in process.stdout
+    
     # Cleanup
     os.unlink(temp_file_name)

@@ -290,6 +290,34 @@ Your input file should be either:
   Bread,Milk,Diaper,Coke
   ```
 
+- **SPM/GSP Format**: Uses delimiters to separate elements and sequences. This format is commonly used in sequential pattern mining datasets.
+  - `-1`: Marks the end of an element (itemset)
+  - `-2`: Marks the end of a sequence (transaction)
+  
+  Example:
+  ```text
+  1 2 -1 3 -1 -2
+  4 -1 5 6 -1 -2
+  1 -1 2 3 -1 -2
+  ```
+  
+  The above represents:
+  - Transaction 1: `[[1, 2], [3]]` → flattened to `[1, 2, 3]`
+  - Transaction 2: `[[4], [5, 6]]` → flattened to `[4, 5, 6]`
+  - Transaction 3: `[[1], [2, 3]]` → flattened to `[1, 2, 3]`
+  
+  String tokens are also supported:
+  ```text
+  A B -1 C -1 -2
+  D -1 E F -1 -2
+  ```
+
+- **Parquet/Arrow Files**: Modern columnar data formats (requires 'gsppy[dataframe]')
+  ```bash
+  pip install 'gsppy[dataframe]'
+  ```
+  This installs optional dependencies: `polars`, `pandas`, and `pyarrow` for DataFrame support.
+
 ### Running the CLI
 
 Use the following command to run GSPPy on your data:
@@ -304,9 +332,16 @@ Or for CSV files:
 gsppy --file path/to/transactions.csv --min_support 0.3 --backend rust
 ```
 
+For SPM/GSP format files, use the `--format spm` option:
+
+```bash
+gsppy --file path/to/data.txt --format spm --min_support 0.3
+```
+
 #### CLI Options
 
-- `--file`: Path to your input file (JSON or CSV). **Required**.
+- `--file`: Path to your input file (JSON, CSV, or SPM format). **Required**.
+- `--format`: File format to use. Options: `auto` (default, auto-detect from extension), `json`, `csv`, `spm`, `parquet`, `arrow`.
 - `--min_support`: Minimum support threshold as a fraction (e.g., `0.3` for 30%). Default is `0.2`.
 - `--backend`: Backend to use for support counting. One of `auto` (default), `python`, `rust`, or `gpu`.
 - `--verbose`: Enable detailed logging with timestamps, log levels, and process IDs for debugging and traceability.
@@ -450,6 +485,83 @@ Verbose mode provides:
 - Useful for debugging, research, and CI/CD integration
 
 For complete documentation on logging, see [docs/logging.md](docs/logging.md).
+
+### Loading SPM/GSP Format Files
+
+GSP-Py supports loading datasets in the classical SPM/GSP delimiter format, which is widely used in sequential pattern mining research. This format uses:
+- `-1` to mark the end of an element (itemset)
+- `-2` to mark the end of a sequence (transaction)
+
+#### Using the SPM Loader
+
+```python
+from gsppy.utils import read_transactions_from_spm
+from gsppy import GSP
+
+# Load SPM format file
+transactions = read_transactions_from_spm('data.txt')
+
+# Run GSP algorithm
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3)
+```
+
+#### SPM Format Examples
+
+**Simple sequence file (`data.txt`):**
+```text
+1 2 -1 3 -1 -2
+4 -1 5 6 -1 -2
+1 -1 2 3 -1 -2
+```
+
+This represents:
+- Transaction 1: Items [1, 2] followed by item [3] → flattened to [1, 2, 3]
+- Transaction 2: Item [4] followed by items [5, 6] → flattened to [4, 5, 6]
+- Transaction 3: Item [1] followed by items [2, 3] → flattened to [1, 2, 3]
+
+**String tokens are also supported:**
+```text
+A B -1 C -1 -2
+D -1 E F -1 -2
+```
+
+#### Token Mapping
+
+For workflows requiring conversion between string tokens and integer IDs, use the `TokenMapper`:
+
+```python
+from gsppy.utils import read_transactions_from_spm
+from gsppy import TokenMapper
+
+# Load with mappings
+transactions, str_to_int, int_to_str = read_transactions_from_spm(
+    'data.txt', 
+    return_mappings=True
+)
+
+print("String to Int:", str_to_int)
+# Output: {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5}
+
+print("Int to String:", int_to_str)
+# Output: {0: '1', 1: '2', 2: '3', 3: '4', 4: '5', 5: '6'}
+
+# Use the TokenMapper class directly
+mapper = TokenMapper()
+id_a = mapper.add_token("A")
+id_b = mapper.add_token("B")
+print(f"A -> {id_a}, B -> {id_b}")
+# Output: A -> 0, B -> 1
+```
+
+#### Edge Cases Handled
+
+The SPM loader gracefully handles:
+- Empty lines (skipped)
+- Missing `-2` delimiter at end of line
+- Extra or consecutive delimiters
+- Mixed-length elements in sequences
+- Both integer and string tokens
 
 ### Output
 

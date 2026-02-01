@@ -45,6 +45,7 @@ from gsppy.enums import (
     PARQUET_EXTENSIONS,
     DATAFRAME_EXTENSIONS,
     SUPPORTED_EXTENSIONS_MESSAGE,
+    FileFormat,
     FileExtension,
 )
 from gsppy.utils import has_timestamps
@@ -195,6 +196,33 @@ def read_transactions_from_csv(file_path: str) -> List[List[str]]:
         raise ValueError(msg) from e
 
 
+def read_transactions_from_spm(file_path: str) -> List[List[str]]:
+    """
+    Read transactions from an SPM/GSP format file.
+
+    The SPM/GSP format uses delimiters:
+    - `-1`: End of element (item set)
+    - `-2`: End of sequence (transaction)
+
+    Parameters:
+        file_path (str): Path to the file containing transactions.
+
+    Returns:
+        List[List[str]]: Parsed transactions from the file.
+
+    Raises:
+        ValueError: If the file cannot be read or contains invalid data.
+    """
+    try:
+        from gsppy.utils import read_transactions_from_spm as read_spm
+
+        return cast(List[List[str]], read_spm(file_path, return_mappings=False))
+    except Exception as e:
+        msg = f"Error reading transaction data from SPM file '{file_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
 def detect_and_read_file(file_path: str) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
     """
     Detect file format (CSV, JSON, Parquet, Arrow) and read transactions.
@@ -259,6 +287,7 @@ def read_transactions_from_parquet(
     """
     try:
         import polars as pl
+
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Parquet support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
@@ -304,6 +333,7 @@ def read_transactions_from_arrow(
     """
     try:
         import polars as pl
+
         from gsppy.dataframe_adapters import polars_to_transactions
     except ImportError as e:
         raise ValueError("Arrow/Feather support requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
@@ -323,6 +353,95 @@ def read_transactions_from_arrow(
         raise ValueError(msg) from e
 
 
+def _load_dataframe_format(
+    file_path: str,
+    file_extension: str,
+    transaction_col: Optional[str],
+    item_col: Optional[str],
+    timestamp_col: Optional[str],
+    sequence_col: Optional[str],
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Load transactions from DataFrame formats (Parquet/Arrow).
+
+    Parameters:
+        file_path: Path to the file
+        file_extension: File extension (lowercase)
+        transaction_col: Transaction ID column name
+        item_col: Item column name
+        timestamp_col: Timestamp column name
+        sequence_col: Sequence column name
+
+    Returns:
+        Loaded transactions
+    """
+    if file_extension in PARQUET_EXTENSIONS:
+        return read_transactions_from_parquet(
+            file_path,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+    else:  # Arrow/Feather
+        return read_transactions_from_arrow(
+            file_path,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+
+
+def _load_transactions_by_format(
+    file_path: str,
+    file_format: str,
+    file_extension: str,
+    is_dataframe_format: bool,
+    transaction_col: Optional[str],
+    item_col: Optional[str],
+    timestamp_col: Optional[str],
+    sequence_col: Optional[str],
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Load transactions based on specified format.
+
+    Parameters:
+        file_path: Path to the file
+        file_format: Format string (lowercase)
+        file_extension: File extension (lowercase)
+        is_dataframe_format: Whether file is a DataFrame format
+        transaction_col: Transaction ID column name
+        item_col: Item column name
+        timestamp_col: Timestamp column name
+        sequence_col: Sequence column name
+
+    Returns:
+        Loaded transactions
+
+    Raises:
+        ValueError: If format is unknown
+    """
+    if file_format == FileFormat.SPM.value:
+        return read_transactions_from_spm(file_path)
+    elif file_format == FileFormat.JSON.value:
+        return read_transactions_from_json(file_path)
+    elif file_format == FileFormat.CSV.value:
+        return read_transactions_from_csv(file_path)
+    elif file_format in (FileFormat.PARQUET.value, FileFormat.ARROW.value):
+        return _load_dataframe_format(file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col)
+    elif file_format == FileFormat.AUTO.value:
+        # Auto-detect format
+        if is_dataframe_format:
+            return _load_dataframe_format(
+                file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
+            )
+        else:
+            return detect_and_read_file(file_path)
+    else:
+        raise ValueError(f"Unknown format: {file_format}")
+
+
 # Click-based CLI
 @click.command()
 @click.option(
@@ -330,7 +449,7 @@ def read_transactions_from_arrow(
     "file_path",
     required=True,
     type=click.Path(exists=True),
-    help="Path to a JSON or CSV file containing transactions.",
+    help="Path to a transaction file (JSON, CSV, SPM, Parquet, or Arrow format).",
 )
 @click.option(
     "--min_support",
@@ -388,6 +507,13 @@ def read_transactions_from_arrow(
     default=None,
     help="DataFrame: column name containing sequences (sequence format).",
 )
+@click.option(
+    "--format",
+    type=click.Choice([fmt.value for fmt in FileFormat], case_sensitive=False),
+    default=FileFormat.AUTO.value,
+    show_default=True,
+    help="File format to use. 'auto' detects format from file extension.",
+)
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
 def main(
     file_path: str,
@@ -400,14 +526,16 @@ def main(
     item_col: Optional[str],
     timestamp_col: Optional[str],
     sequence_col: Optional[str],
+    format: str,  # noqa: A002
     verbose: bool,
 ) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
 
     Supports multiple file formats:
-    - JSON/CSV: Traditional transaction formats
+    - JSON/CSV/SPM: Traditional transaction formats
     - Parquet/Arrow: Modern DataFrame formats (requires 'gsppy[dataframe]')
+    - Polars/Pandas DataFrames: Can be passed directly (requires 'gsppy[dataframe]')
 
     Supports both simple transactions (items only) and timestamped transactions
     (item-timestamp pairs) for temporal pattern mining.
@@ -439,6 +567,12 @@ def main(
         gsppy --file sequences.arrow --min_support 0.3 \
               --sequence-col items
         ```
+
+        With SPM format files:
+
+        ```bash
+        gsppy --file data.txt --format spm --min_support 0.3
+        ```
     """
     setup_logging(verbose)
 
@@ -449,27 +583,17 @@ def main(
 
     # Automatically detect and load transactions
     try:
-        if is_dataframe_format:
-            # For DataFrame formats, pass column parameters
-            if file_extension in PARQUET_EXTENSIONS:
-                transactions = read_transactions_from_parquet(
-                    file_path,
-                    transaction_col=transaction_col,
-                    item_col=item_col,
-                    timestamp_col=timestamp_col,
-                    sequence_col=sequence_col,
-                )
-            else:  # Arrow/Feather
-                transactions = read_transactions_from_arrow(
-                    file_path,
-                    transaction_col=transaction_col,
-                    item_col=item_col,
-                    timestamp_col=timestamp_col,
-                    sequence_col=sequence_col,
-                )
-        else:
-            # For traditional formats, use existing detect_and_read_file
-            transactions = detect_and_read_file(file_path)
+        file_format = format.lower()
+        transactions = _load_transactions_by_format(
+            file_path,
+            file_format,
+            file_extension,
+            is_dataframe_format,
+            transaction_col,
+            item_col,
+            timestamp_col,
+            sequence_col,
+        )
     except ValueError as e:
         logger.error(f"Error: {e}")
         sys.exit(1)

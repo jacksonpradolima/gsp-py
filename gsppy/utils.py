@@ -9,6 +9,7 @@ The key functionalities include:
    with caching to optimize repeated comparisons.
 3. Generating candidate patterns from a dictionary of frequent patterns
    to support pattern generation tasks in algorithms like sequence mining.
+4. Loading SPM/GSP format files with delimiter-based parsing.
 
 Main functionalities:
 - `split_into_batches`: Splits a list of items into smaller batches based on a specified batch size.
@@ -16,6 +17,7 @@ Main functionalities:
   using caching to improve performance.
 - `generate_candidates_from_previous`: Generates candidate patterns by joining previously
   identified frequent patterns.
+- `read_transactions_from_spm`: Loads transactions from SPM/GSP delimiter format files.
 
 These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
@@ -24,6 +26,8 @@ adapted to various domains, such as data mining, recommendation systems, and seq
 from typing import Dict, List, Tuple, Union, Optional, Sequence, Generator, cast
 from functools import lru_cache
 from itertools import product
+
+from gsppy.token_mapper import TokenMapper
 
 
 def has_timestamps(
@@ -382,3 +386,119 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
         for pattern1, pattern2 in product(keys, repeat=2)
         if pattern1[1:] == pattern2[:-1] and not (len(pattern1) == 1 and pattern1 == pattern2)
     ]
+
+
+def _parse_spm_line(line: str, mapper: Optional[TokenMapper]) -> List[str]:
+    """
+    Parse a single line from an SPM format file.
+    
+    Parameters:
+        line: Line to parse
+        mapper: Optional TokenMapper to track tokens
+        
+    Returns:
+        List[str]: Parsed sequence as a flat list
+    """
+    tokens = line.split()
+    sequence: List[str] = []
+    current_element: List[str] = []
+    
+    for token in tokens:
+        if token == "-2":
+            # End of sequence
+            if current_element:
+                sequence.extend(current_element)
+            break
+        elif token == "-1":
+            # End of element
+            if current_element:
+                sequence.extend(current_element)
+                current_element = []
+        else:
+            # Regular item
+            current_element.append(token)
+            if mapper:
+                mapper.add_token(token)
+    
+    # Add any remaining items if -2 was missing
+    if current_element:
+        sequence.extend(current_element)
+    
+    return sequence
+
+
+def read_transactions_from_spm(
+    path: str, return_mappings: bool = False
+) -> Union[List[List[str]], Tuple[List[List[str]], Dict[str, int], Dict[int, str]]]:
+    """
+    Read transactions from an SPM/GSP format file.
+
+    The SPM/GSP format uses delimiters:
+    - `-1`: End of element (item set)
+    - `-2`: End of sequence (transaction)
+
+    Each line represents one sequence/transaction. Items are space-separated integers
+    (or strings), with -1 marking the end of an element and -2 marking the end of a sequence.
+
+    Format examples:
+        Simple sequence: `1 2 -1 3 -1 -2` represents [[1, 2], [3]]
+        Multiple items: `A -1 B C -1 -2` represents [[A], [B, C]]
+
+    Parameters:
+        path: Path to the SPM format file
+        return_mappings: If True, return token mappings (str→int, int→str) along with dataset
+
+    Returns:
+        If return_mappings is False:
+            List[List[str]]: Parsed dataset as flattened sequences
+        If return_mappings is True:
+            Tuple containing:
+                - List[List[str]]: Parsed dataset as flattened sequences
+                - Dict[str, int]: String to integer mapping
+                - Dict[int, str]: Integer to string mapping
+
+    Raises:
+        ValueError: If file cannot be read or contains invalid format
+        FileNotFoundError: If file does not exist
+
+    Examples:
+        >>> # File content: "1 2 -1 3 -1 -2"
+        >>> transactions = read_transactions_from_spm("data.txt")
+        >>> print(transactions)
+        [['1', '2', '3']]
+
+        >>> # With mappings
+        >>> transactions, str_to_int, int_to_str = read_transactions_from_spm("data.txt", return_mappings=True)
+
+    Notes:
+        - Empty lines are skipped
+        - Extra or trailing delimiters are handled gracefully
+        - Elements within a sequence are flattened into a single list
+        - All tokens are returned as strings for consistency
+    """
+    try:
+        transactions: List[List[str]] = []
+        mapper = TokenMapper() if return_mappings else None
+
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                
+                # Skip empty lines
+                if not line:
+                    continue
+                
+                sequence = _parse_spm_line(line, mapper)
+                
+                # Add non-empty sequences
+                if sequence:
+                    transactions.append(sequence)
+
+        if return_mappings and mapper:
+            return transactions, mapper.get_str_to_int(), mapper.get_int_to_str()
+        return transactions
+
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"SPM file '{path}' does not exist.") from e
+    except Exception as e:
+        raise ValueError(f"Error reading SPM format file '{path}': {e}") from e

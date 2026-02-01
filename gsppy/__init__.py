@@ -10,6 +10,7 @@ from gsppy.cli import (
     setup_logging,
     detect_and_read_file,
     read_transactions_from_csv,
+    read_transactions_from_spm,
     read_transactions_from_json,
     read_transactions_from_arrow,
     read_transactions_from_parquet,
@@ -23,6 +24,7 @@ from gsppy.pruning import (
     FrequencyBasedPruning,
     create_default_pruning_strategy,
 )
+from gsppy.token_mapper import TokenMapper
 
 # DataFrame adapters are optional - import only if dependencies are available
 try:
@@ -52,6 +54,7 @@ __all__ = [
     "read_transactions_from_json",
     "read_transactions_from_parquet",
     "read_transactions_from_arrow",
+    "read_transactions_from_spm",
     "setup_logging",
     "__version__",
     "PruningStrategy",
@@ -60,6 +63,7 @@ __all__ = [
     "TemporalAwarePruning",
     "CombinedPruning",
     "create_default_pruning_strategy",
+    "TokenMapper",
 ]
 
 # Add DataFrame adapters to __all__ if available

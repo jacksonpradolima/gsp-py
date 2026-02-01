@@ -1,6 +1,6 @@
 # Command-Line Interface
 
-The `gsppy` CLI runs the Generalized Sequential Pattern algorithm on transactions stored in JSON or CSV files.
+The `gsppy` CLI runs the Generalized Sequential Pattern algorithm on transactions stored in multiple file formats including JSON, CSV, SPM/GSP, Parquet, and Arrow.
 
 ## Usage
 
@@ -10,25 +10,78 @@ gsppy --file transactions.json --min_support 0.3 --backend rust --verbose
 
 ### Options
 
-- `--file PATH` (required): Path to a JSON or CSV file containing transactions.
+- `--file PATH` (required): Path to a transaction file. Supported formats: JSON, CSV, SPM, Parquet, Arrow.
+- `--format [auto|json|csv|spm|parquet|arrow]`: File format to use (default: `auto`). Auto-detection works based on file extension.
 - `--min_support FLOAT`: Minimum support threshold as a fraction of total transactions (default: `0.2`).
 - `--backend [auto|python|rust|gpu]`: Backend for support counting (default: `auto`).
 - `--verbose`: Enables verbose logging for debugging and progress visibility.
 - `--mingap FLOAT`: Minimum time gap between consecutive items (requires timestamped transactions).
 - `--maxgap FLOAT`: Maximum time gap between consecutive items (requires timestamped transactions).
 - `--maxspan FLOAT`: Maximum time span from first to last item (requires timestamped transactions).
+- `--transaction-col TEXT`: Column name for transaction IDs (Parquet/Arrow only).
+- `--item-col TEXT`: Column name for items (Parquet/Arrow only).
+- `--timestamp-col TEXT`: Column name for timestamps (Parquet/Arrow only).
+- `--sequence-col TEXT`: Column name for sequences (Parquet/Arrow only).
 
 ## Examples
 
 ### Basic Usage
 
 ```bash
+# JSON format
 cat <<'DATA' > sample.json
 [["A", "B", "C"], ["A", "C"], ["A", "B"]]
 DATA
 
 # Run with default settings
 gsppy --file sample.json --min_support 0.4
+```
+
+### SPM/GSP Format
+
+The SPM/GSP format is a classical format for sequential pattern mining datasets using delimiters:
+- `-1`: Marks the end of an element (itemset)
+- `-2`: Marks the end of a sequence (transaction)
+
+```bash
+# Create SPM format file
+cat <<'DATA' > sample.txt
+1 2 -1 3 -1 -2
+4 -1 5 6 -1 -2
+1 -1 2 3 -1 -2
+DATA
+
+# Load with explicit format specification
+gsppy --file sample.txt --format spm --min_support 0.5
+```
+
+### CSV Format
+
+```bash
+cat <<'DATA' > sample.csv
+A,B,C
+A,C
+A,B
+DATA
+
+gsppy --file sample.csv --min_support 0.4
+```
+
+### Parquet/Arrow Format
+
+For DataFrame formats (requires `gsppy[dataframe]` extra):
+
+```bash
+# Install with DataFrame support
+pip install 'gsppy[dataframe]'
+
+# Parquet with transaction-item structure
+gsppy --file data.parquet --min_support 0.3 \
+      --transaction-col txn_id --item-col product
+
+# Arrow with sequence column
+gsppy --file sequences.arrow --min_support 0.3 \
+      --sequence-col items
 ```
 
 ### Verbose Mode
