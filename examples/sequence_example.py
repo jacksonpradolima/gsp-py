@@ -10,32 +10,11 @@ Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
 
-from gsppy import GSP, Sequence
+from gsppy import GSP, Sequence, sequences_to_dict
 
 
-def main():
-    """Demonstrate Sequence abstraction usage."""
-    
-    # Define sample transactional data
-    transactions = [
-        ["Bread", "Milk"],
-        ["Bread", "Diaper", "Beer", "Eggs"],
-        ["Milk", "Diaper", "Beer", "Coke"],
-        ["Bread", "Milk", "Diaper", "Beer"],
-        ["Bread", "Milk", "Diaper", "Coke"],
-    ]
-    
-    print("=" * 70)
-    print("GSP-Py: Sequence Abstraction Example")
-    print("=" * 70)
-    print()
-    
-    # Initialize GSP
-    gsp = GSP(transactions)
-    
-    # ========================================================================
-    # Example 1: Traditional Dict-based Output (Backward Compatible)
-    # ========================================================================
+def example_1_traditional_dict_output(gsp):
+    """Example 1: Traditional Dict-based Output (Backward Compatible)."""
     print("Example 1: Traditional Dict-based Output")
     print("-" * 70)
     
@@ -48,10 +27,10 @@ def main():
         for pattern, support in sorted(patterns.items(), key=lambda x: x[1], reverse=True):
             print(f"  Pattern: {str(pattern):30} Support: {support}")
         print()
-    
-    # ========================================================================
-    # Example 2: Sequence Objects (New Feature)
-    # ========================================================================
+
+
+def example_2_sequence_objects(gsp):
+    """Example 2: Using Sequence Objects (New Feature)."""
     print("\nExample 2: Using Sequence Objects")
     print("-" * 70)
     
@@ -67,9 +46,11 @@ def main():
             print(f"  {seq}")  # Uses __str__ method
         print()
     
-    # ========================================================================
-    # Example 3: Working with Sequence Properties
-    # ========================================================================
+    return result_seq
+
+
+def example_3_sequence_properties(result_seq):
+    """Example 3: Working with Sequence Properties."""
     print("\nExample 3: Accessing Sequence Properties")
     print("-" * 70)
     
@@ -78,7 +59,7 @@ def main():
         level_2_sequences = result_seq[1]
         top_sequence = max(level_2_sequences, key=lambda s: s.support)
         
-        print(f"Top 2-sequence pattern:")
+        print("Top 2-sequence pattern:")
         print(f"  Items:        {top_sequence.items}")
         print(f"  Support:      {top_sequence.support}")
         print(f"  Length:       {top_sequence.length}")
@@ -86,10 +67,10 @@ def main():
         print(f"  Last item:    {top_sequence.last_item}")
         print(f"  As tuple:     {top_sequence.as_tuple()}")
         print()
-    
-    # ========================================================================
-    # Example 4: Filtering and Analyzing Sequences
-    # ========================================================================
+
+
+def example_4_filtering_sequences(result_seq):
+    """Example 4: Filtering and Analyzing Sequences."""
     print("\nExample 4: Filtering and Analyzing Sequences")
     print("-" * 70)
     
@@ -116,26 +97,24 @@ def main():
     for seq in sorted(high_support_patterns, key=lambda s: s.support, reverse=True):
         print(f"  {seq}")
     print()
-    
-    # ========================================================================
-    # Example 5: Converting Between Formats
-    # ========================================================================
+
+
+def example_5_format_conversion(result_seq):
+    """Example 5: Converting Between Formats."""
     print("\nExample 5: Converting Between Formats")
     print("-" * 70)
     
     # Convert Sequence objects back to dict format for compatibility
-    from gsppy import sequences_to_dict
-    
     if result_seq:
         level_1_dict = sequences_to_dict(result_seq[0])
         print("Level 1 patterns as dictionary:")
         for pattern, support in sorted(level_1_dict.items(), key=lambda x: x[1], reverse=True):
             print(f"  {pattern}: {support}")
     print()
-    
-    # ========================================================================
-    # Example 6: Iterating Over Sequence Items
-    # ========================================================================
+
+
+def example_6_iterating_sequences(result_seq):
+    """Example 6: Iterating Over Sequence Items."""
     print("\nExample 6: Iterating Over Sequence Items")
     print("-" * 70)
     
@@ -153,10 +132,10 @@ def main():
         if sample_seq.length >= 2:
             print(f"  Slice [0:2]: {sample_seq[0:2]}")
         print()
-    
-    # ========================================================================
-    # Example 7: Creating Custom Sequence Objects
-    # ========================================================================
+
+
+def example_7_custom_sequences():
+    """Example 7: Creating Custom Sequence Objects."""
     print("\nExample 7: Creating Custom Sequence Objects")
     print("-" * 70)
     
@@ -178,10 +157,10 @@ def main():
     if seq_with_metadata.metadata:
         print(f"  Metadata: {seq_with_metadata.metadata}")
     print()
-    
-    # ========================================================================
-    # Example 8: Using Sequences in Data Analysis
-    # ========================================================================
+
+
+def example_8_pattern_statistics(result_seq):
+    """Example 8: Using Sequences in Data Analysis."""
     print("\nExample 8: Pattern Analysis Statistics")
     print("-" * 70)
     
@@ -213,6 +192,37 @@ def main():
         for length in sorted(patterns_by_length.keys()):
             count = len(patterns_by_length[length])
             print(f"  Length {length}: {count} patterns")
+
+
+def main():
+    """Demonstrate Sequence abstraction usage."""
+    
+    # Define sample transactional data
+    transactions = [
+        ["Bread", "Milk"],
+        ["Bread", "Diaper", "Beer", "Eggs"],
+        ["Milk", "Diaper", "Beer", "Coke"],
+        ["Bread", "Milk", "Diaper", "Beer"],
+        ["Bread", "Milk", "Diaper", "Coke"],
+    ]
+    
+    print("=" * 70)
+    print("GSP-Py: Sequence Abstraction Example")
+    print("=" * 70)
+    print()
+    
+    # Initialize GSP
+    gsp = GSP(transactions)
+    
+    # Run examples
+    example_1_traditional_dict_output(gsp)
+    result_seq = example_2_sequence_objects(gsp)
+    example_3_sequence_properties(result_seq)
+    example_4_filtering_sequences(result_seq)
+    example_5_format_conversion(result_seq)
+    example_6_iterating_sequences(result_seq)
+    example_7_custom_sequences()
+    example_8_pattern_statistics(result_seq)
     
     print()
     print("=" * 70)
