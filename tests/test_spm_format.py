@@ -271,7 +271,7 @@ class TestSPMFormatComplex:
 
     def test_complex_with_mappings(self, complex_spm_file: str):
         """Test complex file with mappings."""
-        transactions, str_to_int, int_to_str = read_transactions_from_spm(complex_spm_file, return_mappings=True)
+        transactions, str_to_int, _ = read_transactions_from_spm(complex_spm_file, return_mappings=True)
 
         assert len(transactions) == 4
         # Unique tokens: 1, 2, 3, 4, 5

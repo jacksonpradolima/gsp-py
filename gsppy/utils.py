@@ -388,6 +388,45 @@ def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int])
     ]
 
 
+def _parse_spm_line(line: str, mapper: Optional[TokenMapper]) -> List[str]:
+    """
+    Parse a single line from an SPM format file.
+    
+    Parameters:
+        line: Line to parse
+        mapper: Optional TokenMapper to track tokens
+        
+    Returns:
+        List[str]: Parsed sequence as a flat list
+    """
+    tokens = line.split()
+    sequence: List[str] = []
+    current_element: List[str] = []
+    
+    for token in tokens:
+        if token == "-2":
+            # End of sequence
+            if current_element:
+                sequence.extend(current_element)
+            break
+        elif token == "-1":
+            # End of element
+            if current_element:
+                sequence.extend(current_element)
+                current_element = []
+        else:
+            # Regular item
+            current_element.append(token)
+            if mapper:
+                mapper.add_token(token)
+    
+    # Add any remaining items if -2 was missing
+    if current_element:
+        sequence.extend(current_element)
+    
+    return sequence
+
+
 def read_transactions_from_spm(
     path: str, return_mappings: bool = False
 ) -> Union[List[List[str]], Tuple[List[List[str]], Dict[str, int], Dict[int, str]]]:
@@ -444,41 +483,13 @@ def read_transactions_from_spm(
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-
+                
                 # Skip empty lines
                 if not line:
                     continue
-
-                # Split line into tokens
-                tokens = line.split()
-
-                # Parse the sequence
-                sequence: List[str] = []
-                current_element: List[str] = []
-
-                for token in tokens:
-                    if token == "-2":
-                        # End of sequence
-                        # Add any remaining items in current element
-                        if current_element:
-                            sequence.extend(current_element)
-                            current_element = []
-                        break
-                    elif token == "-1":
-                        # End of element
-                        if current_element:
-                            sequence.extend(current_element)
-                            current_element = []
-                    else:
-                        # Regular item
-                        current_element.append(token)
-                        if mapper:
-                            mapper.add_token(token)
-
-                # Add any remaining items if -2 was missing
-                if current_element:
-                    sequence.extend(current_element)
-
+                
+                sequence = _parse_spm_line(line, mapper)
+                
                 # Add non-empty sequences
                 if sequence:
                     transactions.append(sequence)

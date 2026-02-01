@@ -353,6 +353,101 @@ def read_transactions_from_arrow(
         raise ValueError(msg) from e
 
 
+def _load_dataframe_format(
+    file_path: str,
+    file_extension: str,
+    transaction_col: Optional[str],
+    item_col: Optional[str],
+    timestamp_col: Optional[str],
+    sequence_col: Optional[str],
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Load transactions from DataFrame formats (Parquet/Arrow).
+    
+    Parameters:
+        file_path: Path to the file
+        file_extension: File extension (lowercase)
+        transaction_col: Transaction ID column name
+        item_col: Item column name
+        timestamp_col: Timestamp column name
+        sequence_col: Sequence column name
+        
+    Returns:
+        Loaded transactions
+    """
+    if file_extension in PARQUET_EXTENSIONS:
+        return read_transactions_from_parquet(
+            file_path,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+    else:  # Arrow/Feather
+        return read_transactions_from_arrow(
+            file_path,
+            transaction_col=transaction_col,
+            item_col=item_col,
+            timestamp_col=timestamp_col,
+            sequence_col=sequence_col,
+        )
+
+
+def _load_transactions_by_format(
+    file_path: str,
+    file_format: str,
+    file_extension: str,
+    is_dataframe_format: bool,
+    transaction_col: Optional[str],
+    item_col: Optional[str],
+    timestamp_col: Optional[str],
+    sequence_col: Optional[str],
+) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    """
+    Load transactions based on specified format.
+    
+    Parameters:
+        file_path: Path to the file
+        file_format: Format string (lowercase)
+        file_extension: File extension (lowercase)
+        is_dataframe_format: Whether file is a DataFrame format
+        transaction_col: Transaction ID column name
+        item_col: Item column name
+        timestamp_col: Timestamp column name
+        sequence_col: Sequence column name
+        
+    Returns:
+        Loaded transactions
+        
+    Raises:
+        ValueError: If format is unknown
+    """
+    if file_format == FileFormat.SPM.value:
+        return read_transactions_from_spm(file_path)
+    elif file_format == FileFormat.JSON.value:
+        return read_transactions_from_json(file_path)
+    elif file_format == FileFormat.CSV.value:
+        return read_transactions_from_csv(file_path)
+    elif file_format == FileFormat.PARQUET.value:
+        return _load_dataframe_format(
+            file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
+        )
+    elif file_format == FileFormat.ARROW.value:
+        return _load_dataframe_format(
+            file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
+        )
+    elif file_format == FileFormat.AUTO.value:
+        # Auto-detect format
+        if is_dataframe_format:
+            return _load_dataframe_format(
+                file_path, file_extension, transaction_col, item_col, timestamp_col, sequence_col
+            )
+        else:
+            return detect_and_read_file(file_path)
+    else:
+        raise ValueError(f"Unknown format: {file_format}")
+
+
 # Click-based CLI
 @click.command()
 @click.option(
@@ -494,56 +589,17 @@ def main(
 
     # Automatically detect and load transactions
     try:
-        # Handle explicit format specification
         file_format = format.lower()
-
-        if file_format == FileFormat.SPM.value:
-            transactions = read_transactions_from_spm(file_path)
-        elif file_format == FileFormat.JSON.value:
-            transactions = read_transactions_from_json(file_path)
-        elif file_format == FileFormat.CSV.value:
-            transactions = read_transactions_from_csv(file_path)
-        elif file_format == FileFormat.PARQUET.value:
-            transactions = read_transactions_from_parquet(
-                file_path,
-                transaction_col=transaction_col,
-                item_col=item_col,
-                timestamp_col=timestamp_col,
-                sequence_col=sequence_col,
-            )
-        elif file_format == FileFormat.ARROW.value:
-            transactions = read_transactions_from_arrow(
-                file_path,
-                transaction_col=transaction_col,
-                item_col=item_col,
-                timestamp_col=timestamp_col,
-                sequence_col=sequence_col,
-            )
-        elif file_format == FileFormat.AUTO.value:
-            # Auto-detect format
-            if is_dataframe_format:
-                # For DataFrame formats, pass column parameters
-                if file_extension in PARQUET_EXTENSIONS:
-                    transactions = read_transactions_from_parquet(
-                        file_path,
-                        transaction_col=transaction_col,
-                        item_col=item_col,
-                        timestamp_col=timestamp_col,
-                        sequence_col=sequence_col,
-                    )
-                else:  # Arrow/Feather
-                    transactions = read_transactions_from_arrow(
-                        file_path,
-                        transaction_col=transaction_col,
-                        item_col=item_col,
-                        timestamp_col=timestamp_col,
-                        sequence_col=sequence_col,
-                    )
-            else:
-                # For traditional formats, use existing detect_and_read_file
-                transactions = detect_and_read_file(file_path)
-        else:
-            raise ValueError(f"Unknown format: {format}")
+        transactions = _load_transactions_by_format(
+            file_path,
+            file_format,
+            file_extension,
+            is_dataframe_format,
+            transaction_col,
+            item_col,
+            timestamp_col,
+            sequence_col,
+        )
     except ValueError as e:
         logger.error(f"Error: {e}")
         sys.exit(1)
