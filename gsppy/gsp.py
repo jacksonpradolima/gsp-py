@@ -90,24 +90,32 @@ from __future__ import annotations
 import math
 import logging
 import multiprocessing as mp
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union, Literal, Optional, cast, overload
-from itertools import chain
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Tuple,
+    Union,
+    Literal,
+    Optional,
+    Sequence as TypingSequence,
+    cast,
+    overload,
+)
 from collections import Counter
 
 from gsppy.utils import (
     has_timestamps,
-    split_into_batches,
-    is_subsequence_in_list,
-    generate_candidates_from_previous,
-    is_subsequence_in_list_with_time_constraints,
     is_itemset_format,
+    split_into_batches,
     normalize_to_itemsets,
     is_subsequence_with_itemsets,
+    generate_candidates_from_previous,
     is_subsequence_with_itemsets_and_timestamps,
 )
 from gsppy.pruning import PruningStrategy, create_default_pruning_strategy
 from gsppy.sequence import Sequence, dict_to_sequences
-from gsppy.accelerate import support_counts as support_counts_accel
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -140,6 +148,8 @@ class GSP:
         raw_transactions: Union[
             List[List[str]],
             List[List[Tuple[str, float]]],
+            List[List[List[str]]],
+            List[List[List[Tuple[str, float]]]],
             "pl.DataFrame",
             "pl.LazyFrame",
             "pd.DataFrame",
@@ -260,6 +270,8 @@ class GSP:
         raw_transactions: Union[
             List[List[str]],
             List[List[Tuple[str, float]]],
+            List[List[List[str]]],
+            List[List[List[Tuple[str, float]]]],
             "pl.DataFrame",
             "pl.LazyFrame",
             "pd.DataFrame",
@@ -268,7 +280,9 @@ class GSP:
         item_col: Optional[str],
         timestamp_col: Optional[str],
         sequence_col: Optional[str],
-    ) -> Union[List[List[str]], List[List[Tuple[str, float]]]]:
+    ) -> Union[
+        List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]
+    ]:
         """
         Convert input data to the expected transaction list format.
 
@@ -359,54 +373,66 @@ class GSP:
         if self.mingap is not None and self.maxgap is not None and self.mingap > self.maxgap:
             raise ValueError("mingap cannot be greater than maxgap")
 
-    def _detect_transaction_format(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]]) -> None:
+    def _detect_transaction_format(
+        self,
+        raw_transactions: Union[
+            List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]
+        ],
+    ) -> None:
         """
         Detect if transactions have itemsets and/or timestamps.
-        
+
         Sets:
             - self.has_timestamps: True if transactions include timestamps
             - self.has_itemsets: True if transactions use itemset format
         """
         self.has_timestamps = False
         self.has_itemsets = False
-        
+
         for tx in raw_transactions:
             if not tx:  # Skip empty transactions
                 continue
-                
+
             # Check for itemset format first
             self.has_itemsets = is_itemset_format(tx)
-            
+
             if self.has_itemsets:
                 self._detect_timestamps_in_itemsets(tx)
             else:
                 self._detect_timestamps_in_flat(tx)
             break
-    
-    def _detect_timestamps_in_itemsets(self, tx: Union[List, Tuple]) -> None:
+
+    def _detect_timestamps_in_itemsets(self, tx: Union[List[Any], Tuple[Any, ...]]) -> None:
         """Detect timestamps in itemset format transactions."""
-        first_itemset = tx[0]
+        first_itemset: Any = tx[0]
         if not first_itemset or not isinstance(first_itemset, (list, tuple)):
             return
-            
-        first_item = first_itemset[0]
+
+        first_itemset_seq = cast(TypingSequence[Any], first_itemset)
+        first_item: Any = first_itemset_seq[0]
         if self._is_timestamp_tuple(first_item):
             self.has_timestamps = True
             logger.debug("Detected timestamped itemset transactions")
         else:
             logger.debug("Detected itemset transactions (no timestamps)")
-    
-    def _is_timestamp_tuple(self, item: Union[str, Tuple]) -> bool:
+
+    def _is_timestamp_tuple(self, item: Any) -> bool:
         """Check if an item is a timestamp tuple (item, timestamp)."""
-        if not isinstance(item, (tuple, list)) or len(item) != 2:
+        if not isinstance(item, (tuple, list)):
+            return False
+        item_seq = cast(TypingSequence[Any], item)
+        if len(item_seq) != 2:
             return False
         try:
-            float(item[1])
+            second = item_seq[1]
+            if not isinstance(second, (int, float)):
+                return False
+            float(second)
             return True
         except (TypeError, ValueError):
             return False
-    
-    def _detect_timestamps_in_flat(self, tx: Union[List, Tuple]) -> None:
+
+    def _detect_timestamps_in_flat(self, tx: Union[List[Any], Tuple[Any, ...]]) -> None:
         """Detect timestamps in flat format transactions."""
         tx_sequence = cast(List[Union[str, Tuple[str, float]]], tx)
         self.has_timestamps = has_timestamps(tx_sequence)
@@ -414,31 +440,36 @@ class GSP:
             logger.debug("Detected timestamped flat transactions")
         else:
             logger.debug("Detected flat transactions (no timestamps)")
-    
-    def _extract_items_from_transaction(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
+
+    def _extract_items_from_transaction(self, normalized_tx: Tuple[Tuple[Any, ...], ...]) -> List[str]:
         """Extract items from a normalized transaction for counting."""
         if self.has_timestamps:
             return self._extract_items_from_timestamped(normalized_tx)
         return self._extract_items_from_simple(normalized_tx)
-    
-    def _extract_items_from_timestamped(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
+
+    def _extract_items_from_timestamped(self, normalized_tx: Tuple[Tuple[Any, ...], ...]) -> List[str]:
         """Extract items from timestamped itemsets."""
-        items = []
+        items: List[str] = []
         for itemset in normalized_tx:
             for item in itemset:
                 if self._is_timestamp_tuple(item):
                     items.append(item[0])
         return items
-    
-    def _extract_items_from_simple(self, normalized_tx: Tuple[Tuple, ...]) -> List[str]:
+
+    def _extract_items_from_simple(self, normalized_tx: Tuple[Tuple[Any, ...], ...]) -> List[str]:
         """Extract items from non-timestamped itemsets."""
-        items = []
+        items: List[str] = []
         for itemset in normalized_tx:
             for item in itemset:
                 items.append(item)
         return items
 
-    def _pre_processing(self, raw_transactions: Union[List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]]) -> None:
+    def _pre_processing(
+        self,
+        raw_transactions: Union[
+            List[List[str]], List[List[Tuple[str, float]]], List[List[List[str]]], List[List[List[Tuple[str, float]]]]
+        ],
+    ) -> None:
         """
         Validate and preprocess the input transactional dataset.
 
@@ -493,17 +524,17 @@ class GSP:
             self.maxspan = None
 
         # Normalize all transactions to itemset format for internal processing
-        normalized_transactions = []
-        all_items_list = []
-        
+        normalized_transactions: List[Any] = []
+        all_items_list: List[str] = []
+
         for tx in raw_transactions:
             normalized_tx = normalize_to_itemsets(tx)
             normalized_transactions.append(normalized_tx)
             all_items_list.extend(self._extract_items_from_transaction(normalized_tx))
-        
+
         self.transactions = normalized_transactions
         self.max_size = max(len(tx) for tx in normalized_transactions)
-        
+
         # Count unique items for singleton candidates
         counts: Counter[str] = Counter(all_items_list)
 
@@ -513,23 +544,30 @@ class GSP:
 
     @staticmethod
     def _detect_timestamps_in_transactions(
-        transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...], Tuple[Tuple[str, ...], ...], Tuple[Tuple[Tuple[str, float], ...], ...]]]
+        transactions: List[
+            Union[
+                Tuple[str, ...],
+                Tuple[Tuple[str, float], ...],
+                Tuple[Tuple[str, ...], ...],
+                Tuple[Tuple[Tuple[str, float], ...], ...],
+            ]
+        ],
     ) -> bool:
         """
         Detect if transactions have timestamps in itemset format.
-        
+
         Returns:
             bool: True if timestamps are detected, False otherwise
         """
         first_non_empty_tx = next((t for t in transactions if t), None)
-        
+
         if not first_non_empty_tx or len(first_non_empty_tx) == 0:
             return False
-            
+
         first_itemset = first_non_empty_tx[0]
         if not first_itemset or len(first_itemset) == 0:
             return False
-            
+
         first_item = first_itemset[0]
         if isinstance(first_item, tuple) and len(first_item) == 2:
             try:
@@ -542,7 +580,14 @@ class GSP:
     @staticmethod
     def _worker_batch(
         batch: List[Tuple[str, ...]],
-        transactions: List[Union[Tuple[str, ...], Tuple[Tuple[str, float], ...], Tuple[Tuple[str, ...], ...], Tuple[Tuple[Tuple[str, float], ...], ...]]],
+        transactions: List[
+            Union[
+                Tuple[str, ...],
+                Tuple[Tuple[str, float], ...],
+                Tuple[Tuple[str, ...], ...],
+                Tuple[Tuple[Tuple[str, float], ...], ...],
+            ]
+        ],
         min_support: int,
         mingap: Optional[float] = None,
         maxgap: Optional[float] = None,
@@ -575,7 +620,7 @@ class GSP:
         for item in batch:
             # Convert flat pattern to itemset pattern (each item in its own itemset)
             pattern_as_itemsets = tuple((elem,) for elem in item)
-            
+
             if has_timestamps_flag:
                 # Use timestamped matching (with or without temporal constraints)
                 frequency = sum(
@@ -587,9 +632,7 @@ class GSP:
                 )
             else:
                 # Itemset without timestamps (standard case)
-                frequency = sum(
-                    1 for t in transactions if is_subsequence_with_itemsets(pattern_as_itemsets, t)
-                )
+                frequency = sum(1 for t in transactions if is_subsequence_with_itemsets(pattern_as_itemsets, t))
 
             if frequency >= min_support:
                 results.append((item, frequency))
@@ -631,7 +674,7 @@ class GSP:
     ) -> Dict[Tuple[str, ...], int]:
         """
         Calculate support counts for candidate sequences.
-        
+
         Note: Since transactions are internally normalized to itemset format for consistency,
         this method always uses the Python multiprocessing implementation which fully supports
         itemset matching semantics. Accelerated backends are not used in this version.
@@ -716,6 +759,8 @@ class GSP:
         *,
         return_sequences: bool = False,
     ) -> Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
+        if backend is not None:
+            logger.debug("Backend parameter is currently unused: %s", backend)
         """
         Execute the Generalized Sequential Pattern (GSP) mining algorithm.
 
