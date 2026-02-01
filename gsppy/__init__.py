@@ -24,6 +24,12 @@ from gsppy.pruning import (
     FrequencyBasedPruning,
     create_default_pruning_strategy,
 )
+from gsppy.sequence import (
+    Sequence,
+    sequences_to_dict,
+    dict_to_sequences,
+    to_sequence,
+)
 from gsppy.token_mapper import TokenMapper
 
 # DataFrame adapters are optional - import only if dependencies are available
@@ -63,6 +69,10 @@ __all__ = [
     "TemporalAwarePruning",
     "CombinedPruning",
     "create_default_pruning_strategy",
+    "Sequence",
+    "sequences_to_dict",
+    "dict_to_sequences",
+    "to_sequence",
     "TokenMapper",
 ]
 

@@ -486,6 +486,82 @@ Verbose mode provides:
 
 For complete documentation on logging, see [docs/logging.md](docs/logging.md).
 
+### Using Sequence Objects for Rich Pattern Representation
+
+GSP-Py 4.0+ introduces a **Sequence abstraction class** that provides a richer, more maintainable way to work with sequential patterns. The Sequence class encapsulates pattern items, support counts, and optional metadata in an immutable, hashable object.
+
+#### Traditional Dict-based Output (Default)
+
+```python
+from gsppy import GSP
+
+transactions = [
+    ['Bread', 'Milk'],
+    ['Bread', 'Diaper', 'Beer', 'Eggs'],
+    ['Milk', 'Diaper', 'Beer', 'Coke']
+]
+
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3)
+
+# Returns: [{('Bread',): 4, ('Milk',): 4, ...}, {('Bread', 'Milk'): 3, ...}, ...]
+for level_patterns in result:
+    for pattern, support in level_patterns.items():
+        print(f"Pattern: {pattern}, Support: {support}")
+```
+
+#### Sequence Objects (New Feature)
+
+```python
+from gsppy import GSP
+
+transactions = [
+    ['Bread', 'Milk'],
+    ['Bread', 'Diaper', 'Beer', 'Eggs'],
+    ['Milk', 'Diaper', 'Beer', 'Coke']
+]
+
+gsp = GSP(transactions)
+result = gsp.search(min_support=0.3, return_sequences=True)
+
+# Returns: [[Sequence(('Bread',), support=4), ...], [Sequence(('Bread', 'Milk'), support=3), ...], ...]
+for level_patterns in result:
+    for seq in level_patterns:
+        print(f"Pattern: {seq.items}, Support: {seq.support}, Length: {seq.length}")
+        # Access sequence properties
+        print(f"  First item: {seq.first_item}, Last item: {seq.last_item}")
+        # Check if item is in sequence
+        if "Milk" in seq:
+            print(f"  Contains Milk!")
+```
+
+#### Key Benefits of Sequence Objects
+
+1. **Rich API**: Access pattern properties like `length`, `first_item`, `last_item`
+2. **Type Safety**: IDE autocomplete and better type hints
+3. **Immutable & Hashable**: Can be used as dictionary keys
+4. **Extensible**: Add metadata for confidence, lift, or custom properties
+5. **Backward Compatible**: Convert to/from dict format as needed
+
+```python
+from gsppy import Sequence, sequences_to_dict, dict_to_sequences
+
+# Create custom sequences
+seq = Sequence.from_tuple(("A", "B", "C"), support=5)
+
+# Extend sequences
+extended = seq.extend("D")  # Creates Sequence(("A", "B", "C", "D"))
+
+# Add metadata
+seq_with_meta = seq.with_metadata(confidence=0.85, lift=1.5)
+
+# Convert between formats for compatibility
+seq_result = gsp.search(min_support=0.3, return_sequences=True)
+dict_format = sequences_to_dict(seq_result[0])  # Convert to dict
+```
+
+For a complete example, see [examples/sequence_example.py](examples/sequence_example.py).
+
 ### Loading SPM/GSP Format Files
 
 GSP-Py supports loading datasets in the classical SPM/GSP delimiter format, which is widely used in sequential pattern mining research. This format uses:
