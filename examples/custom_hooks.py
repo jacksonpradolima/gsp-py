@@ -5,6 +5,20 @@ and candidate filtering capabilities.
 This module provides practical examples of how to create custom hooks for
 the GSP algorithm to implement advanced filtering, transformation, and
 pattern mining strategies.
+
+Note on Hook Signatures:
+    Many functions in this module accept additional parameters beyond the
+    standard hook signature. These are designed to be used with functools.partial
+    to create parameterized hooks. For example:
+    
+        from functools import partial
+        filter_fn = partial(length_constraint_filter, max_length=2)
+        patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
+    
+    Standard signatures (without additional parameters):
+    - preprocess_fn(transactions) -> transactions
+    - candidate_filter_fn(candidate, support_count, context) -> bool
+    - postprocess_fn(patterns) -> patterns
 """
 
 from typing import Any, Dict, List, Tuple
