@@ -36,7 +36,7 @@ import sys
 import json
 import logging
 import importlib
-from typing import Any, Callable, List, Tuple, Union, Optional, cast
+from typing import Any, List, Tuple, Union, Callable, Optional, cast
 
 import click
 
@@ -90,7 +90,12 @@ def _load_hook_function(import_path: str, hook_type: str) -> Callable[..., Any]:
         return hook_fn
 
     except ImportError as e:
-        raise ValueError(f"Failed to import {hook_type} hook module '{module_name}': {e}") from e
+        # Extract module name from import path for error message
+        module_part = import_path.rsplit(".", 1)[0] if "." in import_path else import_path
+        raise ValueError(f"Failed to import {hook_type} hook module '{module_part}': {e}") from e
+    except ValueError:
+        # Re-raise ValueError as-is
+        raise
     except Exception as e:
         raise ValueError(f"Failed to load {hook_type} hook function '{import_path}': {e}") from e
 

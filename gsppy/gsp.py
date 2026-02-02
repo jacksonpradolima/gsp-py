@@ -93,12 +93,12 @@ import multiprocessing as mp
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
     List,
     Tuple,
     Union,
     Literal,
+    Callable,
     Optional,
     Sequence as TypingSequence,
     cast,
