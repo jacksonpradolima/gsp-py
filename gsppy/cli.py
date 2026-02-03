@@ -582,7 +582,7 @@ def _load_transactions_by_format(
     default=None,
     help="Python import path to candidate filter hook function (e.g., 'mymodule.filter_fn').",
 )
-def main(
+def main(  # noqa: PLR0913 - CLI function requires multiple parameters for Click decorators
     file_path: str,
     min_support: float,
     backend: str,

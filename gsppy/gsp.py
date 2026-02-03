@@ -779,6 +779,66 @@ class GSP:
         """
         logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
+    def _apply_preprocess_hook(
+        self, preprocess_fn: Optional[Callable[[Any], Any]]
+    ) -> Tuple[Any, Optional[Tuple[Any, List[Tuple[str, ...]]]]]:
+        """Apply preprocessing hook and return processed transactions with backup."""
+        transactions_to_use = self.transactions
+        backup_state = None
+
+        if preprocess_fn is not None:
+            try:
+                logger.debug("Applying preprocessing hook...")
+                preprocessed = preprocess_fn(transactions_to_use)
+                if preprocessed is not None:
+                    transactions_to_use = preprocessed
+                logger.debug("Preprocessing hook completed successfully")
+
+                # Backup original state
+                backup_state = (self.transactions, self.unique_candidates)
+
+                # Update state with preprocessed data
+                self.transactions = transactions_to_use
+                # Recompute unique candidates from preprocessed transactions
+                all_items = set()
+                for transaction in self.transactions:
+                    for itemset in transaction:
+                        for item in itemset:
+                            all_items.add(item)
+                self.unique_candidates = [(item,) for item in sorted(all_items)]
+                logger.debug("Recomputed unique candidates after preprocessing: %d items", len(self.unique_candidates))
+
+            except Exception as e:
+                error_msg = f"Error in preprocess_fn: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
+
+        return transactions_to_use, backup_state
+
+    def _apply_postprocess_hook(
+        self, result: Any, postprocess_fn: Optional[Callable[[Any], Any]]
+    ) -> Any:
+        """Apply postprocessing hook to results."""
+        if postprocess_fn is not None:
+            try:
+                logger.debug("Applying postprocessing hook...")
+                postprocessed = postprocess_fn(result)
+                if postprocessed is not None:
+                    result = postprocessed
+                logger.debug("Postprocessing hook completed successfully")
+            except Exception as e:
+                error_msg = f"Error in postprocess_fn: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
+        return result
+
+    def _restore_preprocessing_state(
+        self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]]]]
+    ) -> None:
+        """Restore original state after preprocessing."""
+        if backup_state is not None:
+            self.transactions, self.unique_candidates = backup_state
+
     @overload
     def search(
         self,
@@ -1012,42 +1072,14 @@ class GSP:
                 f"Using temporal constraints: mingap={self.mingap}, maxgap={self.maxgap}, maxspan={self.maxspan}"
             )
 
-        # Apply preprocessing hook if provided
-        transactions_to_use = self.transactions
-        if preprocess_fn is not None:
-            try:
-                logger.debug("Applying preprocessing hook...")
-                # Note: preprocess_fn receives the raw transactions, not the internal normalized format
-                # This is more user-friendly but means the hook needs to be aware of the data format
-                preprocessed = preprocess_fn(transactions_to_use)
-                if preprocessed is not None:
-                    transactions_to_use = preprocessed
-                logger.debug("Preprocessing hook completed successfully")
-            except Exception as e:
-                error_msg = f"Error in preprocess_fn: {e}"
-                logger.error(error_msg)
-                raise RuntimeError(error_msg) from e
+        # Apply preprocessing hook and backup state
+        transactions_to_use, backup_state = self._apply_preprocess_hook(preprocess_fn)
 
         # Clear freq_patterns for this search (allow reusing the GSP instance)
         self.freq_patterns = []
 
         # Convert fractional support to absolute count (ceil to preserve threshold semantics)
         abs_min_support = int(math.ceil(len(transactions_to_use) * float(min_support)))
-
-        # Store original transactions and temporarily use preprocessed ones if provided
-        original_transactions = self.transactions
-        original_unique_candidates = self.unique_candidates
-        if preprocess_fn is not None:
-            self.transactions = transactions_to_use
-            # Recompute unique candidates from preprocessed transactions
-            # Extract all unique items from the itemsets
-            all_items = set()
-            for transaction in self.transactions:
-                for itemset in transaction:
-                    for item in itemset:
-                        all_items.add(item)
-            self.unique_candidates = [tuple([item]) for item in sorted(all_items)]
-            logger.debug("Recomputed unique candidates after preprocessing: %d items", len(self.unique_candidates))
 
         # the set of frequent 1-sequence: all singleton sequences
         # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
@@ -1092,10 +1124,8 @@ class GSP:
             self._print_status(k_items, candidates)
         logger.info("GSP algorithm completed.")
 
-        # Restore original transactions and unique_candidates if preprocessing was applied
-        if preprocess_fn is not None:
-            self.transactions = original_transactions
-            self.unique_candidates = original_unique_candidates
+        # Restore original state if preprocessing was applied
+        self._restore_preprocessing_state(backup_state)
 
         # Restore original verbosity if it was overridden
         if verbose is not None:
@@ -1105,18 +1135,8 @@ class GSP:
         # Return results in the requested format
         result = self.freq_patterns[:-1]
 
-        # Apply postprocessing hook if provided
-        if postprocess_fn is not None:
-            try:
-                logger.debug("Applying postprocessing hook...")
-                postprocessed = postprocess_fn(result)
-                if postprocessed is not None:
-                    result = postprocessed
-                logger.debug("Postprocessing hook completed successfully")
-            except Exception as e:
-                error_msg = f"Error in postprocess_fn: {e}"
-                logger.error(error_msg)
-                raise RuntimeError(error_msg) from e
+        # Apply postprocessing hook
+        result = self._apply_postprocess_hook(result, postprocess_fn)
 
         if return_sequences:
             # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level

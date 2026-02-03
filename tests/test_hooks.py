@@ -24,6 +24,22 @@ import pytest
 from gsppy.gsp import GSP
 
 
+def _convert_itemset_to_prefix(itemset, prefix: str) -> Tuple[str, ...]:
+    """Helper to add prefix to itemset items."""
+    if itemset:
+        return tuple(prefix + item if isinstance(item, str) else str(item) for item in itemset)
+    return itemset
+
+
+def _convert_transaction_with_prefix(tx, prefix: str) -> Tuple[Tuple[str, ...], ...]:
+    """Helper to convert transaction with prefix."""
+    converted_tx = []
+    for itemset in tx:
+        converted_itemset = _convert_itemset_to_prefix(itemset, prefix)
+        converted_tx.append(converted_itemset)
+    return tuple(converted_tx)
+
+
 @pytest.fixture
 def simple_transactions() -> List[List[str]]:
     """
@@ -114,15 +130,7 @@ class TestPreprocessHooks:
 
         def preprocess(txs: Any) -> Any:
             # Handle tuple format from normalized transactions
-            result = []
-            for tx in txs:
-                converted_tx = []
-                for itemset in tx:
-                    if itemset:
-                        converted_itemset = tuple("PREFIX_" + item if isinstance(item, str) else str(item) for item in itemset)
-                        converted_tx.append(converted_itemset)
-                result.append(tuple(converted_tx))
-            return result
+            return [_convert_transaction_with_prefix(tx, "PREFIX_") for tx in txs]
 
         gsp = GSP(simple_transactions)
         # Use lower min_support since items are transformed
@@ -341,15 +349,7 @@ class TestCombinedHooks:
 
         # Preprocessing: add prefix (handles normalized tuple format)
         def preprocess(txs: Any) -> Any:
-            result = []
-            for tx in txs:
-                converted_tx = []
-                for itemset in tx:
-                    if itemset:
-                        converted_itemset = tuple("TEST_" + item if isinstance(item, str) else str(item) for item in itemset)
-                        converted_tx.append(converted_itemset)
-                result.append(tuple(converted_tx))
-            return result
+            return [_convert_transaction_with_prefix(tx, "TEST_") for tx in txs]
 
         # Candidate filter: keep length <= 2
         filter_fn = lambda candidate, support, ctx: len(candidate) <= 2

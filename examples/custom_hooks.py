@@ -72,7 +72,7 @@ def filter_short_transactions(transactions: Any, min_length: int = 3) -> Any:
 # ============================================================================
 
 
-def length_constraint_filter(candidate: Tuple[str, ...], support_count: int, context: Dict[str, Any], max_length: int = 3) -> bool:
+def length_constraint_filter(candidate: Tuple[str, ...], _support_count: int, context: Dict[str, Any], max_length: int = 3) -> bool:
     """
     Keep only patterns up to a maximum length.
 
@@ -86,7 +86,7 @@ def length_constraint_filter(candidate: Tuple[str, ...], support_count: int, con
     return len(candidate) <= max_length
 
 
-def high_confidence_filter(candidate: Tuple[str, ...], support_count: int, context: Dict[str, Any]) -> bool:
+def high_confidence_filter(_candidate: Tuple[str, ...], support_count: int, context: Dict[str, Any]) -> bool:
     """
     Keep candidates with support significantly above minimum threshold.
 
@@ -99,7 +99,7 @@ def high_confidence_filter(candidate: Tuple[str, ...], support_count: int, conte
     return support_count >= min_support * 1.5
 
 
-def item_whitelist_filter(candidate: Tuple[str, ...], support_count: int, context: Dict[str, Any], required_items: List[str] = None) -> bool:
+def item_whitelist_filter(candidate: Tuple[str, ...], _support_count: int, _context: Dict[str, Any], required_items: List[str] = None) -> bool:
     """
     Keep only patterns containing at least one item from the whitelist.
 
