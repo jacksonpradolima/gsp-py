@@ -279,7 +279,7 @@ class TestCandidateFilterHooks:
         patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
 
         # Should have fewer patterns due to stricter filtering
-        assert len(patterns) >= 0
+        assert len(patterns) > 0
 
     def test_candidate_filter_k_level(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering using k_level from context."""
