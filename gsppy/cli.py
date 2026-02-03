@@ -582,23 +582,8 @@ def _load_transactions_by_format(
     default=None,
     help="Python import path to candidate filter hook function (e.g., 'mymodule.filter_fn').",
 )
-def main(  # noqa: PLR0913 - CLI function requires multiple parameters for Click decorators
-    file_path: str,
-    min_support: float,
-    backend: str,
-    mingap: Optional[float],
-    maxgap: Optional[float],
-    maxspan: Optional[float],
-    transaction_col: Optional[str],
-    item_col: Optional[str],
-    timestamp_col: Optional[str],
-    sequence_col: Optional[str],
-    format: str,  # noqa: A002
-    verbose: bool,
-    preprocess_hook: Optional[str],
-    postprocess_hook: Optional[str],
-    candidate_filter_hook: Optional[str],
-) -> None:
+@click.pass_context
+def main(ctx: click.Context, **kwargs: Any) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
 
@@ -659,6 +644,23 @@ def main(  # noqa: PLR0913 - CLI function requires multiple parameters for Click
               --postprocess-hook hooks.my_postprocess
         ```
     """
+    # Extract parameters from kwargs
+    file_path = kwargs['file_path']
+    min_support = kwargs['min_support']
+    backend = kwargs['backend']
+    mingap = kwargs.get('mingap')
+    maxgap = kwargs.get('maxgap')
+    maxspan = kwargs.get('maxspan')
+    transaction_col = kwargs.get('transaction_col')
+    item_col = kwargs.get('item_col')
+    timestamp_col = kwargs.get('timestamp_col')
+    sequence_col = kwargs.get('sequence_col')
+    format = kwargs['format']  # noqa: A001
+    verbose = kwargs['verbose']
+    preprocess_hook = kwargs.get('preprocess_hook')
+    postprocess_hook = kwargs.get('postprocess_hook')
+    candidate_filter_hook = kwargs.get('candidate_filter_hook')
+    
     setup_logging(verbose)
 
     # Load hook functions if specified
