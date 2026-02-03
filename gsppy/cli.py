@@ -655,7 +655,7 @@ def main(ctx: click.Context, **kwargs: Any) -> None:
     item_col = kwargs.get('item_col')
     timestamp_col = kwargs.get('timestamp_col')
     sequence_col = kwargs.get('sequence_col')
-    format = kwargs['format']  # noqa: A001
+    file_format = kwargs['format']
     verbose = kwargs['verbose']
     preprocess_hook = kwargs.get('preprocess_hook')
     postprocess_hook = kwargs.get('postprocess_hook')
@@ -688,10 +688,10 @@ def main(ctx: click.Context, **kwargs: Any) -> None:
 
     # Automatically detect and load transactions
     try:
-        file_format = format.lower()
+        file_format_lower = file_format.lower()
         transactions = _load_transactions_by_format(
             file_path,
-            file_format,
+            file_format_lower,
             file_extension,
             is_dataframe_format,
             transaction_col,
