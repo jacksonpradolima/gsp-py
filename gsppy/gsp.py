@@ -781,7 +781,7 @@ class GSP:
 
     def _apply_preprocess_hook(
         self, preprocess_fn: Optional[Callable[[Any], Any]]
-    ) -> Tuple[Any, Optional[Tuple[Any, List[Tuple[str, ...]]]]]:
+    ) -> Tuple[Any, Optional[Tuple[Any, List[Tuple[str, ...]], int]]]:
         """Apply preprocessing hook and return processed transactions with backup."""
         transactions_to_use = self.transactions
         backup_state = None
@@ -794,18 +794,23 @@ class GSP:
                     transactions_to_use = preprocessed
                 logger.debug("Preprocessing hook completed successfully")
 
-                # Backup original state
-                backup_state = (self.transactions, self.unique_candidates)
+                # Backup original state including max_size
+                backup_state = (self.transactions, self.unique_candidates, self.max_size)
 
                 # Update state with preprocessed data
                 self.transactions = transactions_to_use
                 # Recompute unique candidates from preprocessed transactions
-                all_items = set()
+                # Use _extract_items_from_transaction to properly handle timestamped data
+                all_items_list: List[str] = []
                 for transaction in self.transactions:
-                    for itemset in transaction:
-                        for item in itemset:
-                            all_items.add(item)
-                self.unique_candidates = [(item,) for item in sorted(all_items)]
+                    all_items_list.extend(self._extract_items_from_transaction(transaction))
+                
+                # Create singleton candidates from unique items
+                unique_items = set(all_items_list)
+                self.unique_candidates = [(item,) for item in sorted(unique_items)]
+                
+                # Recompute max_size based on preprocessed transactions
+                self.max_size = max(len(tx) for tx in self.transactions) if self.transactions else 0
                 logger.debug("Recomputed unique candidates after preprocessing: %d items", len(self.unique_candidates))
 
             except Exception as e:
@@ -833,11 +838,11 @@ class GSP:
         return result
 
     def _restore_preprocessing_state(
-        self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]]]]
+        self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]], int]]
     ) -> None:
         """Restore original state after preprocessing."""
         if backup_state is not None:
-            self.transactions, self.unique_candidates = backup_state
+            self.transactions, self.unique_candidates, self.max_size = backup_state
 
     @overload
     def search(
@@ -997,8 +1002,11 @@ class GSP:
                 ["B", "C", "E"],
             ]
 
-            # Preprocessing: Convert to uppercase
-            preprocess = lambda txs: [[item.upper() for item in tx] for tx in txs]
+            # Preprocessing: Convert all items to uppercase in each itemset
+            preprocess = lambda txs: [
+                [tuple(item.upper() if isinstance(item, str) else item for item in itemset) for itemset in tx]
+                for tx in txs
+            ]
 
             # Candidate filtering: Only keep patterns with length <= 2
             filter_fn = lambda candidate, support, ctx: len(candidate) <= 2

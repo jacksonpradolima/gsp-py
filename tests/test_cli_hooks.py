@@ -29,8 +29,6 @@ def postprocess_filter_support(patterns: Any) -> Any:
 
 # Test cases for CLI hook loading
 import json
-import os
-import tempfile
 import pytest
 from click.testing import CliRunner
 from gsppy.cli import main, _load_hook_function

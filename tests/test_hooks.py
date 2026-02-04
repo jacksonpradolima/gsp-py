@@ -278,7 +278,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_using_context(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering using context information."""
 
-        # Filter based on context - keep if support is above 50% of min support
+        # Filter based on context - keep if support is at least 1.5x the min support count
         def filter_fn(candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
             min_support = context.get("min_support_count", 0)
             return support >= min_support * 1.5
