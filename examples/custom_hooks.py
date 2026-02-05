@@ -10,19 +10,18 @@ Note on Hook Signatures:
     Many functions in this module accept additional parameters beyond the
     standard hook signature. These are designed to be used with functools.partial
     to create parameterized hooks. For example:
-    
+
         from functools import partial
         filter_fn = partial(length_constraint_filter, max_length=2)
         patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
-    
+
     Standard signatures (without additional parameters):
     - preprocess_fn(transactions) -> transactions
     - candidate_filter_fn(candidate, support_count, context) -> bool
     - postprocess_fn(patterns) -> patterns
 """
 
-from typing import Any, Dict, List, Tuple
-
+from typing import Any, Dict, List, Tuple, Optional
 
 # ============================================================================
 # Preprocessing Hooks - Transform transactions before mining
@@ -72,7 +71,9 @@ def filter_short_transactions(transactions: Any, min_length: int = 3) -> Any:
 # ============================================================================
 
 
-def length_constraint_filter(candidate: Tuple[str, ...], _support_count: int, context: Dict[str, Any], max_length: int = 3) -> bool:
+def length_constraint_filter(
+    candidate: Tuple[str, ...], _support_count: int, _context: Dict[str, Any], max_length: int = 3
+) -> bool:
     """
     Keep only patterns up to a maximum length.
 
@@ -99,7 +100,12 @@ def high_confidence_filter(_candidate: Tuple[str, ...], support_count: int, cont
     return support_count >= min_support * 1.5
 
 
-def item_whitelist_filter(candidate: Tuple[str, ...], _support_count: int, _context: Dict[str, Any], required_items: List[str] = None) -> bool:
+def item_whitelist_filter(
+    candidate: Tuple[str, ...],
+    _support_count: int,
+    _context: Dict[str, Any],
+    required_items: Optional[List[str]] = None,
+) -> bool:
     """
     Keep only patterns containing at least one item from the whitelist.
 
@@ -239,7 +245,7 @@ def market_basket_workflow(transactions: List[List[str]], min_support: float = 0
         ...     min_support=0.3,
         ...     preprocess_fn=normalize_to_lowercase,
         ...     candidate_filter_fn=lambda c, s, ctx: len(c) <= 3,
-        ...     postprocess_fn=lambda p: top_k_patterns_per_level(p, k=10)
+        ...     postprocess_fn=lambda p: top_k_patterns_per_level(p, k=10),
         ... )
     """
     from gsppy.gsp import GSP
@@ -248,7 +254,7 @@ def market_basket_workflow(transactions: List[List[str]], min_support: float = 0
     return gsp.search(
         min_support=min_support,
         preprocess_fn=normalize_to_lowercase,
-        candidate_filter_fn=lambda c, s, ctx: len(c) <= 3,
+        candidate_filter_fn=lambda c, _s, _ctx: len(c) <= 3,
         postprocess_fn=lambda p: top_k_patterns_per_level(p, k=10),
     )
 

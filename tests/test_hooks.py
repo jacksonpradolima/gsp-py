@@ -78,6 +78,7 @@ class TestPreprocessHooks:
 
     def test_preprocess_uppercase(self, simple_transactions: List[List[str]]) -> None:
         """Test preprocessing hook that converts items to uppercase."""
+
         # Note: preprocess_fn receives transactions in normalized format (tuples of tuples)
         # For simple transactions, this is: ((item1,), (item2,), ...)
         # We need to handle the tuple format
@@ -111,7 +112,7 @@ class TestPreprocessHooks:
             result = []
             for tx in txs:
                 # Check if any itemset in the transaction contains 'B'
-                has_b = any('B' in itemset for itemset in tx)
+                has_b = any("B" in itemset for itemset in tx)
                 if has_b:
                     result.append(tx)
             return result
@@ -146,7 +147,7 @@ class TestPreprocessHooks:
 
     def test_preprocess_returns_none(self, simple_transactions: List[List[str]]) -> None:
         """Test that returning None from preprocess_fn uses original transactions."""
-        preprocess = lambda txs: None
+        preprocess = lambda _txs: None
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.4, preprocess_fn=preprocess)
@@ -157,7 +158,7 @@ class TestPreprocessHooks:
     def test_preprocess_error_handling(self, simple_transactions: List[List[str]]) -> None:
         """Test error handling when preprocess_fn raises an exception."""
 
-        def bad_preprocess(txs: Any) -> Any:
+        def bad_preprocess(_txs: Any) -> Any:
             raise ValueError("Intentional error in preprocessing")
 
         gsp = GSP(simple_transactions)
@@ -210,11 +211,11 @@ class TestPostprocessHooks:
 
         # First element should be metadata
         assert "_metadata" in patterns[0]
-        assert "total_patterns" in patterns[0]["_metadata"]
+        assert "total_patterns" in patterns[0]["_metadata"]  # type: ignore
 
     def test_postprocess_returns_none(self, simple_transactions: List[List[str]]) -> None:
         """Test that returning None from postprocess_fn uses original results."""
-        postprocess = lambda patterns: None
+        postprocess = lambda _patterns: None
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.4, postprocess_fn=postprocess)
@@ -225,7 +226,7 @@ class TestPostprocessHooks:
     def test_postprocess_error_handling(self, simple_transactions: List[List[str]]) -> None:
         """Test error handling when postprocess_fn raises an exception."""
 
-        def bad_postprocess(patterns: Any) -> Any:
+        def bad_postprocess(_patterns: Any) -> Any:
             raise ValueError("Intentional error in postprocessing")
 
         gsp = GSP(simple_transactions)
@@ -239,7 +240,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_lambda_length(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering with lambda expression based on pattern length."""
         # Only keep patterns with length <= 2
-        filter_fn = lambda candidate, support, ctx: len(candidate) <= 2
+        filter_fn = lambda candidate, _support, _ctx: len(candidate) <= 2
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
@@ -252,7 +253,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_lambda_support(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering based on support threshold."""
         # Keep candidates with support >= 3
-        filter_fn = lambda candidate, support, ctx: support >= 3
+        filter_fn = lambda _candidate, support, _ctx: support >= 3
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
@@ -265,7 +266,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_by_content(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering based on pattern content."""
         # Only keep patterns containing 'A'
-        filter_fn = lambda candidate, support, ctx: "A" in candidate
+        filter_fn = lambda candidate, _support, _ctx: "A" in candidate
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.3, candidate_filter_fn=filter_fn)
@@ -279,7 +280,7 @@ class TestCandidateFilterHooks:
         """Test candidate filtering using context information."""
 
         # Filter based on context - keep if support is at least 1.5x the min support count
-        def filter_fn(candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
+        def filter_fn(_candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
             min_support = context.get("min_support_count", 0)
             return support >= min_support * 1.5
 
@@ -293,7 +294,7 @@ class TestCandidateFilterHooks:
         """Test candidate filtering using k_level from context."""
 
         # Only keep patterns at level 1 and 2
-        def filter_fn(candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
+        def filter_fn(_candidate: Tuple[str, ...], _support: int, context: Dict[str, Any]) -> bool:
             k_level = context.get("k_level", 1)
             return k_level <= 2
 
@@ -306,7 +307,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_complex_logic(self, simple_transactions: List[List[str]]) -> None:
         """Test candidate filtering with complex logic combining multiple criteria."""
 
-        def filter_fn(candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
+        def filter_fn(candidate: Tuple[str, ...], support: int, _context: Dict[str, Any]) -> bool:
             # Complex logic: keep if (length <= 2 AND support >= 3) OR starts with 'A'
             return (len(candidate) <= 2 and support >= 3) or (candidate[0] == "A" if candidate else False)
 
@@ -333,7 +334,7 @@ class TestCandidateFilterHooks:
     def test_candidate_filter_error_handling(self, simple_transactions: List[List[str]]) -> None:
         """Test error handling when candidate_filter_fn raises an exception."""
 
-        def bad_filter(candidate: Tuple[str, ...], support: int, context: Dict[str, Any]) -> bool:
+        def bad_filter(_candidate: Tuple[str, ...], _support: int, _context: Dict[str, Any]) -> bool:
             raise ValueError("Intentional error in filter")
 
         gsp = GSP(simple_transactions)
@@ -352,7 +353,7 @@ class TestCombinedHooks:
             return [_convert_transaction_with_prefix(tx, "TEST_") for tx in txs]
 
         # Candidate filter: keep length <= 2
-        filter_fn = lambda candidate, support, ctx: len(candidate) <= 2
+        filter_fn = lambda candidate, _support, _ctx: len(candidate) <= 2
 
         # Postprocessing: keep only patterns with support >= 2
         postprocess = lambda patterns: [{k: v for k, v in level.items() if v >= 2} for level in patterns]
@@ -375,7 +376,7 @@ class TestCombinedHooks:
     def test_hooks_with_temporal_constraints(self, timestamped_transactions: List[List[Tuple[str, float]]]) -> None:
         """Test hooks with temporal constraints enabled."""
         # Candidate filter that works with temporal patterns
-        filter_fn = lambda candidate, support, ctx: len(candidate) <= 2
+        filter_fn = lambda candidate, _support, _ctx: len(candidate) <= 2
 
         gsp = GSP(timestamped_transactions, maxgap=5.0)
         patterns = gsp.search(min_support=0.5, candidate_filter_fn=filter_fn)
@@ -410,7 +411,7 @@ class TestHookBackwardCompatibility:
         assert len(patterns) > 0
 
         # Only candidate filter, no other hooks
-        filter_fn = lambda c, s, ctx: True
+        filter_fn = lambda _candidate, _support, _ctx: True
 
         gsp2 = GSP(simple_transactions)
         patterns2 = gsp2.search(min_support=0.4, candidate_filter_fn=filter_fn)
@@ -429,7 +430,7 @@ class TestHookEdgeCases:
 
     def test_preprocess_returns_empty_list(self, simple_transactions: List[List[str]]) -> None:
         """Test handling when preprocess_fn returns empty transaction list."""
-        preprocess = lambda txs: []
+        preprocess = lambda _txs: []
 
         gsp = GSP(simple_transactions)
         # Should handle empty transactions gracefully (may return empty patterns or raise)
@@ -439,7 +440,7 @@ class TestHookEdgeCases:
 
     def test_candidate_filter_rejects_all(self, simple_transactions: List[List[str]]) -> None:
         """Test when candidate_filter_fn rejects all candidates."""
-        filter_fn = lambda candidate, support, ctx: False
+        filter_fn = lambda _candidate, _support, _ctx: False
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.4, candidate_filter_fn=filter_fn)
@@ -450,7 +451,7 @@ class TestHookEdgeCases:
 
     def test_postprocess_returns_empty_list(self, simple_transactions: List[List[str]]) -> None:
         """Test when postprocess_fn returns empty list."""
-        postprocess = lambda patterns: []
+        postprocess = lambda _patterns: []
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.4, postprocess_fn=postprocess)
@@ -460,7 +461,7 @@ class TestHookEdgeCases:
 
     def test_hooks_with_return_sequences(self, simple_transactions: List[List[str]]) -> None:
         """Test that hooks work with return_sequences=True."""
-        filter_fn = lambda candidate, support, ctx: len(candidate) <= 2
+        filter_fn = lambda candidate, _support, _ctx: len(candidate) <= 2
 
         gsp = GSP(simple_transactions)
         patterns = gsp.search(min_support=0.4, candidate_filter_fn=filter_fn, return_sequences=True)
