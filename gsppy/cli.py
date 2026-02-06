@@ -35,7 +35,8 @@ import csv
 import sys
 import json
 import logging
-from typing import Any, List, Tuple, Union, Optional, cast
+import importlib
+from typing import Any, List, Tuple, Union, Callable, Optional, cast
 
 import click
 
@@ -49,6 +50,54 @@ from gsppy.enums import (
     FileExtension,
 )
 from gsppy.utils import has_timestamps
+
+
+def _load_hook_function(import_path: str, hook_type: str) -> Callable[..., Any]:
+    """
+    Load a hook function from a Python module import path.
+
+    Parameters:
+        import_path (str): Import path in format 'module.submodule.function_name'
+        hook_type (str): Type of hook for error messages ('preprocess', 'postprocess', 'candidate_filter')
+
+    Returns:
+        Callable: The loaded hook function
+
+    Raises:
+        ValueError: If the import path is invalid or function cannot be loaded
+    """
+    try:
+        # Split into module path and function name
+        parts = import_path.rsplit(".", 1)
+        if len(parts) != 2:
+            raise ValueError(f"Invalid import path format. Expected 'module.function', got '{import_path}'")
+
+        module_name, function_name = parts
+
+        # Import the module
+        module = importlib.import_module(module_name)
+
+        # Get the function from the module
+        if not hasattr(module, function_name):
+            raise ValueError(f"Function '{function_name}' not found in module '{module_name}'")
+
+        hook_fn = getattr(module, function_name)
+
+        # Verify it's callable
+        if not callable(hook_fn):
+            raise ValueError(f"'{import_path}' is not a callable function")
+
+        return hook_fn
+
+    except ImportError as e:
+        # Extract module name from import path for error message
+        module_part = import_path.rsplit(".", 1)[0] if "." in import_path else import_path
+        raise ValueError(f"Failed to import {hook_type} hook module '{module_part}': {e}") from e
+    except ValueError:
+        # Re-raise ValueError as-is
+        raise
+    except Exception as e:
+        raise ValueError(f"Failed to load {hook_type} hook function '{import_path}': {e}") from e
 
 
 def setup_logging(verbose: bool) -> None:
@@ -515,20 +564,26 @@ def _load_transactions_by_format(
     help="File format to use. 'auto' detects format from file extension.",
 )
 @click.option("--verbose", is_flag=True, help="Enable verbose output for debugging purposes.")
-def main(
-    file_path: str,
-    min_support: float,
-    backend: str,
-    mingap: Optional[float],
-    maxgap: Optional[float],
-    maxspan: Optional[float],
-    transaction_col: Optional[str],
-    item_col: Optional[str],
-    timestamp_col: Optional[str],
-    sequence_col: Optional[str],
-    format: str,  # noqa: A002
-    verbose: bool,
-) -> None:
+@click.option(
+    "--preprocess-hook",
+    type=str,
+    default=None,
+    help="Python import path to preprocessing hook function (e.g., 'mymodule.preprocess_fn').",
+)
+@click.option(
+    "--postprocess-hook",
+    type=str,
+    default=None,
+    help="Python import path to postprocessing hook function (e.g., 'mymodule.postprocess_fn').",
+)
+@click.option(
+    "--candidate-filter-hook",
+    type=str,
+    default=None,
+    help="Python import path to candidate filter hook function (e.g., 'mymodule.filter_fn').",
+)
+@click.pass_context
+def main(ctx: click.Context, **kwargs: Any) -> None:
     """
     Run the GSP algorithm on transactional data from a file.
 
@@ -573,8 +628,58 @@ def main(
         ```bash
         gsppy --file data.txt --format spm --min_support 0.3
         ```
+
+        With custom hooks (requires Python module with hook functions):
+
+        ```bash
+        # Create a hooks module first (hooks.py):
+        # def my_filter(candidate, support, context):
+        #     return len(candidate) <= 2  # Keep only short patterns
+        #
+        # def my_postprocess(patterns):
+        #     return patterns[:2]  # Keep only first 2 levels
+
+        gsppy --file data.json --min_support 0.3 \
+              --candidate-filter-hook hooks.my_filter \
+              --postprocess-hook hooks.my_postprocess
+        ```
     """
+    # Extract parameters from kwargs
+    file_path = kwargs['file_path']
+    min_support = kwargs['min_support']
+    backend = kwargs['backend']
+    mingap = kwargs.get('mingap')
+    maxgap = kwargs.get('maxgap')
+    maxspan = kwargs.get('maxspan')
+    transaction_col = kwargs.get('transaction_col')
+    item_col = kwargs.get('item_col')
+    timestamp_col = kwargs.get('timestamp_col')
+    sequence_col = kwargs.get('sequence_col')
+    file_format = kwargs['format']
+    verbose = kwargs['verbose']
+    preprocess_hook = kwargs.get('preprocess_hook')
+    postprocess_hook = kwargs.get('postprocess_hook')
+    candidate_filter_hook = kwargs.get('candidate_filter_hook')
+    
     setup_logging(verbose)
+
+    # Load hook functions if specified
+    try:
+        preprocess_fn = _load_hook_function(preprocess_hook, "preprocess") if preprocess_hook else None
+        postprocess_fn = _load_hook_function(postprocess_hook, "postprocess") if postprocess_hook else None
+        candidate_filter_fn = (
+            _load_hook_function(candidate_filter_hook, "candidate_filter") if candidate_filter_hook else None
+        )
+
+        if preprocess_fn:
+            logger.info(f"Loaded preprocessing hook: {preprocess_hook}")
+        if postprocess_fn:
+            logger.info(f"Loaded postprocessing hook: {postprocess_hook}")
+        if candidate_filter_fn:
+            logger.info(f"Loaded candidate filter hook: {candidate_filter_hook}")
+    except ValueError as e:
+        logger.error(f"Error loading hook function: {e}")
+        sys.exit(1)
 
     # Detect file extension to determine if DataFrame column params are needed
     _, file_extension = os.path.splitext(file_path)
@@ -583,10 +688,10 @@ def main(
 
     # Automatically detect and load transactions
     try:
-        file_format = format.lower()
+        file_format_lower = file_format.lower()
         transactions = _load_transactions_by_format(
             file_path,
-            file_format,
+            file_format_lower,
             file_extension,
             is_dataframe_format,
             transaction_col,
@@ -608,7 +713,13 @@ def main(
     # Initialize and run GSP algorithm
     try:
         gsp = GSP(transactions, mingap=mingap, maxgap=maxgap, maxspan=maxspan, verbose=verbose)
-        patterns = gsp.search(min_support=min_support, return_sequences=False)
+        patterns = gsp.search(
+            min_support=min_support,
+            return_sequences=False,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=postprocess_fn,
+            candidate_filter_fn=candidate_filter_fn,
+        )
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")

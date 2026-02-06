@@ -98,6 +98,7 @@ from typing import (
     Tuple,
     Union,
     Literal,
+    Callable,
     Optional,
     Sequence as TypingSequence,
     cast,
@@ -715,6 +716,56 @@ class GSP:
 
         return pruned_patterns
 
+    def _apply_candidate_filter(
+        self,
+        freq_patterns: Dict[Tuple[str, ...], int],
+        min_support_count: int,
+        k_level: int,
+        candidate_filter_fn: Optional[Callable[[Tuple[str, ...], int, Dict[str, Any]], bool]],
+    ) -> Dict[Tuple[str, ...], int]:
+        """
+        Apply user-provided candidate filter function to patterns.
+
+        This method applies a custom filter function provided by the user to
+        further refine the candidate set. Unlike the pruning strategy which
+        determines what to REMOVE, the filter function determines what to KEEP.
+
+        Parameters:
+            freq_patterns (Dict[Tuple[str, ...], int]): Dictionary of patterns and their support counts.
+            min_support_count (int): Absolute minimum support count threshold.
+            k_level (int): Current k-sequence level.
+            candidate_filter_fn (Optional[Callable]): User-provided filter function.
+
+        Returns:
+            Dict[Tuple[str, ...], int]: Filtered patterns after applying candidate filter.
+        """
+        if candidate_filter_fn is None or not freq_patterns:
+            return freq_patterns
+
+        filtered_patterns: Dict[Tuple[str, ...], int] = {}
+        context = {
+            "min_support_count": min_support_count,
+            "total_transactions": len(self.transactions),
+            "k_level": k_level,
+        }
+
+        for candidate, support_count in freq_patterns.items():
+            try:
+                # Call user-provided filter function
+                # Returns True to KEEP the candidate, False to filter it out
+                if candidate_filter_fn(candidate, support_count, context):
+                    filtered_patterns[candidate] = support_count
+            except Exception as e:
+                error_msg = f"Error in candidate_filter_fn for candidate {candidate}: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
+
+        num_filtered = len(freq_patterns) - len(filtered_patterns)
+        if num_filtered > 0:
+            logger.debug("Candidate filter function filtered out %d additional candidates", num_filtered)
+
+        return filtered_patterns
+
     def _print_status(self, run: int, candidates: List[Tuple[str, ...]]) -> None:
         """
         Log progress information for the current GSP iteration.
@@ -728,6 +779,71 @@ class GSP:
         """
         logger.info("Run %d: %d candidates filtered to %d.", run, len(candidates), len(self.freq_patterns[run - 1]))
 
+    def _apply_preprocess_hook(
+        self, preprocess_fn: Optional[Callable[[Any], Any]]
+    ) -> Tuple[Any, Optional[Tuple[Any, List[Tuple[str, ...]], int]]]:
+        """Apply preprocessing hook and return processed transactions with backup."""
+        transactions_to_use = self.transactions
+        backup_state = None
+
+        if preprocess_fn is not None:
+            try:
+                logger.debug("Applying preprocessing hook...")
+                preprocessed = preprocess_fn(transactions_to_use)
+                if preprocessed is not None:
+                    transactions_to_use = preprocessed
+                logger.debug("Preprocessing hook completed successfully")
+
+                # Backup original state including max_size
+                backup_state = (self.transactions, self.unique_candidates, self.max_size)
+
+                # Update state with preprocessed data
+                self.transactions = transactions_to_use
+                # Recompute unique candidates from preprocessed transactions
+                # Use _extract_items_from_transaction to properly handle timestamped data
+                all_items_list: List[str] = []
+                for transaction in self.transactions:
+                    all_items_list.extend(self._extract_items_from_transaction(transaction))
+                
+                # Create singleton candidates from unique items
+                unique_items = set(all_items_list)
+                self.unique_candidates = [(item,) for item in sorted(unique_items)]
+                
+                # Recompute max_size based on preprocessed transactions
+                self.max_size = max(len(tx) for tx in self.transactions) if self.transactions else 0
+                logger.debug("Recomputed unique candidates after preprocessing: %d items", len(self.unique_candidates))
+
+            except Exception as e:
+                error_msg = f"Error in preprocess_fn: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
+
+        return transactions_to_use, backup_state
+
+    def _apply_postprocess_hook(
+        self, result: Any, postprocess_fn: Optional[Callable[[Any], Any]]
+    ) -> Any:
+        """Apply postprocessing hook to results."""
+        if postprocess_fn is not None:
+            try:
+                logger.debug("Applying postprocessing hook...")
+                postprocessed = postprocess_fn(result)
+                if postprocessed is not None:
+                    result = postprocessed
+                logger.debug("Postprocessing hook completed successfully")
+            except Exception as e:
+                error_msg = f"Error in postprocess_fn: {e}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
+        return result
+
+    def _restore_preprocessing_state(
+        self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]], int]]
+    ) -> None:
+        """Restore original state after preprocessing."""
+        if backup_state is not None:
+            self.transactions, self.unique_candidates, self.max_size = backup_state
+
     @overload
     def search(
         self,
@@ -737,6 +853,9 @@ class GSP:
         verbose: Optional[bool] = None,
         *,
         return_sequences: Literal[False] = False,
+        preprocess_fn: Optional[Callable[[Any], Any]] = None,
+        postprocess_fn: Optional[Callable[[Any], Any]] = None,
+        candidate_filter_fn: Optional[Callable[[Tuple[str, ...], int, Dict[str, Any]], bool]] = None,
     ) -> List[Dict[Tuple[str, ...], int]]: ...
 
     @overload
@@ -748,6 +867,9 @@ class GSP:
         verbose: Optional[bool] = None,
         *,
         return_sequences: Literal[True],
+        preprocess_fn: Optional[Callable[[Any], Any]] = None,
+        postprocess_fn: Optional[Callable[[Any], Any]] = None,
+        candidate_filter_fn: Optional[Callable[[Tuple[str, ...], int, Dict[str, Any]], bool]] = None,
     ) -> List[List[Sequence]]: ...
 
     def search(
@@ -758,6 +880,9 @@ class GSP:
         verbose: Optional[bool] = None,
         *,
         return_sequences: bool = False,
+        preprocess_fn: Optional[Callable[[Any], Any]] = None,
+        postprocess_fn: Optional[Callable[[Any], Any]] = None,
+        candidate_filter_fn: Optional[Callable[[Tuple[str, ...], int, Dict[str, Any]], bool]] = None,
     ) -> Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
         if backend is not None:
             logger.debug("Backend parameter is currently unused: %s", backend)
@@ -786,6 +911,28 @@ class GSP:
                                     compatibility. When True, returns List[List[Sequence]] where
                                     each Sequence contains items, support count, and can be extended
                                     with additional metadata.
+            preprocess_fn (Optional[Callable[[Any], Any]]): Custom preprocessing hook function.
+                                    Called once at the beginning of the search to transform transactions.
+                                    Receives the transaction list and should return a modified transaction list.
+                                    Useful for data cleaning, filtering, or transformation before mining.
+                                    Default is None (no preprocessing).
+            postprocess_fn (Optional[Callable[[Any], Any]]): Custom postprocessing hook function.
+                                    Called once at the end of the search to transform discovered patterns.
+                                    Receives the pattern list and should return a modified pattern list.
+                                    Useful for filtering, aggregating, or enriching results.
+                                    Default is None (no postprocessing).
+            candidate_filter_fn (Optional[Callable[[Tuple[str, ...], int, Dict[str, Any]], bool]]):
+                                    Custom candidate filtering function for dynamic pruning at runtime.
+                                    Called for each candidate after support counting to determine if it
+                                    should be kept. Receives:
+                                    - candidate: The candidate sequence as a tuple of strings
+                                    - support_count: The support count of the candidate
+                                    - context: A dictionary with additional information (e.g., 'min_support_count',
+                                              'total_transactions', 'k_level')
+                                    Should return True to KEEP the candidate, False to filter it out.
+                                    Complements the pruning_strategy but operates at a different level.
+                                    Supports lambda expressions and arbitrary callables.
+                                    Default is None (no additional filtering).
 
         Returns:
             Union[List[Dict[Tuple[str, ...], int]], List[List[Sequence]]]:
@@ -798,6 +945,8 @@ class GSP:
 
         Raises:
             ValueError: If the minimum support threshold is not in the range `(0.0, 1.0]`.
+            Exception: If any user-provided hook function raises an exception, it will be
+                      propagated with additional context about where it occurred.
 
         Logs:
             - Information about the algorithm's start, intermediate progress (candidates filtered),
@@ -842,6 +991,60 @@ class GSP:
                     print(f"Pattern: {seq.items}, Support: {seq.support}")
             ```
 
+            Using custom hooks with lambda expressions:
+
+            ```python
+            from gsppy.gsp import GSP
+
+            transactions = [
+                ["A", "B", "C"],
+                ["A", "C", "D"],
+                ["B", "C", "E"],
+            ]
+
+            # Preprocessing: Convert all items to uppercase in each itemset
+            preprocess = lambda txs: [
+                [tuple(item.upper() if isinstance(item, str) else item for item in itemset) for itemset in tx]
+                for tx in txs
+            ]
+
+            # Candidate filtering: Only keep patterns with length <= 2
+            filter_fn = lambda candidate, support, ctx: len(candidate) <= 2
+
+            # Postprocessing: Add metadata to each level
+            postprocess = lambda patterns: [
+                {k: v for k, v in level.items() if v > 1} for level in patterns
+            ]
+
+            gsp = GSP(transactions)
+            patterns = gsp.search(
+                min_support=0.3,
+                preprocess_fn=preprocess,
+                candidate_filter_fn=filter_fn,
+                postprocess_fn=postprocess
+            )
+            ```
+
+            Advanced candidate filtering with context:
+
+            ```python
+            from gsppy.gsp import GSP
+
+            transactions = [["A", "B", "C"], ["A", "C", "D"], ["B", "C", "E"]]
+
+            # Filter candidates based on both support and pattern characteristics
+            def custom_filter(candidate, support_count, context):
+                # Keep candidates with high support or specific patterns
+                min_support = context.get('min_support_count', 0)
+                if support_count >= min_support * 1.5:  # 50% above minimum
+                    return True
+                # Or keep patterns starting with 'A'
+                return candidate[0] == 'A' if candidate else False
+
+            gsp = GSP(transactions)
+            patterns = gsp.search(min_support=0.3, candidate_filter_fn=custom_filter)
+            ```
+
             Usage with temporal constraints (requires timestamped transactions):
 
             ```python
@@ -877,59 +1080,75 @@ class GSP:
                 f"Using temporal constraints: mingap={self.mingap}, maxgap={self.maxgap}, maxspan={self.maxspan}"
             )
 
-        # Clear freq_patterns for this search (allow reusing the GSP instance)
-        self.freq_patterns = []
+        # Apply preprocessing hook and backup state
+        transactions_to_use, backup_state = self._apply_preprocess_hook(preprocess_fn)
 
-        # Convert fractional support to absolute count (ceil to preserve threshold semantics)
-        abs_min_support = int(math.ceil(len(self.transactions) * float(min_support)))
+        # Ensure state is restored even if errors occur during mining
+        try:
+            # Clear freq_patterns for this search (allow reusing the GSP instance)
+            self.freq_patterns = []
 
-        # the set of frequent 1-sequence: all singleton sequences
-        # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
-        # candidate
-        candidates = self.unique_candidates
+            # Convert fractional support to absolute count (ceil to preserve threshold semantics)
+            abs_min_support = int(math.ceil(len(transactions_to_use) * float(min_support)))
 
-        # scan transactions to collect support count for each candidate
-        # sequence & filter
-        freq_1 = self._support(candidates, abs_min_support)
-        # Apply pruning strategy for additional filtering
-        freq_1 = self._apply_pruning(freq_1, abs_min_support)
-        self.freq_patterns.append(freq_1)
+            # the set of frequent 1-sequence: all singleton sequences
+            # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
+            # candidate
+            candidates = self.unique_candidates
 
-        # (k-itemsets/k-sequence = 1)
-        k_items = 1
-
-        self._print_status(k_items, candidates)
-
-        # repeat until no frequent sequence or no candidate can be found
-        # If max_k is provided, stop generating candidates beyond that length
-        while (
-            self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
-        ):
-            k_items += 1
-
-            # Generate candidate sets Ck (set of candidate k-sequences) -
-            # generate new candidates from the last "best" candidates filtered
-            # by minimum support
-            candidates = generate_candidates_from_previous(self.freq_patterns[k_items - 2])
-
-            # candidate pruning - eliminates candidates who are not potentially
-            # frequent (using support as threshold)
-            freq_k = self._support(candidates, abs_min_support)
+            # scan transactions to collect support count for each candidate
+            # sequence & filter
+            freq_1 = self._support(candidates, abs_min_support)
             # Apply pruning strategy for additional filtering
-            freq_k = self._apply_pruning(freq_k, abs_min_support)
-            self.freq_patterns.append(freq_k)
+            freq_1 = self._apply_pruning(freq_1, abs_min_support)
+            # Apply user-provided candidate filter if specified
+            freq_1 = self._apply_candidate_filter(freq_1, abs_min_support, 1, candidate_filter_fn)
+            self.freq_patterns.append(freq_1)
+
+            # (k-itemsets/k-sequence = 1)
+            k_items = 1
 
             self._print_status(k_items, candidates)
-        logger.info("GSP algorithm completed.")
 
-        # Restore original verbosity if it was overridden
-        if verbose is not None:
-            self.verbose = original_verbose
-            self._configure_logging()
+            # repeat until no frequent sequence or no candidate can be found
+            # If max_k is provided, stop generating candidates beyond that length
+            while (
+                self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
+            ):
+                k_items += 1
 
-        # Return results in the requested format
-        result = self.freq_patterns[:-1]
-        if return_sequences:
-            # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level
-            return [dict_to_sequences(level_patterns) for level_patterns in result]
-        return result
+                # Generate candidate sets Ck (set of candidate k-sequences) -
+                # generate new candidates from the last "best" candidates filtered
+                # by minimum support
+                candidates = generate_candidates_from_previous(self.freq_patterns[k_items - 2])
+
+                # candidate pruning - eliminates candidates who are not potentially
+                # frequent (using support as threshold)
+                freq_k = self._support(candidates, abs_min_support)
+                # Apply pruning strategy for additional filtering
+                freq_k = self._apply_pruning(freq_k, abs_min_support)
+                # Apply user-provided candidate filter if specified
+                freq_k = self._apply_candidate_filter(freq_k, abs_min_support, k_items, candidate_filter_fn)
+                self.freq_patterns.append(freq_k)
+
+                self._print_status(k_items, candidates)
+            logger.info("GSP algorithm completed.")
+
+            # Return results in the requested format
+            result = self.freq_patterns[:-1]
+
+            # Apply postprocessing hook
+            result = self._apply_postprocess_hook(result, postprocess_fn)
+
+            if return_sequences:
+                # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level
+                return [dict_to_sequences(level_patterns) for level_patterns in result]
+            return result
+        finally:
+            # Always restore original state if preprocessing was applied, even on exceptions
+            self._restore_preprocessing_state(backup_state)
+
+            # Restore original verbosity if it was overridden
+            if verbose is not None:
+                self.verbose = original_verbose
+                self._configure_logging()
