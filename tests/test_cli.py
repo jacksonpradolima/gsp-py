@@ -927,7 +927,9 @@ def test_write_patterns_to_csv():
     assert rows[0]['pattern'] == "('A',)"
     assert rows[0]['support'] == '3'
     assert rows[0]['level'] == '1'
-    
+    # Verify column order is pattern, support, level (consistent with Parquet/Arrow)
+    assert list(rows[0].keys()) == ['pattern', 'support', 'level']
+
     os.unlink(temp_file_name)
 
 

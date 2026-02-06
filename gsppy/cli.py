@@ -512,7 +512,7 @@ def write_patterns_to_csv(
         import csv
 
         with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['level', 'pattern', 'support'] if include_level else ['pattern', 'support']
+            fieldnames = ['pattern', 'support', 'level'] if include_level else ['pattern', 'support']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
