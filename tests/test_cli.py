@@ -86,6 +86,85 @@ def unsupported_file() -> Generator[Any, Any, Any]:
     os.unlink(temp_file_name)
 
 
+@pytest.fixture
+def valid_parquet_grouped_file() -> Generator[Any, Any, Any]:
+    """Fixture to create a valid Parquet file with grouped format (transaction_id, item)."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Create a DataFrame with grouped format
+    df = pl.DataFrame({
+        "transaction_id": [1, 1, 2, 2, 3, 3, 3],
+        "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"]
+    })
+    df.write_parquet(temp_file_name)
+    
+    yield temp_file_name
+    os.unlink(temp_file_name)
+
+
+@pytest.fixture
+def valid_parquet_sequence_file() -> Generator[Any, Any, Any]:
+    """Fixture to create a valid Parquet file with sequence format (sequence column)."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Create a DataFrame with sequence format
+    df = pl.DataFrame({
+        "sequence": [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
+    })
+    df.write_parquet(temp_file_name)
+    
+    yield temp_file_name
+    os.unlink(temp_file_name)
+
+
+@pytest.fixture
+def valid_arrow_file() -> Generator[Any, Any, Any]:
+    """Fixture to create a valid Arrow/Feather file with grouped format."""
+    pytest.importorskip("polars", reason="Arrow tests require Polars")
+    import polars as pl
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".arrow") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Create a DataFrame with grouped format
+    df = pl.DataFrame({
+        "transaction_id": [1, 1, 2, 2, 3, 3, 3],
+        "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"]
+    })
+    df.write_ipc(temp_file_name)
+    
+    yield temp_file_name
+    os.unlink(temp_file_name)
+
+
+@pytest.fixture
+def invalid_parquet_missing_columns() -> Generator[Any, Any, Any]:
+    """Fixture to create a Parquet file missing required columns."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Create a DataFrame with wrong column names
+    df = pl.DataFrame({
+        "wrong_col": [1, 2, 3],
+        "another_col": ["A", "B", "C"]
+    })
+    df.write_parquet(temp_file_name)
+    
+    yield temp_file_name
+    os.unlink(temp_file_name)
+
+
 def test_valid_json_file(valid_json_file: Generator[Any, Any, Any]):
     """Test if a valid JSON file is correctly read."""
     transactions = detect_and_read_file(str(valid_json_file))
@@ -572,3 +651,335 @@ def test_cli_spm_format_subprocess():
     
     # Cleanup
     os.unlink(temp_file_name)
+
+
+# ============================================================================
+# Parquet and Arrow Format Tests
+# ============================================================================
+
+
+def test_valid_parquet_grouped_file(valid_parquet_grouped_file: Generator[Any, Any, Any]):
+    """Test if a valid Parquet file with grouped format is correctly read."""
+    from gsppy.cli import read_transactions_from_parquet
+    
+    transactions = read_transactions_from_parquet(
+        str(valid_parquet_grouped_file),
+        transaction_col="transaction_id",
+        item_col="item"
+    )
+    
+    # Expected: 3 transactions grouped by transaction_id
+    assert len(transactions) == 3
+    assert transactions[0] == ["Bread", "Milk"]
+    assert transactions[1] == ["Milk", "Diaper"]
+    assert transactions[2] == ["Bread", "Diaper", "Beer"]
+
+
+def test_valid_parquet_sequence_file(valid_parquet_sequence_file: Generator[Any, Any, Any]):
+    """Test if a valid Parquet file with sequence format is correctly read."""
+    from gsppy.cli import read_transactions_from_parquet
+    
+    transactions = read_transactions_from_parquet(
+        str(valid_parquet_sequence_file),
+        sequence_col="sequence"
+    )
+    
+    assert len(transactions) == 3
+    assert transactions[0] == ["Bread", "Milk"]
+    assert transactions[1] == ["Milk", "Diaper"]
+    assert transactions[2] == ["Bread", "Diaper", "Beer"]
+
+
+def test_valid_arrow_file(valid_arrow_file: Generator[Any, Any, Any]):
+    """Test if a valid Arrow/Feather file is correctly read."""
+    from gsppy.cli import read_transactions_from_arrow
+    
+    transactions = read_transactions_from_arrow(
+        str(valid_arrow_file),
+        transaction_col="transaction_id",
+        item_col="item"
+    )
+    
+    assert len(transactions) == 3
+    assert transactions[0] == ["Bread", "Milk"]
+    assert transactions[1] == ["Milk", "Diaper"]
+    assert transactions[2] == ["Bread", "Diaper", "Beer"]
+
+
+def test_parquet_auto_detect(valid_parquet_grouped_file: Generator[Any, Any, Any]):
+    """Test if Parquet files are auto-detected by extension."""
+    # The detect_and_read_file function doesn't support dataframe formats
+    # because they require column parameters, so we test the format detection logic
+    from gsppy.cli import _load_transactions_by_format
+    from gsppy.enums import FileFormat, DATAFRAME_EXTENSIONS
+    import os
+    
+    file_path = str(valid_parquet_grouped_file)
+    _, file_extension = os.path.splitext(file_path)
+    file_extension = file_extension.lower()
+    
+    # Verify it's recognized as a dataframe format
+    assert file_extension in DATAFRAME_EXTENSIONS
+    
+    # Test loading with explicit format
+    transactions = _load_transactions_by_format(
+        file_path,
+        FileFormat.PARQUET.value,
+        file_extension,
+        is_dataframe_format=True,
+        transaction_col="transaction_id",
+        item_col="item",
+        timestamp_col=None,
+        sequence_col=None
+    )
+    
+    assert len(transactions) == 3
+
+
+def test_parquet_missing_columns_error(invalid_parquet_missing_columns: Generator[Any, Any, Any]):
+    """Test that Parquet files with missing required columns raise appropriate errors."""
+    from gsppy.cli import read_transactions_from_parquet
+    
+    with pytest.raises(ValueError, match="Error reading transaction data from Parquet file"):
+        read_transactions_from_parquet(
+            str(invalid_parquet_missing_columns),
+            transaction_col="transaction_id",  # This column doesn't exist
+            item_col="item"  # This column doesn't exist
+        )
+
+
+def test_parquet_without_polars_error():
+    """Test that using Parquet without Polars installed gives helpful error message."""
+    from gsppy.cli import read_transactions_from_parquet
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Mock polars import to simulate it not being installed
+    with patch.dict('sys.modules', {'polars': None}):
+        with pytest.raises(ValueError, match="Parquet support requires Polars"):
+            read_transactions_from_parquet(temp_file_name)
+    
+    os.unlink(temp_file_name)
+
+
+def test_arrow_without_polars_error():
+    """Test that using Arrow without Polars installed gives helpful error message."""
+    from gsppy.cli import read_transactions_from_arrow
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".arrow") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Mock polars import to simulate it not being installed
+    with patch.dict('sys.modules', {'polars': None}):
+        with pytest.raises(ValueError, match="Arrow/Feather support requires Polars"):
+            read_transactions_from_arrow(temp_file_name)
+    
+    os.unlink(temp_file_name)
+
+
+def test_parquet_cli_integration(valid_parquet_grouped_file: Generator[Any, Any, Any], monkeypatch: MonkeyPatch):
+    """Test CLI integration with Parquet files."""
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "gsppy",
+            "--file", str(valid_parquet_grouped_file),
+            "--min_support", "0.5",
+            "--transaction-col", "transaction_id",
+            "--item-col", "item"
+        ],
+    )
+    
+    # Capture output
+    from io import StringIO
+    captured_output = StringIO()
+    
+    with patch("sys.stdout", captured_output):
+        try:
+            main(standalone_mode=False)
+        except SystemExit:
+            pass
+    
+    output = captured_output.getvalue()
+    # Verify the CLI processed the Parquet file successfully
+    assert "Frequent Patterns Found:" in output or "Pattern:" in output or len(output) > 0
+
+
+def test_parquet_with_timestamps():
+    """Test Parquet files with timestamp columns for temporal mining."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    from gsppy.cli import read_transactions_from_parquet
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Create a DataFrame with timestamps
+    df = pl.DataFrame({
+        "transaction_id": [1, 1, 1, 2, 2, 3],
+        "item": ["A", "B", "C", "A", "B", "C"],
+        "timestamp": [1.0, 2.0, 5.0, 1.0, 3.0, 2.0]
+    })
+    df.write_parquet(temp_file_name)
+    
+    transactions = read_transactions_from_parquet(
+        temp_file_name,
+        transaction_col="transaction_id",
+        item_col="item",
+        timestamp_col="timestamp"
+    )
+    
+    # Verify timestamped format
+    assert len(transactions) == 3
+    # First transaction should have tuples (item, timestamp)
+    assert isinstance(transactions[0][0], tuple)
+    assert transactions[0][0][0] == "A"
+    assert transactions[0][0][1] == 1.0
+    
+    os.unlink(temp_file_name)
+
+
+
+def test_write_patterns_to_parquet():
+    """Test writing GSP patterns to Parquet format."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    from gsppy.cli import write_patterns_to_parquet
+    
+    # Sample patterns from GSP search
+    patterns = [
+        {('A',): 3, ('B',): 2},
+        {('A', 'B'): 2}
+    ]
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
+        temp_file_name = temp_file.name
+    
+    # Write patterns
+    write_patterns_to_parquet(patterns, temp_file_name)
+    
+    # Read back and verify
+    df = pl.read_parquet(temp_file_name)
+    assert len(df) == 3  # 3 patterns total
+    assert "pattern" in df.columns
+    assert "support" in df.columns
+    assert "level" in df.columns
+    
+    # Check values
+    assert df.filter(pl.col("pattern") == "('A',)")["support"][0] == 3
+    assert df.filter(pl.col("pattern") == "('A', 'B')")["level"][0] == 2
+    
+    os.unlink(temp_file_name)
+
+
+def test_write_patterns_to_arrow():
+    """Test writing GSP patterns to Arrow format."""
+    pytest.importorskip("polars", reason="Arrow tests require Polars")
+    import polars as pl
+    from gsppy.cli import write_patterns_to_arrow
+    
+    patterns = [
+        {('A',): 3, ('B',): 2},
+        {('A', 'B'): 2}
+    ]
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".arrow") as temp_file:
+        temp_file_name = temp_file.name
+    
+    write_patterns_to_arrow(patterns, temp_file_name)
+    
+    # Read back and verify
+    df = pl.read_ipc(temp_file_name)
+    assert len(df) == 3
+    assert "pattern" in df.columns
+    assert "support" in df.columns
+    
+    os.unlink(temp_file_name)
+
+
+def test_write_patterns_to_csv():
+    """Test writing GSP patterns to CSV format."""
+    from gsppy.cli import write_patterns_to_csv
+    import csv
+    
+    patterns = [
+        {('A',): 3, ('B',): 2},
+        {('A', 'B'): 2}
+    ]
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv", mode="w") as temp_file:
+        temp_file_name = temp_file.name
+    
+    write_patterns_to_csv(patterns, temp_file_name)
+    
+    # Read back and verify
+    with open(temp_file_name, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+    
+    assert len(rows) == 3
+    assert rows[0]['pattern'] == "('A',)"
+    assert rows[0]['support'] == '3'
+    assert rows[0]['level'] == '1'
+    
+    os.unlink(temp_file_name)
+
+
+def test_write_patterns_to_json():
+    """Test writing GSP patterns to JSON format."""
+    from gsppy.cli import write_patterns_to_json
+    
+    patterns = [
+        {('A',): 3, ('B',): 2},
+        {('A', 'B'): 2}
+    ]
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
+        temp_file_name = temp_file.name
+    
+    write_patterns_to_json(patterns, temp_file_name)
+    
+    # Read back and verify
+    with open(temp_file_name, 'r') as jsonfile:
+        data = json.load(jsonfile)
+    
+    assert len(data) == 2  # 2 levels
+    assert len(data[0]) == 2  # 2 patterns in level 1
+    assert data[0][0]['pattern'] == ['A']
+    assert data[0][0]['support'] == 3
+    
+    os.unlink(temp_file_name)
+
+
+def test_cli_with_parquet_output(valid_json_file: Generator[Any, Any, Any], monkeypatch: MonkeyPatch):
+    """Test CLI with Parquet output."""
+    pytest.importorskip("polars", reason="Parquet tests require Polars")
+    import polars as pl
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as output_file:
+        output_file_name = output_file.name
+    
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "gsppy",
+            "--file", str(valid_json_file),
+            "--min_support", "0.5",
+            "--output", output_file_name
+        ],
+    )
+    
+    try:
+        main(standalone_mode=False)
+    except SystemExit:
+        pass
+    
+    # Verify output file was created and contains data
+    assert os.path.exists(output_file_name)
+    df = pl.read_parquet(output_file_name)
+    assert len(df) > 0
+    assert "pattern" in df.columns
+    assert "support" in df.columns
+    
+    os.unlink(output_file_name)

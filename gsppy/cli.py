@@ -402,6 +402,176 @@ def read_transactions_from_arrow(
         raise ValueError(msg) from e
 
 
+def write_patterns_to_parquet(
+    patterns: List[dict],
+    output_path: str,
+    include_level: bool = True,
+) -> None:
+    """
+    Write GSP patterns to a Parquet file using Polars.
+
+    Parameters:
+        patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
+        output_path (str): Path to the output Parquet file.
+        include_level (bool): Whether to include pattern level (length) in output.
+
+    Raises:
+        ValueError: If Polars is not installed or writing fails.
+    """
+    try:
+        import polars as pl
+    except ImportError as e:
+        raise ValueError("Parquet export requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
+
+    try:
+        # Flatten patterns into rows
+        rows = []
+        for level_idx, level_patterns in enumerate(patterns, start=1):
+            for pattern, support in level_patterns.items():
+                row = {
+                    "pattern": str(pattern),
+                    "support": support,
+                }
+                if include_level:
+                    row["level"] = level_idx
+                rows.append(row)
+
+        # Create DataFrame and write to Parquet
+        df = pl.DataFrame(rows)
+        df.write_parquet(output_path)
+        logging.info(f"Successfully wrote {len(rows)} patterns to {output_path}")
+
+    except Exception as e:
+        msg = f"Error writing patterns to Parquet file '{output_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
+def write_patterns_to_arrow(
+    patterns: List[dict],
+    output_path: str,
+    include_level: bool = True,
+) -> None:
+    """
+    Write GSP patterns to an Arrow/Feather file using Polars.
+
+    Parameters:
+        patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
+        output_path (str): Path to the output Arrow/Feather file.
+        include_level (bool): Whether to include pattern level (length) in output.
+
+    Raises:
+        ValueError: If Polars is not installed or writing fails.
+    """
+    try:
+        import polars as pl
+    except ImportError as e:
+        raise ValueError("Arrow export requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
+
+    try:
+        # Flatten patterns into rows
+        rows = []
+        for level_idx, level_patterns in enumerate(patterns, start=1):
+            for pattern, support in level_patterns.items():
+                row = {
+                    "pattern": str(pattern),
+                    "support": support,
+                }
+                if include_level:
+                    row["level"] = level_idx
+                rows.append(row)
+
+        # Create DataFrame and write to Arrow/Feather
+        df = pl.DataFrame(rows)
+        df.write_ipc(output_path)
+        logging.info(f"Successfully wrote {len(rows)} patterns to {output_path}")
+
+    except Exception as e:
+        msg = f"Error writing patterns to Arrow file '{output_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
+def write_patterns_to_csv(
+    patterns: List[dict],
+    output_path: str,
+    include_level: bool = True,
+) -> None:
+    """
+    Write GSP patterns to a CSV file.
+
+    Parameters:
+        patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
+        output_path (str): Path to the output CSV file.
+        include_level (bool): Whether to include pattern level (length) in output.
+
+    Raises:
+        ValueError: If writing fails.
+    """
+    try:
+        import csv
+
+        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['level', 'pattern', 'support'] if include_level else ['pattern', 'support']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for level_idx, level_patterns in enumerate(patterns, start=1):
+                for pattern, support in level_patterns.items():
+                    row = {
+                        'pattern': str(pattern),
+                        'support': support,
+                    }
+                    if include_level:
+                        row['level'] = level_idx
+                    writer.writerow(row)
+
+        logging.info(f"Successfully wrote patterns to {output_path}")
+
+    except Exception as e:
+        msg = f"Error writing patterns to CSV file '{output_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
+def write_patterns_to_json(
+    patterns: List[dict],
+    output_path: str,
+) -> None:
+    """
+    Write GSP patterns to a JSON file.
+
+    Parameters:
+        patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
+        output_path (str): Path to the output JSON file.
+
+    Raises:
+        ValueError: If writing fails.
+    """
+    try:
+        # Convert pattern tuples to lists for JSON serialization
+        serializable_patterns = []
+        for level_idx, level_patterns in enumerate(patterns, start=1):
+            level_data = []
+            for pattern, support in level_patterns.items():
+                level_data.append({
+                    'pattern': list(pattern),
+                    'support': support,
+                    'level': level_idx
+                })
+            serializable_patterns.append(level_data)
+
+        with open(output_path, 'w', encoding='utf-8') as jsonfile:
+            json.dump(serializable_patterns, jsonfile, indent=2)
+
+        logging.info(f"Successfully wrote patterns to {output_path}")
+
+    except Exception as e:
+        msg = f"Error writing patterns to JSON file '{output_path}': {e}"
+        logging.error(msg)
+        raise ValueError(msg) from e
+
+
 def _load_dataframe_format(
     file_path: str,
     file_extension: str,
@@ -582,6 +752,19 @@ def _load_transactions_by_format(
     default=None,
     help="Python import path to candidate filter hook function (e.g., 'mymodule.filter_fn').",
 )
+@click.option(
+    "--output",
+    type=str,
+    default=None,
+    help="Path to save mining results. Format is auto-detected from extension (.parquet, .arrow, .csv, .json).",
+)
+@click.option(
+    "--output-format",
+    type=click.Choice(["auto", "parquet", "arrow", "csv", "json"], case_sensitive=False),
+    default="auto",
+    show_default=True,
+    help="Output format for mining results. 'auto' detects format from file extension.",
+)
 @click.pass_context
 def main(ctx: click.Context, **kwargs: Any) -> None:
     """
@@ -660,6 +843,8 @@ def main(ctx: click.Context, **kwargs: Any) -> None:
     preprocess_hook = kwargs.get('preprocess_hook')
     postprocess_hook = kwargs.get('postprocess_hook')
     candidate_filter_hook = kwargs.get('candidate_filter_hook')
+    output_path = kwargs.get('output')
+    output_format = kwargs.get('output_format', 'auto')
     
     setup_logging(verbose)
 
@@ -720,11 +905,18 @@ def main(ctx: click.Context, **kwargs: Any) -> None:
             postprocess_fn=postprocess_fn,
             candidate_filter_fn=candidate_filter_fn,
         )
+        
+        # Display results to stdout
         logger.info("Frequent Patterns Found:")
         for i, level in enumerate(patterns, start=1):
             logger.info(f"\n{i}-Sequence Patterns:")
             for pattern, support in level.items():
                 logger.info(f"Pattern: {pattern}, Support: {support}")
+        
+        # Write results to file if output path specified
+        if output_path:
+            _write_patterns_to_file(patterns, output_path, output_format)
+            
     except Exception as e:
         logger.error(f"Error executing GSP algorithm: {e}")
         sys.exit(1)
@@ -765,6 +957,56 @@ def _validate_parameters(
         sys.exit(1)
     if mingap is not None and maxgap is not None and mingap > maxgap:
         logger.error("Error: mingap cannot be greater than maxgap.")
+        sys.exit(1)
+
+
+def _write_patterns_to_file(
+    patterns: List[dict],
+    output_path: str,
+    output_format: str = "auto"
+) -> None:
+    """
+    Write GSP patterns to a file in the specified format.
+
+    Args:
+        patterns: GSP search results
+        output_path: Path to output file
+        output_format: Output format (auto, parquet, arrow, csv, json)
+
+    Raises:
+        SystemExit: If writing fails
+    """
+    try:
+        # Auto-detect format from file extension if needed
+        if output_format.lower() == "auto":
+            _, ext = os.path.splitext(output_path)
+            ext = ext.lower()
+            if ext in PARQUET_EXTENSIONS:
+                output_format = "parquet"
+            elif ext in ARROW_EXTENSIONS:
+                output_format = "arrow"
+            elif ext == ".csv":
+                output_format = "csv"
+            elif ext == ".json":
+                output_format = "json"
+            else:
+                raise ValueError(f"Cannot auto-detect format from extension: {ext}")
+
+        # Write patterns based on format
+        format_lower = output_format.lower()
+        if format_lower == "parquet":
+            write_patterns_to_parquet(patterns, output_path)
+        elif format_lower == "arrow":
+            write_patterns_to_arrow(patterns, output_path)
+        elif format_lower == "csv":
+            write_patterns_to_csv(patterns, output_path)
+        elif format_lower == "json":
+            write_patterns_to_json(patterns, output_path)
+        else:
+            raise ValueError(f"Unknown output format: {output_format}")
+
+    except Exception as e:
+        logger.error(f"Error writing patterns to file: {e}")
         sys.exit(1)
 
 
