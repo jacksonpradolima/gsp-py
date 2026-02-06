@@ -118,6 +118,8 @@ id_b = mapper.add_token("B")  # Returns 1
 
 Requires the DataFrame extra (`pip install 'gsppy[dataframe]'`):
 
+##### Reading Transactions
+
 ```python
 from gsppy.cli import read_transactions_from_parquet, read_transactions_from_arrow
 
@@ -136,6 +138,58 @@ transactions = read_transactions_from_arrow(
 
 model = GSP(transactions)
 frequent = model.search(min_support=0.5)
+```
+
+##### Exporting Results
+
+GSP-Py supports exporting mining results to multiple formats:
+
+```python
+from gsppy.cli import (
+    write_patterns_to_parquet,
+    write_patterns_to_arrow,
+    write_patterns_to_csv,
+    write_patterns_to_json
+)
+
+# Run GSP mining
+gsp = GSP(transactions)
+patterns = gsp.search(min_support=0.5)
+
+# Export to Parquet (recommended for large result sets)
+write_patterns_to_parquet(patterns, 'results.parquet')
+
+# Export to Arrow/Feather
+write_patterns_to_arrow(patterns, 'results.arrow')
+
+# Export to CSV
+write_patterns_to_csv(patterns, 'results.csv')
+
+# Export to JSON
+write_patterns_to_json(patterns, 'results.json')
+```
+
+The exported files contain columns:
+- `pattern`: String representation of the sequential pattern
+- `support`: Support count for the pattern
+- `level`: Pattern length (1-sequence, 2-sequence, etc.)
+
+##### Command-Line Export
+
+Use the `--output` flag to export results directly from the CLI:
+
+```bash
+# Auto-detect format from extension
+gsppy --file data.parquet --min_support 0.3 --output results.parquet \
+      --transaction-col txn_id --item-col product
+
+# Explicitly specify output format
+gsppy --file data.json --min_support 0.3 --output results.csv \
+      --output-format csv
+
+# Export to multiple formats
+gsppy --file data.parquet --min_support 0.3 --output results.arrow \
+      --transaction-col txn_id --item-col product --output-format arrow
 ```
 
 ## Using Sequence Objects
