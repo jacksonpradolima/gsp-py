@@ -710,9 +710,10 @@ def test_parquet_auto_detect(valid_parquet_grouped_file: Generator[Any, Any, Any
     """Test if Parquet files are auto-detected by extension."""
     # The detect_and_read_file function doesn't support dataframe formats
     # because they require column parameters, so we test the format detection logic
-    from gsppy.cli import _load_transactions_by_format
-    from gsppy.enums import FileFormat, DATAFRAME_EXTENSIONS
     import os
+
+    from gsppy.cli import _load_transactions_by_format
+    from gsppy.enums import DATAFRAME_EXTENSIONS, FileFormat
     
     file_path = str(valid_parquet_grouped_file)
     _, file_extension = os.path.splitext(file_path)
@@ -810,6 +811,7 @@ def test_parquet_with_timestamps():
     """Test Parquet files with timestamp columns for temporal mining."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
+
     from gsppy.cli import read_transactions_from_parquet
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
@@ -845,6 +847,7 @@ def test_write_patterns_to_parquet():
     """Test writing GSP patterns to Parquet format."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
+
     from gsppy.cli import write_patterns_to_parquet
     
     # Sample patterns from GSP search
@@ -877,6 +880,7 @@ def test_write_patterns_to_arrow():
     """Test writing GSP patterns to Arrow format."""
     pytest.importorskip("polars", reason="Arrow tests require Polars")
     import polars as pl
+
     from gsppy.cli import write_patterns_to_arrow
     
     patterns = [
@@ -900,8 +904,9 @@ def test_write_patterns_to_arrow():
 
 def test_write_patterns_to_csv():
     """Test writing GSP patterns to CSV format."""
-    from gsppy.cli import write_patterns_to_csv
     import csv
+
+    from gsppy.cli import write_patterns_to_csv
     
     patterns = [
         {('A',): 3, ('B',): 2},

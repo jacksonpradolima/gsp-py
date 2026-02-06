@@ -14,12 +14,14 @@ Requirements:
 
 import os
 import tempfile
+
 import polars as pl
+
 from gsppy import GSP
 from gsppy.cli import (
-    read_transactions_from_parquet,
-    write_patterns_to_parquet,
     write_patterns_to_arrow,
+    write_patterns_to_parquet,
+    read_transactions_from_parquet,
 )
 
 print("=" * 80)
