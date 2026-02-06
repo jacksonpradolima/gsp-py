@@ -760,7 +760,7 @@ def _load_transactions_by_format(
 )
 @click.option(
     "--output-format",
-    type=click.Choice(["auto", "parquet", "arrow", "csv", "json"], case_sensitive=False),
+    type=click.Choice([fmt.value for fmt in FileFormat], case_sensitive=False),
     default="auto",
     show_default=True,
     help="Output format for mining results. 'auto' detects format from file extension.",
@@ -978,29 +978,29 @@ def _write_patterns_to_file(
     """
     try:
         # Auto-detect format from file extension if needed
-        if output_format.lower() == "auto":
+        if output_format.lower() == FileFormat.AUTO.value:
             _, ext = os.path.splitext(output_path)
             ext = ext.lower()
             if ext in PARQUET_EXTENSIONS:
-                output_format = "parquet"
+                output_format = FileFormat.PARQUET.value
             elif ext in ARROW_EXTENSIONS:
-                output_format = "arrow"
-            elif ext == ".csv":
-                output_format = "csv"
-            elif ext == ".json":
-                output_format = "json"
+                output_format = FileFormat.ARROW.value
+            elif ext == FileExtension.CSV.value:
+                output_format = FileFormat.CSV.value
+            elif ext == FileExtension.JSON.value:
+                output_format = FileFormat.JSON.value
             else:
                 raise ValueError(f"Cannot auto-detect format from extension: {ext}")
 
         # Write patterns based on format
         format_lower = output_format.lower()
-        if format_lower == "parquet":
+        if format_lower == FileFormat.PARQUET.value:
             write_patterns_to_parquet(patterns, output_path)
-        elif format_lower == "arrow":
+        elif format_lower == FileFormat.ARROW.value:
             write_patterns_to_arrow(patterns, output_path)
-        elif format_lower == "csv":
+        elif format_lower == FileFormat.CSV.value:
             write_patterns_to_csv(patterns, output_path)
-        elif format_lower == "json":
+        elif format_lower == FileFormat.JSON.value:
             write_patterns_to_json(patterns, output_path)
         else:
             raise ValueError(f"Unknown output format: {output_format}")
