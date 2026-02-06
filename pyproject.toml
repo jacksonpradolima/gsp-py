@@ -43,7 +43,7 @@ dev = [
     "cython==3.2.4",
     "hatch==1.16.3",
     "hatchling==1.28.0",
-    "hypothesis>=6.0.0,<7.0.0",
+    "hypothesis==6.151.5",
     "pylint==4.0.4",
     "pyright==1.1.408",
     "pytest==9.0.2",
