@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v5.0.0 (2026-02-06)
+
+### Chores
+
+- Adds support for optional types in item filters and ignores types in metadata printouts.
+  ([`79111b4`](https://github.com/jacksonpradolima/gsp-py/commit/79111b4c781a65b21a17f85b0b507b41ba6e51f9))
+
+- Update uv.lock for version 4.2.0
+  ([`f8f690f`](https://github.com/jacksonpradolima/gsp-py/commit/f8f690f7f0304dc4331c17c68487fe3411436149))
+
+### Features
+
+- Add preprocessing, postprocessing, and candidate filtering hooks to GSP algorithm
+  ([`495d290`](https://github.com/jacksonpradolima/gsp-py/commit/495d29009abe862bf992831bd276181efa40c99d))
+
+feat!: add preprocessing, postprocessing, and candidate filtering hooks to GSP algorithm
+
+
 ## v4.2.0 (2026-02-01)
 
 ### Chores
