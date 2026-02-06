@@ -1083,70 +1083,72 @@ class GSP:
         # Apply preprocessing hook and backup state
         transactions_to_use, backup_state = self._apply_preprocess_hook(preprocess_fn)
 
-        # Clear freq_patterns for this search (allow reusing the GSP instance)
-        self.freq_patterns = []
+        # Ensure state is restored even if errors occur during mining
+        try:
+            # Clear freq_patterns for this search (allow reusing the GSP instance)
+            self.freq_patterns = []
 
-        # Convert fractional support to absolute count (ceil to preserve threshold semantics)
-        abs_min_support = int(math.ceil(len(transactions_to_use) * float(min_support)))
+            # Convert fractional support to absolute count (ceil to preserve threshold semantics)
+            abs_min_support = int(math.ceil(len(transactions_to_use) * float(min_support)))
 
-        # the set of frequent 1-sequence: all singleton sequences
-        # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
-        # candidate
-        candidates = self.unique_candidates
+            # the set of frequent 1-sequence: all singleton sequences
+            # (k-itemsets/k-sequence = 1) - Initially, every item in DB is a
+            # candidate
+            candidates = self.unique_candidates
 
-        # scan transactions to collect support count for each candidate
-        # sequence & filter
-        freq_1 = self._support(candidates, abs_min_support)
-        # Apply pruning strategy for additional filtering
-        freq_1 = self._apply_pruning(freq_1, abs_min_support)
-        # Apply user-provided candidate filter if specified
-        freq_1 = self._apply_candidate_filter(freq_1, abs_min_support, 1, candidate_filter_fn)
-        self.freq_patterns.append(freq_1)
-
-        # (k-itemsets/k-sequence = 1)
-        k_items = 1
-
-        self._print_status(k_items, candidates)
-
-        # repeat until no frequent sequence or no candidate can be found
-        # If max_k is provided, stop generating candidates beyond that length
-        while (
-            self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
-        ):
-            k_items += 1
-
-            # Generate candidate sets Ck (set of candidate k-sequences) -
-            # generate new candidates from the last "best" candidates filtered
-            # by minimum support
-            candidates = generate_candidates_from_previous(self.freq_patterns[k_items - 2])
-
-            # candidate pruning - eliminates candidates who are not potentially
-            # frequent (using support as threshold)
-            freq_k = self._support(candidates, abs_min_support)
+            # scan transactions to collect support count for each candidate
+            # sequence & filter
+            freq_1 = self._support(candidates, abs_min_support)
             # Apply pruning strategy for additional filtering
-            freq_k = self._apply_pruning(freq_k, abs_min_support)
+            freq_1 = self._apply_pruning(freq_1, abs_min_support)
             # Apply user-provided candidate filter if specified
-            freq_k = self._apply_candidate_filter(freq_k, abs_min_support, k_items, candidate_filter_fn)
-            self.freq_patterns.append(freq_k)
+            freq_1 = self._apply_candidate_filter(freq_1, abs_min_support, 1, candidate_filter_fn)
+            self.freq_patterns.append(freq_1)
+
+            # (k-itemsets/k-sequence = 1)
+            k_items = 1
 
             self._print_status(k_items, candidates)
-        logger.info("GSP algorithm completed.")
 
-        # Restore original state if preprocessing was applied
-        self._restore_preprocessing_state(backup_state)
+            # repeat until no frequent sequence or no candidate can be found
+            # If max_k is provided, stop generating candidates beyond that length
+            while (
+                self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
+            ):
+                k_items += 1
 
-        # Restore original verbosity if it was overridden
-        if verbose is not None:
-            self.verbose = original_verbose
-            self._configure_logging()
+                # Generate candidate sets Ck (set of candidate k-sequences) -
+                # generate new candidates from the last "best" candidates filtered
+                # by minimum support
+                candidates = generate_candidates_from_previous(self.freq_patterns[k_items - 2])
 
-        # Return results in the requested format
-        result = self.freq_patterns[:-1]
+                # candidate pruning - eliminates candidates who are not potentially
+                # frequent (using support as threshold)
+                freq_k = self._support(candidates, abs_min_support)
+                # Apply pruning strategy for additional filtering
+                freq_k = self._apply_pruning(freq_k, abs_min_support)
+                # Apply user-provided candidate filter if specified
+                freq_k = self._apply_candidate_filter(freq_k, abs_min_support, k_items, candidate_filter_fn)
+                self.freq_patterns.append(freq_k)
 
-        # Apply postprocessing hook
-        result = self._apply_postprocess_hook(result, postprocess_fn)
+                self._print_status(k_items, candidates)
+            logger.info("GSP algorithm completed.")
 
-        if return_sequences:
-            # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level
-            return [dict_to_sequences(level_patterns) for level_patterns in result]
-        return result
+            # Return results in the requested format
+            result = self.freq_patterns[:-1]
+
+            # Apply postprocessing hook
+            result = self._apply_postprocess_hook(result, postprocess_fn)
+
+            if return_sequences:
+                # Convert Dict[Tuple[str, ...], int] to List[Sequence] for each level
+                return [dict_to_sequences(level_patterns) for level_patterns in result]
+            return result
+        finally:
+            # Always restore original state if preprocessing was applied, even on exceptions
+            self._restore_preprocessing_state(backup_state)
+
+            # Restore original verbosity if it was overridden
+            if verbose is not None:
+                self.verbose = original_verbose
+                self._configure_logging()

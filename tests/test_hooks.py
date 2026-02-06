@@ -472,3 +472,39 @@ class TestHookEdgeCases:
             from gsppy.sequence import Sequence
 
             assert isinstance(patterns[0][0], Sequence)
+
+    def test_state_restoration_on_exception(self, simple_transactions: List[List[str]]) -> None:
+        """Test that preprocessing state is restored even when exceptions occur during mining."""
+        gsp = GSP(simple_transactions)
+        
+        # Store original state
+        original_transactions = gsp.transactions
+        original_candidates = gsp.unique_candidates
+        original_max_size = gsp.max_size
+        
+        # Create a preprocessing function that modifies transactions
+        def modify_preprocess(txs):
+            # Add an extra itemset to each transaction
+            return [tx + (("EXTRA",),) for tx in txs]
+        
+        # Create a candidate filter that raises an exception
+        def failing_filter(candidate, support, ctx):
+            if "B" in candidate:
+                raise ValueError("Intentional test error")
+            return True
+        
+        # Attempt search with both preprocessing and failing filter
+        try:
+            gsp.search(min_support=0.3, preprocess_fn=modify_preprocess, candidate_filter_fn=failing_filter)
+            assert False, "Expected exception was not raised"
+        except (ValueError, RuntimeError):
+            pass  # Expected exception
+        
+        # Verify state was restored despite the exception
+        assert gsp.transactions == original_transactions, "Transactions should be restored"
+        assert gsp.unique_candidates == original_candidates, "Candidates should be restored"
+        assert gsp.max_size == original_max_size, "max_size should be restored"
+        
+        # Verify GSP instance can still be reused successfully
+        patterns = gsp.search(min_support=0.4)
+        assert len(patterns) > 0, "GSP should work after exception recovery"
