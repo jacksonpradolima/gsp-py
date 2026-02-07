@@ -22,6 +22,8 @@ gsppy --file transactions.json --min_support 0.3 --backend rust --verbose
 - `--item-col TEXT`: Column name for items (Parquet/Arrow only).
 - `--timestamp-col TEXT`: Column name for timestamps (Parquet/Arrow only).
 - `--sequence-col TEXT`: Column name for sequences (Parquet/Arrow only).
+- `--output PATH`: Path to save mining results. Format is auto-detected from extension.
+- `--output-format [auto|parquet|arrow|csv|json]`: Output format for results (default: `auto`).
 
 ## Examples
 
@@ -82,6 +84,61 @@ gsppy --file data.parquet --min_support 0.3 \
 # Arrow with sequence column
 gsppy --file sequences.arrow --min_support 0.3 \
       --sequence-col items
+```
+
+### Exporting Results
+
+Export mining results to various formats using the `--output` flag:
+
+```bash
+# Export to Parquet (recommended for large datasets)
+gsppy --file data.json --min_support 0.3 --output results.parquet
+
+# Export to Arrow/Feather
+gsppy --file data.parquet --min_support 0.3 \
+      --transaction-col txn_id --item-col product \
+      --output results.arrow
+
+# Export to CSV
+gsppy --file data.json --min_support 0.3 --output results.csv
+
+# Export to JSON
+gsppy --file data.json --min_support 0.3 --output results.json
+
+# Explicitly specify output format
+gsppy --file data.json --min_support 0.3 \
+      --output myresults.txt --output-format csv
+```
+
+The output files contain columns:
+- `pattern`: String representation of the sequential pattern
+- `support`: Support count for the pattern
+- `level`: Pattern length (1-sequence, 2-sequence, etc.)
+
+### Complete Round-trip Workflow
+
+CSV → Parquet → Mining → Export:
+
+```bash
+# Step 1: Convert CSV to Parquet using Polars (Python)
+python -c "
+import polars as pl
+df = pl.read_csv('transactions.csv')
+df.write_parquet('transactions.parquet')
+"
+
+# Step 2: Run GSP mining and export results
+gsppy --file transactions.parquet --min_support 0.3 \
+      --transaction-col txn_id --item-col product \
+      --output results.parquet
+
+# Step 3: Analyze results
+python -c "
+import polars as pl
+df = pl.read_parquet('results.parquet')
+print(df.head(10))
+print(f'Total patterns: {len(df)}')
+"
 ```
 
 ### Verbose Mode
