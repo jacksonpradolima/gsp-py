@@ -402,6 +402,33 @@ def read_transactions_from_arrow(
         raise ValueError(msg) from e
 
 
+def _flatten_patterns_to_rows(
+    patterns: List[dict],
+    include_level: bool = True,
+) -> List[dict]:
+    """
+    Flatten GSP patterns into rows suitable for DataFrame export.
+
+    Parameters:
+        patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
+        include_level (bool): Whether to include pattern level (length) in output.
+
+    Returns:
+        List[dict]: Flattened rows with pattern, support, and optionally level.
+    """
+    rows = []
+    for level_idx, level_patterns in enumerate(patterns, start=1):
+        for pattern, support in level_patterns.items():
+            row = {
+                "pattern": str(pattern),
+                "support": support,
+            }
+            if include_level:
+                row["level"] = level_idx
+            rows.append(row)
+    return rows
+
+
 def write_patterns_to_parquet(
     patterns: List[dict],
     output_path: str,
@@ -424,19 +451,7 @@ def write_patterns_to_parquet(
         raise ValueError("Parquet export requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
 
     try:
-        # Flatten patterns into rows
-        rows = []
-        for level_idx, level_patterns in enumerate(patterns, start=1):
-            for pattern, support in level_patterns.items():
-                row = {
-                    "pattern": str(pattern),
-                    "support": support,
-                }
-                if include_level:
-                    row["level"] = level_idx
-                rows.append(row)
-
-        # Create DataFrame and write to Parquet
+        rows = _flatten_patterns_to_rows(patterns, include_level)
         df = pl.DataFrame(rows)
         df.write_parquet(output_path)
         logging.info(f"Successfully wrote {len(rows)} patterns to {output_path}")
@@ -469,19 +484,7 @@ def write_patterns_to_arrow(
         raise ValueError("Arrow export requires Polars. Install with: pip install 'gsppy[dataframe]'") from e
 
     try:
-        # Flatten patterns into rows
-        rows = []
-        for level_idx, level_patterns in enumerate(patterns, start=1):
-            for pattern, support in level_patterns.items():
-                row = {
-                    "pattern": str(pattern),
-                    "support": support,
-                }
-                if include_level:
-                    row["level"] = level_idx
-                rows.append(row)
-
-        # Create DataFrame and write to Arrow/Feather
+        rows = _flatten_patterns_to_rows(patterns, include_level)
         df = pl.DataFrame(rows)
         df.write_ipc(output_path)
         logging.info(f"Successfully wrote {len(rows)} patterns to {output_path}")
@@ -509,8 +512,6 @@ def write_patterns_to_csv(
         ValueError: If writing fails.
     """
     try:
-        import csv
-
         with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
             fieldnames = ['pattern', 'support', 'level'] if include_level else ['pattern', 'support']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -537,6 +538,7 @@ def write_patterns_to_csv(
 def write_patterns_to_json(
     patterns: List[dict],
     output_path: str,
+    include_level: bool = True,
 ) -> None:
     """
     Write GSP patterns to a JSON file.
@@ -544,6 +546,7 @@ def write_patterns_to_json(
     Parameters:
         patterns (List[dict]): GSP search results (list of dicts mapping patterns to support).
         output_path (str): Path to the output JSON file.
+        include_level (bool): Whether to include pattern level (length) in output.
 
     Raises:
         ValueError: If writing fails.
@@ -554,11 +557,13 @@ def write_patterns_to_json(
         for level_idx, level_patterns in enumerate(patterns, start=1):
             level_data = []
             for pattern, support in level_patterns.items():
-                level_data.append({
+                pattern_dict = {
                     'pattern': list(pattern),
                     'support': support,
-                    'level': level_idx
-                })
+                }
+                if include_level:
+                    pattern_dict['level'] = level_idx
+                level_data.append(pattern_dict)
             serializable_patterns.append(level_data)
 
         with open(output_path, 'w', encoding='utf-8') as jsonfile:
@@ -760,7 +765,7 @@ def _load_transactions_by_format(
 )
 @click.option(
     "--output-format",
-    type=click.Choice([fmt.value for fmt in FileFormat], case_sensitive=False),
+    type=click.Choice([fmt.value for fmt in FileFormat if fmt != FileFormat.SPM], case_sensitive=False),
     default="auto",
     show_default=True,
     help="Output format for mining results. 'auto' detects format from file extension.",

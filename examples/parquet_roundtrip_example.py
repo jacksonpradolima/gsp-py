@@ -166,7 +166,7 @@ wrong_parquet = os.path.join(tempfile.gettempdir(), "wrong_cols.parquet")
 wrong_cols_df.write_parquet(wrong_parquet)
 
 try:
-    transactions = read_transactions_from_parquet(
+    read_transactions_from_parquet(
         wrong_parquet,
         transaction_col="transaction_id",  # This column doesn't exist
         item_col="item"  # This column doesn't exist
@@ -273,7 +273,9 @@ print("-" * 80)
 
 temp_files = [
     input_parquet, output_parquet, sequence_parquet, output_arrow,
-    empty_parquet, wrong_parquet, mixed_parquet, large_parquet
+    empty_parquet, wrong_parquet, mixed_parquet, large_parquet,
+    os.path.join(tempfile.gettempdir(), "float_ts.parquet"),
+    os.path.join(tempfile.gettempdir(), "integer_ts.parquet"),
 ]
 
 for temp_file in temp_files:
