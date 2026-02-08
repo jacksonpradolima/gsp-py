@@ -1,6 +1,124 @@
 # CHANGELOG
 
 
+## v5.1.0 (2026-02-08)
+
+### Bug Fixes
+
+- Typing
+  ([`e5dc072`](https://github.com/jacksonpradolima/gsp-py/commit/e5dc0725461571684d95f74ceeea0564760bb49d))
+
+### Build System
+
+- **deps**: Bump anchore/sbom-action from 0.22.0 to 0.22.2 in /.github/workflows
+  ([`3eb1aa7`](https://github.com/jacksonpradolima/gsp-py/commit/3eb1aa73588166dbc9d30359d6bc4f6b80bbacc7))
+
+build(deps): bump anchore/sbom-action from 0.22.0 to 0.22.2 in /.github/workflows
+
+- **deps**: Bump anchore/sbom-action in /.github/workflows
+  ([`2d3c354`](https://github.com/jacksonpradolima/gsp-py/commit/2d3c3545b8075e50f1c28fb4a07adb9dfbaf258b))
+
+Bumps [anchore/sbom-action](https://github.com/anchore/sbom-action) from 0.22.0 to 0.22.2. -
+  [Release notes](https://github.com/anchore/sbom-action/releases) -
+  [Changelog](https://github.com/anchore/sbom-action/blob/main/RELEASE.md) -
+  [Commits](https://github.com/anchore/sbom-action/compare/62ad5284b8ced813296287a0b63906cb364b73ee...28d71544de8eaf1b958d335707167c5f783590ad)
+
+--- updated-dependencies: - dependency-name: anchore/sbom-action dependency-version: 0.22.2
+
+dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump github/codeql-action from 4.31.10 to 4.32.1 in /.github/workflows
+  ([`3d1104e`](https://github.com/jacksonpradolima/gsp-py/commit/3d1104e158f1ee440689e94747370e4ffb1b28e7))
+
+build(deps): bump github/codeql-action from 4.31.10 to 4.32.1 in /.github/workflows
+
+- **deps**: Bump github/codeql-action in /.github/workflows
+  ([`a5e79ea`](https://github.com/jacksonpradolima/gsp-py/commit/a5e79ea1521f8e41d48d2c774847c9be732b54ef))
+
+Bumps [github/codeql-action](https://github.com/github/codeql-action) from 4.31.10 to 4.32.1. -
+  [Release notes](https://github.com/github/codeql-action/releases) -
+  [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/github/codeql-action/compare/cdefb33c0f6224e58673d9004f47f7cb3e328b89...6bc82e05fd0ea64601dd4b465378bbcf57de0314)
+
+--- updated-dependencies: - dependency-name: github/codeql-action dependency-version: 4.32.1
+
+dependency-type: direct:production
+
+update-type: version-update:semver-minor
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump hypothesis from 6.151.4 to 6.151.5
+  ([`15dda16`](https://github.com/jacksonpradolima/gsp-py/commit/15dda1655c4b6557d114102e80af7f63f64d26d6))
+
+build(deps): bump hypothesis from 6.151.4 to 6.151.5
+
+- **deps**: Bump hypothesis from 6.151.4 to 6.151.5
+  ([`010e30b`](https://github.com/jacksonpradolima/gsp-py/commit/010e30bd1960d27e525a8284b63f7f52c931ae03))
+
+Bumps [hypothesis](https://github.com/HypothesisWorks/hypothesis) from 6.151.4 to 6.151.5. -
+  [Release notes](https://github.com/HypothesisWorks/hypothesis/releases) -
+  [Commits](https://github.com/HypothesisWorks/hypothesis/compare/hypothesis-python-6.151.4...hypothesis-python-6.151.5)
+
+--- updated-dependencies: - dependency-name: hypothesis dependency-version: 6.151.5
+
+dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Update hypothesis version in pyproject.toml to 6.151.5
+  ([`2f674b9`](https://github.com/jacksonpradolima/gsp-py/commit/2f674b90d8b1d3c44b7337cf06edbf96963982a8))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- **deps-dev**: Bump ruff from 0.14.14 to 0.15.0
+  ([`c2f82e6`](https://github.com/jacksonpradolima/gsp-py/commit/c2f82e6c9450b110106279efa5409a947c85c92d))
+
+build(deps-dev): bump ruff from 0.14.14 to 0.15.0
+
+- **deps-dev**: Bump ruff from 0.14.14 to 0.15.0
+  ([`f5a9663`](https://github.com/jacksonpradolima/gsp-py/commit/f5a9663acdeb6e4eb01e6b9c35260812d1865dcd))
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.14.14 to 0.15.0. - [Release
+  notes](https://github.com/astral-sh/ruff/releases) -
+  [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/astral-sh/ruff/compare/0.14.14...0.15.0)
+
+--- updated-dependencies: - dependency-name: ruff dependency-version: 0.15.0
+
+dependency-type: direct:development
+
+update-type: version-update:semver-minor
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+### Chores
+
+- Update uv.lock for version 5.0.0
+  ([`53f4528`](https://github.com/jacksonpradolima/gsp-py/commit/53f4528fd8363796d948ede6e2fd5b4042e734f1))
+
+### Features
+
+- Add Parquet/Arrow export for GSP mining results
+  ([`004f092`](https://github.com/jacksonpradolima/gsp-py/commit/004f092ff6fc70de7a1aacd0a4b74a786576d619))
+
+feat: add Parquet/Arrow export for GSP mining results
+
+
 ## v5.0.0 (2026-02-06)
 
 ### Chores
