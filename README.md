@@ -342,9 +342,11 @@ gsppy --file path/to/data.txt --format spm --min_support 0.3
 #### CLI Options
 
 - `--file`: Path to your input file (JSON, CSV, or SPM format). **Required**.
-- `--format`: File format to use. Options: `auto` (default, auto-detect from extension), `json`, `csv`, `spm`, `parquet`, `arrow`.
+- `--format`: File format to use for input. Options: `auto` (default, auto-detect from extension), `json`, `csv`, `spm`, `parquet`, `arrow`.
 - `--min_support`: Minimum support threshold as a fraction (e.g., `0.3` for 30%). Default is `0.2`.
 - `--backend`: Backend to use for support counting. One of `auto` (default), `python`, `rust`, or `gpu`.
+- `--output`: Path to save mining results to a file. If not specified, results are printed to console.
+- `--output-format`: Output format for mining results. Options: `auto` (default, detect from extension), `parquet`, `arrow`, `csv`, `json`. Requires `--output` to be specified.
 - `--verbose`: Enable detailed logging with timestamps, log levels, and process IDs for debugging and traceability.
 - `--mingap`, `--maxgap`, `--maxspan`: Temporal constraints for time-aware pattern mining (requires timestamped transactions).
 
@@ -404,6 +406,40 @@ Pattern: ('Diaper', 'Beer'), Support: 3
 Pattern: ('Bread', 'Milk', 'Diaper'), Support: 2
 Pattern: ('Milk', 'Diaper', 'Beer'), Support: 2
 ```
+
+#### Exporting Results
+
+GSP-Py supports exporting mining results to various formats for further analysis or integration with data pipelines:
+
+**Export to Parquet** (efficient columnar format for large datasets):
+```bash
+gsppy --file transactions.json --min_support 0.3 --output results.parquet
+```
+
+**Export to CSV**:
+```bash
+gsppy --file transactions.json --min_support 0.3 --output results.csv
+```
+
+**Export to JSON**:
+```bash
+gsppy --file transactions.json --min_support 0.3 --output results.json
+```
+
+**Specify format explicitly**:
+```bash
+gsppy --file transactions.json --min_support 0.3 --output results.data --output-format parquet
+```
+
+The exported files contain three columns:
+- `pattern`: The sequential pattern (e.g., `('Bread', 'Milk')`)
+- `support`: Number of transactions containing the pattern
+- `level`: Length of the pattern sequence
+
+Export formats are particularly useful for:
+- **Parquet/Arrow**: Integration with big data tools (Spark, Polars, Pandas), data lakes, and cloud analytics
+- **CSV**: Easy viewing in spreadsheets and compatibility with traditional tools
+- **JSON**: Structured data for web applications and APIs
 
 #### Error Handling
 
