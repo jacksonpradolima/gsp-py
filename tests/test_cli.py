@@ -824,7 +824,7 @@ def test_parquet_with_timestamps():
     # First transaction should have tuples (item, timestamp)
     assert isinstance(transactions[0][0], tuple)
     assert transactions[0][0][0] == "A"
-    assert transactions[0][0][1] == 1.0
+    assert transactions[0][0][1] == pytest.approx(1.0)
     
     os.unlink(temp_file_name)
 
