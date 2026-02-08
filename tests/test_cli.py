@@ -785,9 +785,10 @@ def test_parquet_cli_integration(valid_parquet_grouped_file: Generator[Any, Any,
     with patch("sys.stdout", captured_output):
         try:
             main(standalone_mode=False)
-        except SystemExit:
-            # Click-based CLIs raise SystemExit even on success; ignore it
-            pass
+        except SystemExit as exc:
+            # Click-based CLIs raise SystemExit even on success; only ignore successful exits
+            if exc.code not in (0, None):
+                raise
     
     output = captured_output.getvalue()
     # Verify the CLI processed the Parquet file successfully
@@ -1000,9 +1001,10 @@ def test_cli_with_parquet_output(valid_json_file: Generator[Any, Any, Any], monk
     
     try:
         main(standalone_mode=False)
-    except SystemExit:
-        # Click-based CLIs raise SystemExit even on success; ignore it
-        pass
+    except SystemExit as exc:
+        # Click-based CLIs raise SystemExit even on success; only ignore successful exits
+        if exc.code not in (0, None):
+            raise
     
     # Verify output file was created and contains data
     assert os.path.exists(output_file_name)
