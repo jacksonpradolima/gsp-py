@@ -212,21 +212,26 @@ def test_gsp_handles_variable_lengths(transactions: List[List[str]]) -> None:
 @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_variable_length_pattern_discovery(transactions: List[List[str]]) -> None:
     """
-    Property: Pattern lengths should not exceed the longest transaction length.
+    Property: Maximum pattern length should not exceed the longest transaction length.
     
-    With variable-length transactions and min_support < 1.0, longer patterns
-    can still be found as long as there are sufficiently long transactions
-    that support them.
+    With variable-length transactions, the longest frequent pattern that can be
+    found is limited by the length of the longest transaction, since a pattern
+    cannot be longer than any transaction that contains it.
     """
     max_transaction_length = max(len(txn) for txn in transactions)
     
     gsp = GSP(transactions)
     result = gsp.search(min_support=0.1)
     
-    # Maximum pattern length should not exceed longest transaction
+    # The number of levels in result equals the maximum pattern length found
+    # (level 1 = 1-sequences, level 2 = 2-sequences, etc.)
+    # This cannot exceed the longest transaction length
     if result:
         max_pattern_length = len(result)
-        assert max_pattern_length <= max_transaction_length
+        assert max_pattern_length <= max_transaction_length, (
+            f"Found {max_pattern_length}-sequences but longest transaction is only "
+            f"{max_transaction_length} items long"
+        )
 
 
 # ============================================================================
