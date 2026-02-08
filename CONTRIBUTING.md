@@ -199,7 +199,7 @@ pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py tests/test_cli_fuz
 # Run specific fuzzing test
 pytest tests/test_gsp_edge_cases.py::test_gsp_handles_large_transactions -v
 
-# Run with more examples (default is determined by Hypothesis profile)
+# Run with a fixed Hypothesis seed for reproducible fuzzing
 pytest tests/test_gsp_fuzzing.py --hypothesis-seed=42
 ```
 
@@ -332,31 +332,28 @@ def my_custom_strategy(draw: st.DrawFn, **kwargs) -> MyType:
 
 ### Example: Testing a New Feature
 
-If you're adding a new feature (e.g., weighted patterns), create tests that:
+If you're adding a new feature (e.g., new pruning strategies), create tests that:
 
 1. **Validate basic functionality** with standard strategies
 2. **Test edge cases** with extreme strategies
-3. **Verify invariants** (e.g., weights don't violate constraints)
+3. **Verify invariants** (e.g., parameters don't violate constraints)
 4. **Check integration** with existing features
 
 ```python
 @given(
     transactions=transaction_lists(),
-    weights=st.lists(st.floats(min_value=0.1, max_value=1.0), min_size=2, max_size=50)
 )
 @settings(max_examples=30, deadline=None)
-def test_weighted_patterns_property(transactions, weights):
-    """Property: Weighted patterns should respect weight constraints."""
-    # Ensure weights match transaction count
-    weights = weights[:len(transactions)]
-    
-    gsp = GSP(transactions, weights=weights)
+def test_gsp_patterns_property(transactions):
+    """Property: Returned pattern supports should stay within valid bounds."""
+    gsp = GSP(transactions)
     result = gsp.search(min_support=0.2)
     
-    # Verify weighted support calculations
+    # Verify support calculations are within expected bounds
+    max_possible_support = len(transactions)
     for level_patterns in result:
         for pattern, support in level_patterns.items():
-            assert 0 <= support <= sum(weights)
+            assert 0 <= support <= max_possible_support
 ```
 
 ### Debugging Failed Property-Based Tests
@@ -377,13 +374,11 @@ For more information, see the [Hypothesis documentation](https://hypothesis.read
 
 ## Running Fuzzing Tests in CI
 
-The project's CI configuration automatically runs fuzzing tests with appropriate profiles:
-- Default profile uses moderate examples for regular testing
-- CI profile may use more examples for comprehensive validation
+The project's CI configuration automatically runs fuzzing tests. The tests use settings configured in each test file via the `@settings` decorator.
 
-To run tests locally with CI settings:
+To run all tests (including fuzzing tests) locally:
 ```bash
-HYPOTHESIS_PROFILE=ci pytest tests/
+pytest tests/
 ```
 
 ## Reporting Issues

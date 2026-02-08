@@ -19,23 +19,21 @@ Email: jacksonpradolima@gmail.com
 import math
 from typing import List, Tuple
 
-import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st, assume
+from hypothesis import HealthCheck, given, assume, settings, strategies as st
 
 from gsppy.gsp import GSP
 from tests.hypothesis_strategies import (
-    extreme_transaction_lists,
-    sparse_transaction_lists,
     noisy_transaction_lists,
-    variable_length_transaction_lists,
-    transactions_with_duplicates,
-    transactions_with_special_chars,
-    timestamped_transaction_lists,
-    pathological_timestamped_transactions,
+    sparse_transaction_lists,
     valid_support_thresholds,
+    extreme_transaction_lists,
     edge_case_support_thresholds,
+    transactions_with_duplicates,
+    timestamped_transaction_lists,
+    transactions_with_special_chars,
+    variable_length_transaction_lists,
+    pathological_timestamped_transactions,
 )
-
 
 # ============================================================================
 # Extreme Transaction Size Tests
@@ -214,20 +212,21 @@ def test_gsp_handles_variable_lengths(transactions: List[List[str]]) -> None:
 @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_variable_length_pattern_discovery(transactions: List[List[str]]) -> None:
     """
-    Property: Pattern lengths should not exceed the shortest transaction length.
+    Property: Pattern lengths should not exceed the longest transaction length.
     
-    With variable-length transactions, longer patterns can only be found
-    if transactions are long enough to contain them.
+    With variable-length transactions and min_support < 1.0, longer patterns
+    can still be found as long as there are sufficiently long transactions
+    that support them.
     """
-    min_transaction_length = min(len(txn) for txn in transactions)
+    max_transaction_length = max(len(txn) for txn in transactions)
     
     gsp = GSP(transactions)
     result = gsp.search(min_support=0.1)
     
-    # Maximum pattern length should not exceed shortest transaction
+    # Maximum pattern length should not exceed longest transaction
     if result:
         max_pattern_length = len(result)
-        assert max_pattern_length <= min_transaction_length
+        assert max_pattern_length <= max_transaction_length
 
 
 # ============================================================================
@@ -452,7 +451,7 @@ def test_gsp_maximum_support_requirement(transactions: List[List[str]]) -> None:
 @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_very_low_support(transactions: List[List[str]]) -> None:
     """
-    Property: Very low support (0.01) should find many patterns in sparse data.
+    Property: Very low support (0.01) should find patterns in sparse data.
     
     Tests that low support thresholds correctly identify infrequent patterns.
     """
@@ -461,12 +460,17 @@ def test_gsp_very_low_support(transactions: List[List[str]]) -> None:
     
     assert isinstance(result, list)
     
-    # Should find at least some patterns with very low support
-    total_patterns = sum(len(level) for level in result)
+    # Each level should be a dict mapping patterns to non-negative integer supports
+    for level in result:
+        assert isinstance(level, dict)
+        for support in level.values():
+            assert isinstance(support, int)
+            assert support >= 0
     
-    # With low support on sparse data, we should find patterns
-    # (though the exact number depends on the data)
-    assert total_patterns >= 0  # At minimum, should not crash
+    # With very low support on sparse, non-empty data, we should find at least one pattern
+    if transactions and any(txn for txn in transactions):
+        total_patterns = sum(len(level) for level in result)
+        assert total_patterns > 0
 
 
 # ============================================================================

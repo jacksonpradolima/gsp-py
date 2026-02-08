@@ -9,7 +9,7 @@ Usage:
     python run_fuzzing_tests.py                     # Run all fuzzing tests
     python run_fuzzing_tests.py --suite edge       # Run edge-case tests only
     python run_fuzzing_tests.py --suite cli        # Run CLI fuzzing tests only
-    python run_fuzzing_tests.py --examples 200     # Run with custom example count
+    python run_fuzzing_tests.py --seed 42          # Run with specific seed
     python run_fuzzing_tests.py --verbose          # Verbose output
 
 Author: Jackson Antonio do Prado Lima
@@ -19,14 +19,13 @@ Email: jacksonpradolima@gmail.com
 import sys
 import argparse
 import subprocess
-from pathlib import Path
 from typing import List, Optional
+from pathlib import Path
 
 
 def run_pytest(
     test_paths: List[str],
     verbose: bool = True,
-    max_examples: Optional[int] = None,
     seed: Optional[int] = None,
     extra_args: Optional[List[str]] = None
 ) -> int:
@@ -36,14 +35,13 @@ def run_pytest(
     Args:
         test_paths: List of test file paths or patterns
         verbose: Enable verbose output
-        max_examples: Override Hypothesis max_examples setting
         seed: Hypothesis random seed for reproducibility
         extra_args: Additional pytest arguments
         
     Returns:
         Exit code from pytest
     """
-    cmd = ["python3", "-m", "pytest"]
+    cmd = [sys.executable, "-m", "pytest"]
     
     # Add test paths
     cmd.extend(test_paths)
@@ -64,15 +62,8 @@ def run_pytest(
     print(f"Running: {' '.join(cmd)}")
     print("-" * 80)
     
-    # Set environment variable for max_examples if specified
-    import os
-    env = os.environ.copy()
-    if max_examples:
-        print(f"Note: max_examples override ({max_examples}) requires modifying test code or using profiles")
-        print("      Running with default example count from tests")
-    
     # Run pytest
-    result = subprocess.run(cmd, cwd=Path(__file__).parent.parent, env=env)
+    result = subprocess.run(cmd, cwd=Path(__file__).parent.parent)
     return result.returncode
 
 
@@ -86,8 +77,8 @@ Examples:
   # Run all fuzzing tests
   python run_fuzzing_tests.py
   
-  # Run only edge-case tests with more examples
-  python run_fuzzing_tests.py --suite edge --examples 200
+  # Run only edge-case tests
+  python run_fuzzing_tests.py --suite edge
   
   # Run CLI fuzzing with specific seed
   python run_fuzzing_tests.py --suite cli --seed 42
@@ -105,12 +96,6 @@ Examples:
     )
     
     parser.add_argument(
-        "--examples",
-        type=int,
-        help="Override Hypothesis max_examples setting"
-    )
-    
-    parser.add_argument(
         "--seed",
         type=int,
         help="Hypothesis random seed for reproducibility"
@@ -119,20 +104,24 @@ Examples:
     parser.add_argument(
         "--verbose",
         "-v",
+        dest="verbose",
         action="store_true",
+        default=True,
         help="Enable verbose output (default: enabled)"
+    )
+    
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        dest="verbose",
+        action="store_false",
+        help="Disable verbose output"
     )
     
     parser.add_argument(
         "--coverage",
         action="store_true",
         help="Run with coverage reporting"
-    )
-    
-    parser.add_argument(
-        "--quick",
-        action="store_true",
-        help="Quick run with fewer examples (for rapid testing)"
     )
     
     args = parser.parse_args()
@@ -160,17 +149,11 @@ Examples:
     if args.coverage:
         extra_args.extend(["--cov=gsppy", "--cov-report=term", "--cov-report=html"])
     
-    if args.quick:
-        # Override max_examples for quick testing
-        args.examples = args.examples or 10
-    
     # Run tests
     print("=" * 80)
     print("GSP-Py Property-Based Fuzzing Tests")
     print("=" * 80)
     print(f"Suite: {args.suite}")
-    if args.examples:
-        print(f"Max examples: {args.examples}")
     if args.seed is not None:
         print(f"Random seed: {args.seed}")
     print("=" * 80)
@@ -179,7 +162,6 @@ Examples:
     return run_pytest(
         test_paths=test_paths,
         verbose=args.verbose,
-        max_examples=args.examples,
         seed=args.seed,
         extra_args=extra_args
     )

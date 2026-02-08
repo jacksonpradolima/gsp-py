@@ -17,16 +17,14 @@ Email: jacksonpradolima@gmail.com
 
 import json
 import tempfile
-from pathlib import Path
 from typing import List
-from click.testing import CliRunner
+from pathlib import Path
 
-import pytest
-from hypothesis import given, settings, strategies as st, HealthCheck
+from hypothesis import HealthCheck, given, settings, strategies as st
+from click.testing import CliRunner
 
 from gsppy.cli import main
 from tests.hypothesis_strategies import transaction_lists, extreme_transaction_lists
-
 
 # ============================================================================
 # Helper Functions

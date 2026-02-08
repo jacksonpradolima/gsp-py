@@ -214,10 +214,7 @@ xfail_strict = true
 filterwarnings = ["error"]
 ```
 
-**Hypothesis profiles** are configured in `pyproject.toml` and can be activated via environment variable:
-```bash
-HYPOTHESIS_PROFILE=ci pytest tests/
-```
+Test settings for Hypothesis are configured in each test file using the `@settings` decorator.
 
 ## 📝 Writing New Tests
 

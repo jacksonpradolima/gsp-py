@@ -26,9 +26,9 @@ Author: Jackson Antonio do Prado Lima
 Email: jacksonpradolima@gmail.com
 """
 
-from typing import List, Tuple, Union, Any
-from hypothesis import strategies as st
+from typing import List, Tuple
 
+from hypothesis import strategies as st
 
 # ============================================================================
 # Basic Strategies - Building Blocks
@@ -537,9 +537,9 @@ def valid_support_thresholds() -> st.SearchStrategy[float]:
     Generate valid support thresholds for GSP testing.
     
     Returns:
-        A strategy generating floats in the valid range (0.0, 1.0]
+        A strategy generating floats in the valid range [0.01, 1.0]
     """
-    return st.floats(min_value=0.01, max_value=1.0, exclude_min=True)
+    return st.floats(min_value=0.01, max_value=1.0)
 
 
 def edge_case_support_thresholds() -> st.SearchStrategy[float]:

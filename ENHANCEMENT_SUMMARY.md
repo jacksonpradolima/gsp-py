@@ -247,4 +247,3 @@ All new tests have been validated to:
 
 **Author**: Copilot (GitHub)
 **Date**: February 8, 2026
-**Issue**: #[issue-number] - Enhance property-based fuzzing and edge-case testing
