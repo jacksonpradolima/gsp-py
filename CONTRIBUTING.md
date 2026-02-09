@@ -193,7 +193,7 @@ Rather than writing individual test cases with specific inputs, property-based t
 All property-based tests use the `@given` decorator from Hypothesis:
 
 ```bash
-# Run all fuzzing tests
+# Run all fast fuzzing tests (excludes slow integration tests, ~2 minutes)
 pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py tests/test_cli_fuzzing.py -v
 
 # Run specific fuzzing test
@@ -201,7 +201,20 @@ pytest tests/test_gsp_edge_cases.py::test_gsp_handles_large_transactions -v
 
 # Run with a fixed Hypothesis seed for reproducible fuzzing
 pytest tests/test_gsp_fuzzing.py --hypothesis-seed=42
+
+# Run slow integration tests (marked for CI/master branch only)
+pytest -m integration -v
+
+# Skip integration tests explicitly
+pytest -m "not integration" -v
 ```
+
+**Integration Tests:**
+
+Some tests are marked as `@pytest.mark.integration` due to long runtime (10+ minutes). These are:
+- `test_gsp_stress_large_transactions` - Stress test with large individual transactions (~15 minutes)
+
+These tests are automatically excluded from regular test runs but can be run explicitly with `pytest -m integration`.
 
 ### Using Modular Hypothesis Strategies
 
@@ -378,9 +391,19 @@ For more information, see the [Hypothesis documentation](https://hypothesis.read
 
 The project's CI configuration automatically runs fuzzing tests. The tests use settings configured in each test file via the `@settings` decorator.
 
-To run all tests (including fuzzing tests) locally:
+**Test Execution Strategy:**
+
+- **Regular CI (PRs, feature branches)**: Runs all tests except those marked with `@pytest.mark.integration`. This completes in ~2 minutes.
+- **Integration CI (master branch)**: Runs all tests including integration tests with `pytest -m integration`. This may take 15+ minutes.
+
+To run all tests locally (excluding slow integration tests):
 ```bash
 pytest tests/
+```
+
+To run including integration tests:
+```bash
+pytest tests/ -m "integration or not integration"
 ```
 
 ## Reporting Issues

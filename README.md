@@ -215,7 +215,7 @@ GSP-Py includes comprehensive testing to ensure reliability and correctness:
 
 **Running Tests:**
 ```bash
-# Run all tests in parallel
+# Run all tests in parallel (excluding slow integration tests)
 make test
 # or
 pytest -n auto
@@ -225,6 +225,10 @@ pytest tests/test_gsp.py                  # Core GSP algorithm tests
 pytest tests/test_gsp_fuzzing.py         # Property-based fuzzing tests
 pytest tests/test_gsp_edge_cases.py      # Extended edge-case tests
 pytest tests/test_cli_fuzzing.py         # CLI fuzzing tests
+
+# Run integration tests (slow, marked for CI/merge to master only)
+pytest -m integration                     # Run all integration tests
+pytest -m "not integration"               # Skip integration tests (default)
 
 # Run with coverage
 make coverage
@@ -237,7 +241,7 @@ pytest --cov=gsppy --cov-report=html
 GSP-Py uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing, which automatically generates test cases to discover edge cases:
 
 ```bash
-# Run fuzzing test suites
+# Run fuzzing test suites (fast tests only, ~2 minutes)
 pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py -v
 
 # Run specific fuzzing test

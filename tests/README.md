@@ -37,7 +37,7 @@ This directory contains comprehensive tests for the GSP-Py library, including un
 
 ### Run All Tests
 ```bash
-# Using pytest directly
+# Using pytest directly (excludes slow integration tests)
 pytest
 
 # Using make
@@ -52,7 +52,7 @@ pytest -n auto
 # Core algorithm tests
 pytest tests/test_gsp.py
 
-# All fuzzing tests
+# All fast fuzzing tests (excludes integration tests)
 pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py tests/test_cli_fuzzing.py
 
 # CLI tests
@@ -60,20 +60,23 @@ pytest tests/test_cli.py tests/test_cli_fuzzing.py
 
 # DataFrame tests
 pytest tests/test_dataframe.py
+
+# Integration tests only (slow, 15+ minutes)
+pytest -m integration
+
+# All tests including integration
+pytest -m "integration or not integration"
 ```
 
 ### Run Property-Based Fuzzing Tests
 
 **Using the fuzzing test runner:**
 ```bash
-# Run all fuzzing test suites
+# Run all fuzzing test suites (fast tests only)
 python tests/run_fuzzing_tests.py
 
 # Run specific suite
 python tests/run_fuzzing_tests.py --suite edge
-
-# Quick test with fewer examples
-python tests/run_fuzzing_tests.py --quick
 
 # Reproducible test with seed
 python tests/run_fuzzing_tests.py --seed 42
@@ -87,7 +90,7 @@ python tests/run_fuzzing_tests.py --coverage
 # Standard fuzzing tests (11 tests)
 pytest tests/test_gsp_fuzzing.py -v
 
-# Extended edge-case tests (26+ tests)
+# Extended edge-case tests (21 tests, excludes integration)
 pytest tests/test_gsp_edge_cases.py -v
 
 # CLI fuzzing tests (15+ tests)

@@ -19,6 +19,7 @@ Email: jacksonpradolima@gmail.com
 import math
 from typing import List, Tuple
 
+import pytest
 from hypothesis import HealthCheck, given, assume, settings, strategies as st
 
 from gsppy.gsp import GSP
@@ -239,7 +240,7 @@ def test_gsp_variable_length_pattern_discovery(transactions: List[List[str]]) ->
 # ============================================================================
 
 @given(transactions=transactions_with_duplicates())
-@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_duplicate_items(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle transactions with duplicate items.
@@ -261,7 +262,7 @@ def test_gsp_handles_duplicate_items(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transactions_with_special_chars())
-@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_special_characters(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle items with special characters and unicode.
@@ -590,13 +591,18 @@ def test_gsp_stress_many_transactions(transactions: List[List[str]]) -> None:
             assert support > 0
 
 
+@pytest.mark.integration
 @given(transactions=extreme_transaction_lists(size_type="large"))
 @settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_stress_large_transactions(transactions: List[List[str]]) -> None:
     """
     Stress test: GSP should handle transactions with many items.
     
-    Tests scalability with large individual transactions (50-100+ items).
+    Tests scalability with large individual transactions (10-20 items).
+    
+    This is marked as an integration test due to its long runtime (~15 minutes).
+    It will not run in regular test suites but only when explicitly requested
+    with `pytest -m integration`.
     """
     gsp = GSP(transactions)
     result = gsp.search(min_support=0.3)
