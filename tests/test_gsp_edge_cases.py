@@ -473,7 +473,7 @@ def test_gsp_very_low_support(transactions: List[List[str]]) -> None:
             assert support >= 0
     
     # With very low support on sparse, non-empty data, we should find at least one pattern
-    if transactions and any(txn for txn in transactions):
+    if transactions and any(transactions):
         total_patterns = sum(len(level) for level in result)
         assert total_patterns > 0
 
