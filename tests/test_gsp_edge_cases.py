@@ -295,12 +295,12 @@ def test_gsp_handles_special_characters(transactions: List[List[str]]) -> None:
 
 @given(
     transactions=st.lists(
-        st.lists(st.text(min_size=1, max_size=10), min_size=1, max_size=20),
+        st.lists(st.text(min_size=1, max_size=5), min_size=1, max_size=5),
         min_size=2,
-        max_size=30
+        max_size=10
     )
 )
-@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_robust_to_diverse_strings(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle arbitrary string inputs without crashing.

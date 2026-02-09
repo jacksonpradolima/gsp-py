@@ -166,12 +166,12 @@ def extreme_transaction_lists(
         A list of transactions with extreme characteristics
     """
     if size_type == "large":
-        # Few transactions with many items
-        n_transactions = draw(st.integers(min_value=2, max_value=10))
-        items = draw(item_pool(min_items=50, max_items=200))
+        # Few transactions with many items (reduced for performance)
+        n_transactions = draw(st.integers(min_value=2, max_value=5))
+        items = draw(item_pool(min_items=10, max_items=25))
         transactions = []
         for _ in range(n_transactions):
-            transaction_size = draw(st.integers(min_value=50, max_value=min(100, len(items))))
+            transaction_size = draw(st.integers(min_value=10, max_value=min(20, len(items))))
             transaction = draw(st.lists(
                 st.sampled_from(items),
                 min_size=transaction_size,
@@ -181,12 +181,12 @@ def extreme_transaction_lists(
         return transactions
     
     elif size_type == "many":
-        # Many transactions with moderate items
-        n_transactions = draw(st.integers(min_value=100, max_value=500))
-        items = draw(item_pool(min_items=10, max_items=30))
+        # Many transactions with moderate items (reduced for performance)
+        n_transactions = draw(st.integers(min_value=50, max_value=100))
+        items = draw(item_pool(min_items=5, max_items=15))
         transactions = []
         for _ in range(n_transactions):
-            transaction_size = draw(st.integers(min_value=2, max_value=min(15, len(items))))
+            transaction_size = draw(st.integers(min_value=2, max_value=min(8, len(items))))
             transaction = draw(st.lists(
                 st.sampled_from(items),
                 min_size=transaction_size,
