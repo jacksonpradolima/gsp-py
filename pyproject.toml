@@ -175,7 +175,7 @@ reportPrivateUsage = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--tb=short -v"
+addopts = "--tb=short -v --durations=10"
 xfail_strict = true
 filterwarnings = [
     "error"
