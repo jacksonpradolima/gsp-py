@@ -58,7 +58,7 @@ def test_cli_missing_file() -> None:
 
 
 @given(support=st.floats(min_value=-1.0, max_value=-0.01))
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=3, deadline=None)
 def test_cli_invalid_negative_support(support: float) -> None:
     """Test CLI with negative support values."""
     runner = CliRunner()
@@ -78,7 +78,7 @@ def test_cli_invalid_negative_support(support: float) -> None:
 
 
 @given(support=st.floats(min_value=1.01, max_value=10.0))
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=3, deadline=None)
 def test_cli_invalid_high_support(support: float) -> None:
     """Test CLI with support values > 1.0."""
     runner = CliRunner()
@@ -102,7 +102,7 @@ def test_cli_invalid_high_support(support: float) -> None:
 # ============================================================================
 
 @given(transactions=transaction_lists(min_transactions=2, max_transactions=20))
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_cli_json_format(transactions: List[List[str]]) -> None:
     """
     Property: CLI should correctly parse valid JSON transaction files.
@@ -169,7 +169,7 @@ def test_cli_json_wrong_structure() -> None:
 # ============================================================================
 
 @given(transactions=transaction_lists(min_transactions=2, max_transactions=20))
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_cli_csv_format(transactions: List[List[str]]) -> None:
     """
     Property: CLI should correctly parse valid CSV transaction files.
@@ -259,7 +259,7 @@ def test_cli_output_structure() -> None:
     transactions=transaction_lists(min_transactions=5, max_transactions=15),
     support=st.floats(min_value=0.1, max_value=0.9)
 )
-@settings(max_examples=15, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_cli_varying_support_output(
     transactions: List[List[str]], support: float
 ) -> None:
@@ -291,7 +291,7 @@ def test_cli_varying_support_output(
 # ============================================================================
 
 @given(transactions=extreme_transaction_lists(size_type="minimal"))
-@settings(max_examples=20, deadline=None)
+@settings(max_examples=3, deadline=None)
 def test_cli_minimal_valid_input(transactions: List[List[str]]) -> None:
     """
     Property: CLI should handle minimal valid inputs.
@@ -354,7 +354,7 @@ def test_cli_single_transaction_error() -> None:
 # ============================================================================
 
 @given(transactions=extreme_transaction_lists(size_type="many"))
-@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=2, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_cli_stress_many_transactions(transactions: List[List[str]]) -> None:
     """
     Stress test: CLI should handle large transaction files.

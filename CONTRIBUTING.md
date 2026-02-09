@@ -266,7 +266,7 @@ from hypothesis import given, settings, HealthCheck
 from tests.hypothesis_strategies import transaction_lists
 
 @given(transactions=transaction_lists())
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_my_property(transactions):
     """
     Property: Describe what invariant this test validates.
@@ -283,9 +283,11 @@ def test_gsp_my_property(transactions):
 ```
 
 4. **Configure test settings** as needed:
-   - `max_examples`: Number of random test cases to generate (default varies by profile)
+   - `max_examples`: Number of random test cases to generate (use small values like 3-10 for fast tests)
    - `deadline`: Maximum time per test case (use `None` for slow operations)
    - `suppress_health_check`: Disable specific health checks like `HealthCheck.too_slow`
+
+**Note:** Keep `max_examples` low (3-10) to ensure tests run quickly. The fuzzing suite should complete in under a minute.
 
 ### Creating Custom Strategies
 
@@ -343,7 +345,7 @@ If you're adding a new feature (e.g., new pruning strategies), create tests that
 @given(
     transactions=transaction_lists(),
 )
-@settings(max_examples=30, deadline=None)
+@settings(max_examples=5, deadline=None)
 def test_gsp_patterns_property(transactions):
     """Property: Returned pattern supports should stay within valid bounds."""
     gsp = GSP(transactions)

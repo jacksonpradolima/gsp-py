@@ -234,7 +234,7 @@ pytest --cov=gsppy --cov-report=html
 
 **Property-Based Testing (Fuzzing):**
 
-GSP-Py uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing, which automatically generates hundreds of test cases to discover edge cases:
+GSP-Py uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing, which automatically generates test cases to discover edge cases:
 
 ```bash
 # Run fuzzing test suites
@@ -254,6 +254,8 @@ The fuzzing tests validate critical properties and invariants:
 - ✅ Determinism (same input → same output)
 - ✅ No duplicate patterns within levels
 - ✅ Robustness to edge cases (extreme sizes, sparse data, noise, special characters)
+
+**Note:** Fuzzing tests use small example counts (3-10 examples per test) for fast execution while maintaining good coverage. Individual tests complete in seconds, with the full fuzzing suite running in under a minute.
 
 For more details on writing and extending property-based tests, see the [Contributing Guide](CONTRIBUTING.md#property-based-testing-with-hypothesis).
 

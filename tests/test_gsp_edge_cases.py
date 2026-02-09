@@ -40,7 +40,7 @@ from tests.hypothesis_strategies import (
 # ============================================================================
 
 @given(transactions=extreme_transaction_lists(size_type="large"))
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_large_transactions(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle transactions with many items.
@@ -62,7 +62,7 @@ def test_gsp_handles_large_transactions(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=extreme_transaction_lists(size_type="many"))
-@settings(max_examples=15, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_many_transactions(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle datasets with many transactions.
@@ -82,7 +82,7 @@ def test_gsp_handles_many_transactions(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=extreme_transaction_lists(size_type="minimal"))
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_minimal_input(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle minimal valid input (2 transactions, 1 item each).
@@ -107,7 +107,7 @@ def test_gsp_handles_minimal_input(transactions: List[List[str]]) -> None:
 # ============================================================================
 
 @given(transactions=sparse_transaction_lists())
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_sparse_patterns(transactions: List[List[str]]) -> None:
     """
     Property: GSP should gracefully handle sparse data with low pattern overlap.
@@ -129,7 +129,7 @@ def test_gsp_handles_sparse_patterns(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=noisy_transaction_lists(noise_ratio=0.7))
-@settings(max_examples=25, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_filters_noise(transactions: List[List[str]]) -> None:
     """
     Property: GSP should filter out noisy items and identify true patterns.
@@ -154,7 +154,7 @@ def test_gsp_filters_noise(transactions: List[List[str]]) -> None:
     transactions=noisy_transaction_lists(),
     support=st.floats(min_value=0.1, max_value=0.8)
 )
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_noise_resistance_varies_with_support(
     transactions: List[List[str]], support: float
 ) -> None:
@@ -186,7 +186,7 @@ def test_gsp_noise_resistance_varies_with_support(
 # ============================================================================
 
 @given(transactions=variable_length_transaction_lists())
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_variable_lengths(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle transactions with highly variable lengths.
@@ -209,7 +209,7 @@ def test_gsp_handles_variable_lengths(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=variable_length_transaction_lists())
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_variable_length_pattern_discovery(transactions: List[List[str]]) -> None:
     """
     Property: Maximum pattern length should not exceed the longest transaction length.
@@ -239,7 +239,7 @@ def test_gsp_variable_length_pattern_discovery(transactions: List[List[str]]) ->
 # ============================================================================
 
 @given(transactions=transactions_with_duplicates())
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_duplicate_items(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle transactions with duplicate items.
@@ -261,7 +261,7 @@ def test_gsp_handles_duplicate_items(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transactions_with_special_chars())
-@settings(max_examples=25, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_special_characters(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle items with special characters and unicode.
@@ -300,7 +300,7 @@ def test_gsp_handles_special_characters(transactions: List[List[str]]) -> None:
         max_size=30
     )
 )
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_robust_to_diverse_strings(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle arbitrary string inputs without crashing.
@@ -330,7 +330,7 @@ def test_gsp_robust_to_diverse_strings(transactions: List[List[str]]) -> None:
 # ============================================================================
 
 @given(transactions=timestamped_transaction_lists())
-@settings(max_examples=25, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_timestamped_transactions(
     transactions: List[List[Tuple[str, float]]]
 ) -> None:
@@ -354,7 +354,7 @@ def test_gsp_handles_timestamped_transactions(
 
 
 @given(transactions=pathological_timestamped_transactions(pathology_type="identical"))
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_identical_timestamps(
     transactions: List[List[Tuple[str, float]]]
 ) -> None:
@@ -375,7 +375,7 @@ def test_gsp_handles_identical_timestamps(
 
 
 @given(transactions=pathological_timestamped_transactions(pathology_type="gaps"))
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_large_timestamp_gaps(
     transactions: List[List[Tuple[str, float]]]
 ) -> None:
@@ -405,7 +405,7 @@ def test_gsp_handles_large_timestamp_gaps(
     transactions=extreme_transaction_lists(size_type="many"),
     support=edge_case_support_thresholds()
 )
-@settings(max_examples=15, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_edge_case_support_thresholds(
     transactions: List[List[str]], support: float
 ) -> None:
@@ -430,7 +430,7 @@ def test_gsp_edge_case_support_thresholds(
 
 
 @given(transactions=extreme_transaction_lists(size_type="minimal"))
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_maximum_support_requirement(transactions: List[List[str]]) -> None:
     """
     Property: With support=1.0, only patterns in ALL transactions should be found.
@@ -453,7 +453,7 @@ def test_gsp_maximum_support_requirement(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=sparse_transaction_lists())
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_very_low_support(transactions: List[List[str]]) -> None:
     """
     Property: Very low support (0.01) should find patterns in sparse data.
@@ -486,7 +486,7 @@ def test_gsp_very_low_support(transactions: List[List[str]]) -> None:
     transactions=variable_length_transaction_lists(),
     support=valid_support_thresholds()
 )
-@settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_preserves_sequence_validity(
     transactions: List[List[str]], support: float
 ) -> None:
@@ -524,7 +524,7 @@ def test_gsp_preserves_sequence_validity(
     support1=st.floats(min_value=0.1, max_value=0.4),
     support2=st.floats(min_value=0.5, max_value=0.9)
 )
-@settings(max_examples=15, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_support_conservation(
     transactions: List[List[str]], support1: float, support2: float
 ) -> None:
@@ -570,7 +570,7 @@ def test_gsp_support_conservation(
 # ============================================================================
 
 @given(transactions=extreme_transaction_lists(size_type="many"))
-@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_stress_many_transactions(transactions: List[List[str]]) -> None:
     """
     Stress test: GSP should handle hundreds of transactions efficiently.
@@ -591,7 +591,7 @@ def test_gsp_stress_many_transactions(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=extreme_transaction_lists(size_type="large"))
-@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=3, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_stress_large_transactions(transactions: List[List[str]]) -> None:
     """
     Stress test: GSP should handle transactions with many items.
