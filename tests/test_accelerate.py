@@ -11,21 +11,21 @@ This module tests the acceleration layer for GSP support counting, including:
 """
 
 import os
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
 
 from gsppy.accelerate import (
     _ENCODED_CACHE,
+    _env_backend,
+    _gpu_available,
+    support_counts,
+    _rust_available,
     _encode_candidates,
     _encode_transactions,
-    _env_backend,
-    _get_encoded_transactions,
-    _gpu_available,
-    _rust_available,
-    support_counts,
     support_counts_python,
+    _get_encoded_transactions,
 )
 
 
