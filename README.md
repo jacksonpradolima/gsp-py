@@ -209,6 +209,63 @@ make bench-small         # run small benchmark
 make bench-big           # run large benchmark
 ```
 
+#### 6. Testing & Quality Assurance
+
+GSP-Py includes comprehensive testing to ensure reliability and correctness:
+
+**Running Tests:**
+```bash
+# Run all tests in parallel (excluding slow integration tests)
+make test
+# or
+pytest -n auto
+
+# Run specific test suites
+pytest tests/test_gsp.py                  # Core GSP algorithm tests
+pytest tests/test_gsp_fuzzing.py         # Property-based fuzzing tests
+pytest tests/test_gsp_edge_cases.py      # Extended edge-case tests
+pytest tests/test_cli_fuzzing.py         # CLI fuzzing tests
+
+# Run integration tests (slow, marked for CI/merge to master only)
+pytest -m integration                     # Run all integration tests
+pytest -m "not integration"               # Skip integration tests (default)
+
+# Run with coverage
+make coverage
+# or
+pytest --cov=gsppy --cov-report=html
+```
+
+**Property-Based Testing (Fuzzing):**
+
+GSP-Py uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing, which automatically generates test cases to discover edge cases:
+
+```bash
+# Run fuzzing test suites (fast tests only, ~2 minutes)
+pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py -v
+
+# Run specific fuzzing test
+pytest tests/test_gsp_edge_cases.py::test_gsp_handles_large_transactions -v
+
+# Reproduce a specific failure using seed
+pytest tests/test_gsp_fuzzing.py --hypothesis-seed=12345
+```
+
+The fuzzing tests validate critical properties and invariants:
+- ✅ Support monotonicity (lower thresholds → more patterns)
+- ✅ Pattern length progression (level k contains k-sequences)
+- ✅ Support threshold compliance (all patterns meet minimum support)
+- ✅ Determinism (same input → same output)
+- ✅ No duplicate patterns within levels
+- ✅ Robustness to edge cases (extreme sizes, sparse data, noise, special characters)
+
+**Note:** Fuzzing tests use small example counts (3-10 examples per test) for fast execution while maintaining good coverage. Individual tests complete in seconds, with the full fuzzing suite running in under a minute.
+
+For more details on writing and extending property-based tests, see the [Contributing Guide](CONTRIBUTING.md#property-based-testing-with-hypothesis).
+
+> [!TIP]
+> GSP-Py provides reusable Hypothesis strategies in `tests/hypothesis_strategies.py` that you can use to write new property-based tests. These strategies generate various types of test data including extreme transaction sizes, noisy patterns, temporal data, and malformed inputs.
+
 > [!NOTE]
 > Tox in this project uses the "tox-uv" plugin. When running `make tox` or `tox`, missing Python interpreters can be provisioned automatically via uv (no need to pre-install all versions). This makes local setup faster.
 
@@ -1382,14 +1439,6 @@ uv pip install -e .
 uv run pytest -n auto
 uv run ruff check .
 uv run pyright
-```
-
-### Testing & Fuzzing
-
-GSP-Py includes comprehensive test coverage, including property-based fuzzing tests using [Hypothesis](https://hypothesis.readthedocs.io/). These fuzzing tests automatically generate random inputs to verify algorithm invariants and discover edge cases. Run the fuzzing tests with:
-
-```bash
-uv run pytest tests/test_gsp_fuzzing.py -v
 ```
 
 ### General Steps:

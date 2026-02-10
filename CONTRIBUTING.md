@@ -91,6 +91,7 @@ To maintain consistency and code quality, please follow these coding guidelines:
    - Write tests for new features or bug fixes.
    - Use `pytest` as the testing framework.
    - Place tests in the `tests/` directory using descriptive test names.
+   - Consider property-based tests for robust validation (see Property-Based Testing section below).
 
 4. **Documentation**:
    - Update documentation (`README.md`, `CHANGELOG.md`, comments in code) related to your changes.
@@ -176,6 +177,234 @@ Some hot loops can be accelerated with Rust via PyO3. This is entirely optional:
    - `make pre-commit-install` to install the pre-commit hook
    - `make pre-commit-run` to run on all files
 - To set up pre-commit manually: `uv run pre-commit install`
+
+---
+
+## Property-Based Testing with Hypothesis
+
+GSP-Py uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing (fuzzing), which automatically generates test cases to discover edge cases and ensure robustness.
+
+### What is Property-Based Testing?
+
+Rather than writing individual test cases with specific inputs, property-based testing defines **properties** (invariants) that should hold for all inputs. Hypothesis then generates hundreds of random test cases to verify these properties.
+
+### Running Fuzzing Tests
+
+All property-based tests use the `@given` decorator from Hypothesis:
+
+```bash
+# Run all fast fuzzing tests (excludes slow integration tests, ~2 minutes)
+pytest tests/test_gsp_fuzzing.py tests/test_gsp_edge_cases.py tests/test_cli_fuzzing.py -v
+
+# Run specific fuzzing test
+pytest tests/test_gsp_edge_cases.py::test_gsp_handles_large_transactions -v
+
+# Run with a fixed Hypothesis seed for reproducible fuzzing
+pytest tests/test_gsp_fuzzing.py --hypothesis-seed=42
+
+# Run slow integration tests (marked for CI/master branch only)
+pytest -m integration -v
+
+# Skip integration tests explicitly
+pytest -m "not integration" -v
+```
+
+**Integration Tests:**
+
+Some tests are marked as `@pytest.mark.integration` due to long runtime (10+ minutes). These are:
+- `test_gsp_stress_large_transactions` - Stress test with large individual transactions (~15 minutes)
+
+These tests are automatically excluded from regular test runs but can be run explicitly with `pytest -m integration`.
+
+### Using Modular Hypothesis Strategies
+
+GSP-Py provides reusable strategies in `tests/hypothesis_strategies.py` that you can compose for new tests:
+
+```python
+from hypothesis import given
+from tests.hypothesis_strategies import (
+    transaction_lists,           # Standard transaction data
+    extreme_transaction_lists,   # Extreme sizes (large/many/minimal)
+    sparse_transaction_lists,    # Low pattern overlap
+    noisy_transaction_lists,     # Mixed signal and noise
+    timestamped_transaction_lists, # Temporal data
+    valid_support_thresholds,    # Valid support values
+)
+
+@given(transactions=transaction_lists())
+def test_my_property(transactions):
+    gsp = GSP(transactions)
+    result = gsp.search(min_support=0.2)
+    # Assert your property here
+    assert isinstance(result, list)
+```
+
+### Available Strategies
+
+**Basic Strategies:**
+- `transaction_lists()` - Standard transaction data (2-50 transactions)
+- `item_pool()` - Generate unique items for transactions
+- `item_strings()` - Generate individual item strings
+
+**Edge Case Strategies:**
+- `extreme_transaction_lists(size_type="large")` - Few transactions with many items
+- `extreme_transaction_lists(size_type="many")` - Many transactions (100-500)
+- `extreme_transaction_lists(size_type="minimal")` - Minimal valid input (2 transactions)
+- `sparse_transaction_lists()` - Low pattern overlap/sparse patterns
+- `noisy_transaction_lists()` - High noise ratio with some signal
+- `variable_length_transaction_lists()` - Highly variable transaction sizes
+
+**Malformed Input Strategies:**
+- `transactions_with_duplicates()` - Duplicate items within transactions
+- `transactions_with_special_chars()` - Unicode, special chars, whitespace
+
+**Temporal Strategies:**
+- `timestamped_transaction_lists()` - Transactions with timestamps
+- `pathological_timestamped_transactions()` - Edge cases (reversed, identical, large gaps)
+
+**Support Threshold Strategies:**
+- `valid_support_thresholds()` - Valid range (0.01-1.0)
+- `edge_case_support_thresholds()` - Boundary values
+
+### Writing New Property-Based Tests
+
+1. **Identify the property/invariant** you want to test (e.g., "support counts should never exceed total transactions")
+
+2. **Choose or create appropriate strategies** from `tests/hypothesis_strategies.py`
+
+3. **Write the test using `@given`**:
+
+```python
+from hypothesis import given, settings, HealthCheck
+from tests.hypothesis_strategies import transaction_lists
+
+@given(transactions=transaction_lists())
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+def test_gsp_my_property(transactions):
+    """
+    Property: Describe what invariant this test validates.
+    
+    Explain what the test is checking and why it matters.
+    """
+    gsp = GSP(transactions)
+    result = gsp.search(min_support=0.2)
+    
+    # Assert your property
+    for level_patterns in result:
+        for pattern, support in level_patterns.items():
+            assert support <= len(transactions), "Support cannot exceed transaction count"
+```
+
+4. **Configure test settings** as needed:
+   - `max_examples`: Number of random test cases to generate (use small values like 3-10 for fast tests)
+   - `deadline`: Maximum time per test case (use `None` for slow operations)
+   - `suppress_health_check`: Disable specific health checks like `HealthCheck.too_slow`
+
+**Note:** Keep `max_examples` low (3-10) to ensure tests run quickly. The fuzzing suite should complete in under a minute.
+
+### Creating Custom Strategies
+
+To create a new reusable strategy in `tests/hypothesis_strategies.py`:
+
+```python
+from hypothesis import strategies as st
+
+@st.composite
+def my_custom_strategy(draw: st.DrawFn, **kwargs) -> MyType:
+    """
+    Generate custom test data.
+    
+    Args:
+        draw: Hypothesis draw function
+        **kwargs: Custom parameters
+        
+    Returns:
+        Generated test data
+    """
+    # Use draw() to generate random values
+    n = draw(st.integers(min_value=1, max_value=10))
+    items = draw(st.lists(st.text(), min_size=n, max_size=n))
+    return items
+```
+
+### Best Practices for Property-Based Testing
+
+1. **Test properties, not specific outputs**: Focus on invariants that should always hold
+   - ✅ "All patterns should meet minimum support threshold"
+   - ❌ "Transaction X should produce patterns Y"
+
+2. **Use appropriate strategies**: Match the strategy to what you're testing
+   - Testing edge cases? Use `extreme_transaction_lists()`
+   - Testing noise resistance? Use `noisy_transaction_lists()`
+
+3. **Handle expected failures gracefully**: Use `assume()` to skip invalid inputs or `pytest.raises()` for expected errors
+
+4. **Keep tests focused**: Each test should validate one clear property
+
+5. **Document properties clearly**: Explain what invariant is being tested in the docstring
+
+6. **Compose strategies**: Combine existing strategies rather than creating everything from scratch
+
+### Example: Testing a New Feature
+
+If you're adding a new feature (e.g., new pruning strategies), create tests that:
+
+1. **Validate basic functionality** with standard strategies
+2. **Test edge cases** with extreme strategies
+3. **Verify invariants** (e.g., parameters don't violate constraints)
+4. **Check integration** with existing features
+
+```python
+@given(
+    transactions=transaction_lists(),
+)
+@settings(max_examples=5, deadline=None)
+def test_gsp_patterns_property(transactions):
+    """Property: Returned pattern supports should stay within valid bounds."""
+    gsp = GSP(transactions)
+    result = gsp.search(min_support=0.2)
+    
+    # Verify support calculations are within expected bounds
+    max_possible_support = len(transactions)
+    for level_patterns in result:
+        for pattern, support in level_patterns.items():
+            assert 0 <= support <= max_possible_support
+```
+
+### Debugging Failed Property-Based Tests
+
+When a property-based test fails, Hypothesis provides:
+- The **specific input** that caused the failure
+- A **simplified version** of that input (shrinking)
+- The **random seed** to reproduce the failure
+
+To reproduce a failure:
+```bash
+pytest tests/test_gsp_edge_cases.py::test_name --hypothesis-seed=12345
+```
+
+For more information, see the [Hypothesis documentation](https://hypothesis.readthedocs.io/).
+
+---
+
+## Running Fuzzing Tests in CI
+
+The project's CI configuration automatically runs fuzzing tests. The tests use settings configured in each test file via the `@settings` decorator.
+
+**Test Execution Strategy:**
+
+- **Regular CI (PRs, feature branches)**: Runs all tests except those marked with `@pytest.mark.integration`. This completes in ~2 minutes.
+- **Integration CI (master branch)**: Runs all tests including integration tests with `pytest -m integration`. This may take 15+ minutes.
+
+To run all tests locally (excluding slow integration tests):
+```bash
+pytest tests/
+```
+
+To run including integration tests:
+```bash
+pytest tests/ -m "integration or not integration"
+```
 
 ## Reporting Issues
 

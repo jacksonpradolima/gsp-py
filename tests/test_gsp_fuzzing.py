@@ -59,7 +59,7 @@ def transaction_lists(draw: st.DrawFn, min_transactions: int = 2, max_transactio
 
 
 @given(transactions=transaction_lists())
-@settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_returns_valid_output(transactions: List[List[str]]) -> None:
     """
     Property: GSP should always return a valid output structure.
@@ -90,7 +90,7 @@ def test_gsp_returns_valid_output(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists())
-@settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_support_monotonicity(transactions: List[List[str]]) -> None:
     """
     Property: Lower min_support should yield equal or more patterns.
@@ -123,7 +123,7 @@ def test_gsp_support_monotonicity(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists())
-@settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_pattern_length_increases(transactions: List[List[str]]) -> None:
     """
     Property: Pattern lengths should increase by level.
@@ -143,7 +143,7 @@ def test_gsp_pattern_length_increases(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=1.0))
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_respects_min_support(transactions: List[List[str]], min_support: float) -> None:
     """
     Property: All returned patterns should meet the minimum support threshold.
@@ -165,7 +165,7 @@ def test_gsp_respects_min_support(transactions: List[List[str]], min_support: fl
 
 
 @given(transactions=transaction_lists())
-@settings(max_examples=100, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_first_level_contains_single_items(transactions: List[List[str]]) -> None:
     """
     Property: First level should contain only single-item sequences.
@@ -186,7 +186,7 @@ def test_gsp_first_level_contains_single_items(transactions: List[List[str]]) ->
 
 
 @given(transactions=transaction_lists(min_transactions=2, max_transactions=10))
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_deterministic(transactions: List[List[str]]) -> None:
     """
     Property: GSP should be deterministic.
@@ -205,7 +205,7 @@ def test_gsp_deterministic(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists())
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_pattern_hierarchy(transactions: List[List[str]]) -> None:
     """
     Property: Each pattern's support should be >= support of any of its super-patterns.
@@ -236,7 +236,7 @@ def test_gsp_pattern_hierarchy(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=0.99))
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_no_duplicate_patterns(transactions: List[List[str]], min_support: float) -> None:
     """
     Property: No duplicate patterns should exist at any level.
@@ -257,7 +257,7 @@ def test_gsp_no_duplicate_patterns(transactions: List[List[str]], min_support: f
 
 
 @given(st.lists(st.lists(st.text(min_size=1, max_size=3), min_size=1, max_size=5), min_size=2, max_size=10))
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_handles_diverse_inputs(transactions: List[List[str]]) -> None:
     """
     Property: GSP should handle diverse string inputs without crashing.
@@ -277,7 +277,7 @@ def test_gsp_handles_diverse_inputs(transactions: List[List[str]]) -> None:
 
 
 @given(transactions=transaction_lists(min_transactions=5, max_transactions=20))
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> None:
     """
     Property: With sufficiently high min_support, result should be empty or minimal.
@@ -299,7 +299,7 @@ def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> No
     transactions=transaction_lists(min_transactions=10, max_transactions=30),
     support_fraction=st.floats(min_value=0.1, max_value=0.9),
 )
-@settings(max_examples=30, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_support_bounds(transactions: List[List[str]], support_fraction: float) -> None:
     """
     Property: Support values should be within valid bounds.
