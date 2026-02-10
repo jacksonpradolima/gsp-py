@@ -73,7 +73,9 @@ Each notebook is structured with `@app.cell` decorators that define reactive cel
 
 ## Exporting Notebooks
 
-To export a notebook to HTML for documentation:
+Marimo notebooks can be exported to various formats for sharing:
+
+To export a notebook to HTML:
 
 ```bash
 marimo export html sequence_example.py -o sequence_example.html
@@ -91,20 +93,8 @@ When adding new notebooks:
 
 1. Create the notebook in this directory
 2. Test it with `marimo check your_notebook.py`
-3. Export to HTML: `marimo export html your_notebook.py -o ../docs/your_notebook.html --force`
-4. Add a link in `docs/examples.md`
-5. Update `mkdocs.yml` if adding a new documentation page
-6. Commit both the `.py` notebook and the `.html` export
-
-**Important:** When modifying existing notebooks, remember to regenerate the HTML export:
-
-```bash
-# After modifying a notebook
-marimo export html your_notebook.py -o ../docs/your_notebook.html --force
-git add notebooks/your_notebook.py docs/your_notebook.html
-```
-
-This ensures the documentation stays in sync with the notebook source.
+3. Add a link in `docs/examples.md` pointing to the notebook on GitHub
+4. Commit the `.py` notebook file
 
 ## More Resources
 

@@ -1,6 +1,6 @@
 # Interactive Examples
 
-GSP-Py provides interactive notebook examples using [marimo](https://marimo.io/) that demonstrate various features and use cases. These notebooks are fully executable and can be run locally or viewed as static HTML.
+GSP-Py provides interactive notebook examples using [marimo](https://marimo.io/) that demonstrate various features and use cases. These notebooks are fully executable and can be run locally.
 
 ## Available Notebooks
 
@@ -15,7 +15,7 @@ Learn how to use the Sequence class for working with sequential patterns in a st
 - Creating custom sequence objects
 - Pattern analysis and statistics
 
-[View Notebook](sequence_example.html){ .md-button .md-button--primary }
+**Notebook:** [`notebooks/sequence_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/sequence_example.py)
 
 ### 2. Itemset Support Example
 
@@ -27,7 +27,7 @@ Understand how to work with itemsets where multiple items can occur together at 
 - E-commerce click streams with concurrent actions
 - When and how to use itemsets
 
-[View Notebook](itemset_example.html){ .md-button .md-button--primary }
+**Notebook:** [`notebooks/itemset_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/itemset_example.py)
 
 ### 3. DataFrame Integration Example
 
@@ -39,7 +39,7 @@ Learn how to use GSP-Py with Polars and Pandas DataFrames for efficient pattern 
 - Temporal mining with timestamps
 - Performance benefits of DataFrame integration
 
-[View Notebook](dataframe_example.html){ .md-button .md-button--primary }
+**Notebook:** [`notebooks/dataframe_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/dataframe_example.py)
 
 ## Running Notebooks Locally
 
