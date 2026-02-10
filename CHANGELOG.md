@@ -1,6 +1,104 @@
 # CHANGELOG
 
 
+## v5.2.0 (2026-02-10)
+
+### Bug Fixes
+
+- Address code review feedback - fix imports, runner script, test assertions, and documentation
+  ([`c4e8016`](https://github.com/jacksonpradolima/gsp-py/commit/c4e8016e8ebd8dfe3e58cc00762f5841300f4597))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Remove ENHANCEMENT_SUMMARY.md, remove duplicate Testing section, clarify test assertion
+  ([`4c37a78`](https://github.com/jacksonpradolima/gsp-py/commit/4c37a7805acfdd78e8b6a7d79618847bed90ef1a))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Simplify comprehension to use collection constructor directly
+  ([`fcf52dd`](https://github.com/jacksonpradolima/gsp-py/commit/fcf52dd30f775a8bd8b316cc8cf7d3318161b172))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Build System
+
+- **deps**: Bump github/codeql-action from 4.32.1 to 4.32.2 in /.github/workflows
+  ([`49efd5c`](https://github.com/jacksonpradolima/gsp-py/commit/49efd5ca92f8418482bddd63cf25cb9dc030d507))
+
+build(deps): bump github/codeql-action from 4.32.1 to 4.32.2 in /.github/workflows
+
+- **deps**: Bump github/codeql-action in /.github/workflows
+  ([`0ef92d8`](https://github.com/jacksonpradolima/gsp-py/commit/0ef92d8675e49f08b7f1da4701fc388403ed9db5))
+
+Bumps [github/codeql-action](https://github.com/github/codeql-action) from 4.32.1 to 4.32.2. -
+  [Release notes](https://github.com/github/codeql-action/releases) -
+  [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/github/codeql-action/compare/6bc82e05fd0ea64601dd4b465378bbcf57de0314...45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2)
+
+--- updated-dependencies: - dependency-name: github/codeql-action dependency-version: 4.32.2
+
+dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+### Chores
+
+- Update uv.lock for version 5.1.0
+  ([`07e5ea5`](https://github.com/jacksonpradolima/gsp-py/commit/07e5ea5bbafc6d02cb63c5de99e732e51f7f0f24))
+
+### Documentation
+
+- Add comprehensive enhancement summary document
+  ([`61491c6`](https://github.com/jacksonpradolima/gsp-py/commit/61491c6bfb0bf477ca6b895ed74bed27d09a3cb9))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Features
+
+- Add fuzzing test runner and comprehensive test documentation
+  ([`9630244`](https://github.com/jacksonpradolima/gsp-py/commit/963024463fac550b54f6c736fd11eb08fb21428f))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Add modular hypothesis strategies and comprehensive edge-case tests
+  ([`241b2ac`](https://github.com/jacksonpradolima/gsp-py/commit/241b2acb8d495ff43798163b005d8c5edacc2c98))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Modular property-based testing framework with 36 new fast fuzzing tests
+  ([`042079d`](https://github.com/jacksonpradolima/gsp-py/commit/042079d181c3255c76912c6e4f7ec8fdfd4543b4))
+
+feat: modular property-based testing framework with 36 new fast fuzzing tests
+
+### Performance Improvements
+
+- Reduce extreme test input sizes for faster execution
+  ([`902e20d`](https://github.com/jacksonpradolima/gsp-py/commit/902e20d70b3f68dc065a6f69fd16dd2ff4add3e2))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Reduce hypothesis max_examples for faster test execution
+  ([`2240020`](https://github.com/jacksonpradolima/gsp-py/commit/2240020b24fe70ed806efb462d58414fa0c61b81))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Testing
+
+- Add --durations=10 to pytest config for test timing visibility
+  ([`aefde80`](https://github.com/jacksonpradolima/gsp-py/commit/aefde80999c281acc3d9cca5e1e0c9cc0aab3ac7))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Mark slow stress test as integration and reduce max_examples for other slow tests
+  ([`1dca809`](https://github.com/jacksonpradolima/gsp-py/commit/1dca809d7b07612c11a7ecf555da06eef04d7b87))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+
 ## v5.1.0 (2026-02-08)
 
 ### Bug Fixes
