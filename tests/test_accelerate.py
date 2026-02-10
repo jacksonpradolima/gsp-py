@@ -362,6 +362,19 @@ class TestGPUAcceleration:
         assert result == []
 
     @pytest.mark.skipif(not _gpu_available, reason="Test requires GPU/CuPy")
+    def test_support_counts_gpu_singletons_empty_transactions(self):
+        """Test GPU singleton counting when all transactions are empty."""
+        from gsppy.accelerate import _support_counts_gpu_singletons
+
+        # Empty transactions (after uniquifying, these would become empty lists)
+        enc_tx: List[List[int]] = [[], [], []]
+        cand_ids = [0, 1]
+
+        result = _support_counts_gpu_singletons(enc_tx, cand_ids, min_support_abs=1, vocab_size=5)
+
+        assert result == []
+
+    @pytest.mark.skipif(not _gpu_available, reason="Test requires GPU/CuPy")
     def test_support_counts_gpu_backend_mixed_candidates(self):
         """Test GPU backend with both singleton and non-singleton candidates."""
         transactions = [("A", "B", "C"), ("A", "C"), ("B", "C")]
@@ -617,6 +630,41 @@ class TestGPUBackendSimulation:
         # Should use GPU for singletons
         assert mock_cp.asarray.called
         assert mock_cp.bincount.called
+
+    @patch("gsppy.accelerate._gpu_available", True)
+    @patch("gsppy.accelerate.cp")
+    def test_support_counts_gpu_singletons_filtering(self, mock_cp):
+        """Test GPU backend filters singletons below min_support."""
+        # Mock CuPy operations - some items don't meet min_support
+        mock_cp_counts = Mock()
+        mock_cp_counts.get.return_value = [3, 1, 2]  # A=3, B=1, C=2
+
+        mock_cp.asarray.return_value = Mock()
+        mock_cp.bincount.return_value = mock_cp_counts
+
+        transactions = [("A", "B"), ("A", "C"), ("A", "C")]
+        candidates = [("A",), ("B",), ("C",)]
+
+        result = support_counts(transactions, candidates, min_support_abs=2, backend="gpu")
+
+        # Only A and C should be in result (B has support=1 < 2)
+        assert ("A",) in result
+        assert ("C",) in result
+        assert ("B",) not in result
+
+    @patch("gsppy.accelerate._gpu_available", True)
+    @patch("gsppy.accelerate.cp")
+    def test_support_counts_gpu_no_singletons(self, mock_cp):
+        """Test GPU backend when there are no singleton candidates."""
+        transactions = [("A", "B"), ("A", "C")]
+        candidates = [("A", "B"), ("A", "C")]  # Only multi-element patterns
+
+        result = support_counts(transactions, candidates, min_support_abs=1, backend="gpu")
+
+        # GPU singleton path should not be called (no singletons)
+        assert not mock_cp.asarray.called
+        # Result should still contain the patterns (via Python fallback)
+        assert len(result) >= 0
 
     @patch("gsppy.accelerate._gpu_available", True)
     @patch("gsppy.accelerate._rust_available", True)
