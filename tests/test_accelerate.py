@@ -612,7 +612,7 @@ class TestGPUBackendSimulation:
         transactions = [("A", "B"), ("A", "C"), ("B", "C")]
         candidates = [("A",), ("B",), ("C",)]
 
-        result = support_counts(transactions, candidates, min_support_abs=1, backend="gpu")
+        support_counts(transactions, candidates, min_support_abs=1, backend="gpu")
 
         # Should use GPU for singletons
         assert mock_cp.asarray.called
@@ -636,7 +636,7 @@ class TestGPUBackendSimulation:
         transactions = [("A", "B"), ("A", "C")]
         candidates = [("A",), ("B",), ("A", "B")]
 
-        result = support_counts(transactions, candidates, min_support_abs=1, backend="gpu")
+        support_counts(transactions, candidates, min_support_abs=1, backend="gpu")
 
         # Should use both GPU and Rust
         assert mock_cp.bincount.called
@@ -713,9 +713,9 @@ class TestIntegration:
         candidates_2 = [("A", "B"), ("A", "C"), ("A", "D"), ("B", "C"), ("B", "D"), ("C", "D")]
         result_2 = support_counts(transactions, candidates_2, min_support_abs=2, backend="python")
 
-        # Check specific patterns
-        assert result_2[("A", "B")] >= 2 or ("A", "B") not in result_2
-        assert result_2.get(("A", "D"), 0) >= 2 or ("A", "D") not in result_2
+        # Check that only patterns with support >= 2 are returned
+        for count in result_2.values():
+            assert count >= 2
 
     def test_encoding_decoding_roundtrip(self):
         """Test that encoding and decoding produces original data."""
