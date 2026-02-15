@@ -1,6 +1,6 @@
 # GSP-Py Interactive Notebooks
 
-This directory contains interactive [marimo](https://marimo.io/) notebooks demonstrating various features of GSP-Py. These notebooks are converted from the original examples in the `examples/` directory.
+This directory contains interactive [marimo](https://marimo.io/) notebooks demonstrating various features of GSP-Py.
 
 ## Available Notebooks
 

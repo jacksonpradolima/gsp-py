@@ -299,7 +299,7 @@ sequences = dict_to_sequences(dict_format)
 # [Sequence(('Bread',), support=4), ...]
 ```
 
-For a complete example demonstrating all Sequence features, see `examples/sequence_example.py` in the repository.
+For a complete example demonstrating all Sequence features, see the [sequence_example.py marimo notebook](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/sequence_example.py) in the repository.
 
 ## Verbose Mode
 

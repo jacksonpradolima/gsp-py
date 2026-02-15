@@ -280,19 +280,19 @@ def _():
 
     2. Preprocessing:
        $ gsppy --file data.json --min_support 0.3 \\
-               --preprocess-hook examples.custom_hooks.normalize_to_lowercase
+               --preprocess-hook notebooks.custom_hooks.normalize_to_lowercase
 
     3. Postprocessing:
        $ gsppy --file data.json --min_support 0.2 \\
-               --postprocess-hook examples.custom_hooks.add_pattern_statistics
+               --postprocess-hook notebooks.custom_hooks.add_pattern_statistics
 
     4. Combined hooks:
        $ gsppy --file data.json --min_support 0.3 \\
-               --preprocess-hook examples.custom_hooks.normalize_to_lowercase \\
-               --candidate-filter-hook examples.custom_hooks.progressive_length_filter \\
-               --postprocess-hook examples.custom_hooks.add_pattern_statistics
+               --preprocess-hook notebooks.custom_hooks.normalize_to_lowercase \\
+               --candidate-filter-hook notebooks.custom_hooks.progressive_length_filter \\
+               --postprocess-hook notebooks.custom_hooks.add_pattern_statistics
 
-    Note: The hooks module must be in Python path (e.g., in examples/ directory)
+    Note: The hooks module must be in Python path (e.g., in notebooks/ directory)
     """
     return
 

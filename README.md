@@ -615,7 +615,7 @@ seq_result = gsp.search(min_support=0.3, return_sequences=True)
 dict_format = sequences_to_dict(seq_result[0])  # Convert to dict
 ```
 
-For a complete example, see [examples/sequence_example.py](examples/sequence_example.py).
+For a complete interactive example, see the [sequence_example.py marimo notebook](notebooks/sequence_example.py).
 
 ### Loading SPM/GSP Format Files
 
@@ -1089,7 +1089,7 @@ patterns = gsp.search(min_support=0.5)
 
 ### Complete Example
 
-See [examples/itemset_example.py](examples/itemset_example.py) for comprehensive examples including:
+See the [itemset_example.py marimo notebook](notebooks/itemset_example.py) for comprehensive examples including:
 
 - Market basket analysis with itemsets
 - Web clickstream with parallel page views

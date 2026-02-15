@@ -1,6 +1,15 @@
-# Interactive Examples
+# Interactive Examples with Marimo
 
-GSP-Py provides interactive notebook examples using [marimo](https://marimo.io/) that demonstrate various features and use cases. These notebooks are fully executable and can be run locally.
+GSP-Py provides interactive notebook examples using [marimo](https://marimo.io/) that demonstrate various features and use cases. Marimo notebooks are reactive Python notebooks that provide an interactive environment for exploring GSP-Py functionality.
+
+## What is Marimo?
+
+[Marimo](https://marimo.io/) is a reactive Python notebook that runs as a pure Python program. Unlike traditional notebooks:
+- **Reactive**: Changes propagate automatically through dependent cells
+- **Reproducible**: Runs deterministically every time
+- **Git-friendly**: Stored as pure Python files (`.py`), not JSON
+- **Interactive**: Edit code and see results update in real-time
+- **Shareable**: Can be exported to HTML, PDF, or run as web apps
 
 ## Available Notebooks
 
@@ -79,31 +88,76 @@ Complete workflow for using Parquet files with GSP-Py.
 
 **Notebook:** [`notebooks/parquet_roundtrip_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/parquet_roundtrip_example.py)
 
+## Setup and Installation
+
+Before running the notebooks, you need to install marimo and GSP-Py:
+
+```bash
+# Install GSP-Py with dataframe support (recommended)
+pip install 'gsppy[dataframe]'
+
+# Install marimo
+pip install marimo
+```
+
 ## Running Notebooks Locally
 
 To run these notebooks interactively on your machine:
 
-1. **Install GSP-Py with notebook dependencies:**
-
-```bash
-pip install 'gsppy[dataframe]'
-pip install marimo
-```
-
-2. **Clone the repository:**
+1. **Clone the repository:**
 
 ```bash
 git clone https://github.com/jacksonpradolima/gsp-py.git
 cd gsp-py
 ```
 
-3. **Run a notebook:**
+2. **Run a notebook in interactive mode:**
 
 ```bash
 marimo edit notebooks/sequence_example.py
 ```
 
-This will open the notebook in your browser where you can interact with the code, modify parameters, and see results in real-time.
+This opens the notebook in your browser where you can:
+- Modify code and see results update automatically
+- Experiment with different parameters
+- Add new cells and explore the library
+- Save your changes back to the `.py` file
+
+3. **Run a notebook as a script:**
+
+```bash
+python notebooks/sequence_example.py
+```
+
+Or use marimo to run it as a read-only app:
+
+```bash
+marimo run notebooks/sequence_example.py
+```
+
+## Working with Marimo Notebooks
+
+### Interactive Editing
+
+When you run `marimo edit`, you get a reactive development environment:
+
+1. **Edit any cell** - Changes propagate automatically to dependent cells
+2. **Add new cells** - Use the + button or keyboard shortcuts
+3. **Reorder cells** - Drag and drop to reorganize
+4. **View outputs** - Rich display of DataFrames, plots, and results
+
+### Keyboard Shortcuts
+
+- `Cmd/Ctrl + Enter`: Run current cell
+- `Shift + Enter`: Run cell and select next
+- `Cmd/Ctrl + S`: Save notebook
+
+### Cell Dependencies
+
+Marimo automatically tracks dependencies between cells:
+- If you change a variable, all cells using it update
+- No need to manually re-run cells in order
+- Prevents stale outputs and hidden state bugs
 
 ## Creating Your Own Notebooks
 
@@ -128,4 +182,4 @@ Marimo notebooks are:
 - [Marimo Documentation](https://docs.marimo.io/)
 - [GSP-Py API Reference](api.md)
 - [GSP-Py Usage Guide](usage.md)
-- [Source Code Examples](https://github.com/jacksonpradolima/gsp-py/tree/master/examples)
+- [Notebooks Source Code](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks)
