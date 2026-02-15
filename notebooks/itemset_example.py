@@ -1,220 +1,221 @@
-"""
-Itemset Example for GSP-Py
-
-This interactive notebook demonstrates how to use GSP-Py with itemsets,
-where multiple items can occur together at the same time step in a sequence.
-"""
-
 import marimo
 
-__generated_with = "0.19.9"
-app = marimo.App(width="medium")
+__generated_with = "0.19.11"
+app = marimo.App()
 
 
-@app.cell(hide_code=False)
+@app.cell
 def _():
-    """Import required libraries"""
-    from gsppy import GSP
-    import marimo as mo
-    return GSP, mo
+    """
+    Example demonstrating itemset support in GSP-Py.
 
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Introduction"""
-    mo.md("""
-    # GSP-Py: Itemset Support Example
-    
-    This notebook demonstrates how to use **itemsets** in GSP-Py, where multiple items
+    This example shows how to use GSP-Py with itemsets, where multiple items
     can occur together at the same time step in a sequence.
+
+    Key concepts:
+    1. Flat sequences: ['A', 'B', 'C'] - each item at separate time steps
+    2. Itemset sequences: [['A', 'B'], ['C']] - A and B occur together, then C
+
+    Author: Jackson Antonio do Prado Lima
+    Email: jacksonpradolima@gmail.com
+    """
+
+    from gsppy import GSP
+
+    def example_flat_vs_itemset():
+        """
+        Demonstrate the difference between flat and itemset representations.
+        """
+        print("=" * 80)
+        print("EXAMPLE 1: Flat vs Itemset Sequences")
+        print("=" * 80)
     
-    ## Key Concepts
+        # Flat sequences - each item happens at a separate time step
+        print("\n1a. Flat sequences (traditional format):")
+        flat_transactions = [
+            ['A', 'B', 'C'],  # A, then B, then C
+            ['A', 'C'],        # A, then C
+            ['A', 'B', 'C'],  # A, then B, then C
+        ]
+        print(f"   Transactions: {flat_transactions}")
     
-    1. **Flat sequences**: `['A', 'B', 'C']` - each item at separate time steps
-    2. **Itemset sequences**: `[['A', 'B'], ['C']]` - A and B occur together, then C
-    """)
-    return
+        gsp_flat = GSP(flat_transactions)
+        patterns_flat = gsp_flat.search(min_support=0.66)
+    
+        print("   Frequent patterns (min_support=0.66):")
+        for i, level_patterns in enumerate(patterns_flat, start=1):
+            print(f"      {i}-sequences: {level_patterns}")
+    
+        # Itemset sequences - items in same list occur together
+        print("\n1b. Itemset sequences:")
+        itemset_transactions = [
+            [['A', 'B'], ['C']],  # A and B together, then C
+            [['A'], ['C']],        # A, then C
+            [['A', 'B'], ['C']],  # A and B together, then C
+        ]
+        print(f"   Transactions: {itemset_transactions}")
+    
+        gsp_itemset = GSP(itemset_transactions)
+        patterns_itemset = gsp_itemset.search(min_support=0.66)
+    
+        print("   Frequent patterns (min_support=0.66):")
+        for i, level_patterns in enumerate(patterns_itemset, start=1):
+            print(f"      {i}-sequences: {level_patterns}")
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 1 Header"""
-    mo.md("""
-    ## Example 1: Flat vs Itemset Sequences
+    def example_market_basket():
+        """
+        Real-world example: Market basket analysis with itemsets.
     
-    Let's compare how flat and itemset sequences differ in their representation and results.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(GSP, mo):
-    """Flat sequences example"""
-    flat_transactions = [
-        ['A', 'B', 'C'],  # A, then B, then C
-        ['A', 'C'],        # A, then C
-        ['A', 'B', 'C'],  # A, then B, then C
-    ]
+        Customers can buy multiple items in a single transaction, then return
+        to buy more items in subsequent transactions.
+        """
+        print("\n" + "=" * 80)
+        print("EXAMPLE 2: Market Basket Analysis with Itemsets")
+        print("=" * 80)
     
-    gsp_flat = GSP(flat_transactions)
-    patterns_flat = gsp_flat.search(min_support=0.66)
-    
-    _output_flat = [f"**Flat transactions:** `{flat_transactions}`\n"]
-    _output_flat.append("\n**Frequent patterns (min_support=0.66):**\n")
-    for _i, _level_patterns in enumerate(patterns_flat, start=1):
-        _output_flat.append(f"\n{_i}-sequences: `{_level_patterns}`")
-    
-    mo.md("\n".join(_output_flat))
-    return flat_transactions, gsp_flat, patterns_flat
-
-
-@app.cell(hide_code=False)
-def _(GSP, mo):
-    """Itemset sequences example"""
-    itemset_transactions = [
-        [['A', 'B'], ['C']],  # A and B together, then C
-        [['A'], ['C']],        # A, then C
-        [['A', 'B'], ['C']],  # A and B together, then C
-    ]
-    
-    gsp_itemset = GSP(itemset_transactions)
-    patterns_itemset = gsp_itemset.search(min_support=0.66)
-    
-    _output_itemset = [f"**Itemset transactions:** `{itemset_transactions}`\n"]
-    _output_itemset.append("\n**Frequent patterns (min_support=0.66):**\n")
-    for _i, _level_patterns in enumerate(patterns_itemset, start=1):
-        _output_itemset.append(f"\n{_i}-sequences: `{_level_patterns}`")
-    
-    mo.md("\n".join(_output_itemset))
-    return gsp_itemset, itemset_transactions, patterns_itemset
-
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 2 Header"""
-    mo.md("""
-    ## Example 2: Market Basket Analysis with Itemsets
-    
-    A real-world example: Market basket analysis where customers can buy multiple items
-    in a single transaction, then return to buy more items in subsequent transactions.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(GSP, mo):
-    """Market basket example"""
-    # Each customer's purchase history
-    # Nested lists represent items bought together (same shopping trip)
-    market_transactions = [
-        # Customer 1: Bought bread & milk together, then came back for eggs
-        [['Bread', 'Milk'], ['Eggs']],
+        # Each customer's purchase history
+        # Nested lists represent items bought together (same shopping trip)
+        transactions = [
+            # Customer 1: Bought bread & milk together, then came back for eggs
+            [['Bread', 'Milk'], ['Eggs']],
         
-        # Customer 2: Bought bread, milk & butter together
-        [['Bread', 'Milk', 'Butter']],
+            # Customer 2: Bought bread, milk & butter together
+            [['Bread', 'Milk', 'Butter']],
         
-        # Customer 3: Bought bread & milk together, then eggs later
-        [['Bread', 'Milk'], ['Eggs']],
+            # Customer 3: Bought bread & milk together, then eggs later
+            [['Bread', 'Milk'], ['Eggs']],
         
-        # Customer 4: Bought bread & milk, then butter
-        [['Bread', 'Milk'], ['Butter']],
-        
-        # Customer 5: Bought bread alone, then milk & eggs together
-        [['Bread'], ['Milk', 'Eggs']],
-    ]
+            # Customer 4: Bought bread & milk together, then eggs & butter together
+            [['Bread', 'Milk'], ['Eggs', 'Butter']],
+        ]
     
-    gsp_market = GSP(market_transactions)
-    patterns_market = gsp_market.search(min_support=0.4)
+        print("\nCustomer transaction history:")
+        for i, tx in enumerate(transactions, start=1):
+            print(f"   Customer {i}: {tx}")
     
-    _output_market = ["**Customer purchase histories:**\n"]
-    for _idx, _txn in enumerate(market_transactions, start=1):
-        _output_market.append(f"- Customer {_idx}: `{_txn}`")
+        gsp = GSP(transactions)
+        patterns = gsp.search(min_support=0.5)
     
-    _output_market.append(f"\n\n**Frequent patterns (min_support=0.4):**\n")
-    for _level_idx, _level_patterns in enumerate(patterns_market, start=1):
-        _output_market.append(f"\n**Level {_level_idx}** ({len(_level_patterns)} patterns):")
-        for _pattern, _support in sorted(_level_patterns.items(), key=lambda x: x[1], reverse=True):
-            _output_market.append(f"  - Pattern: `{_pattern}` | Support: {_support}")
+        print("\nFrequent patterns (min_support=0.5, i.e., 2+ customers):")
+        for i, level_patterns in enumerate(patterns, start=1):
+            print(f"\n   {i}-sequences:")
+            for pattern, support in level_patterns.items():
+                print(f"      {pattern} - appears in {support} customer histories")
     
-    mo.md("\n".join(_output_market))
-    return gsp_market, market_transactions, patterns_market
+        # Insights
+        print("\n📊 Insights:")
+        print("   - Customers who buy Bread and Milk often return to buy Eggs later")
+        print("   - This is different from 'Bread, then Milk, then Eggs' pattern")
+        print("   - Itemsets capture co-occurrence (items bought together)")
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 3 Header"""
-    mo.md("""
-    ## Example 3: E-commerce Click Streams with Concurrent Actions
+    def example_clickstream():
+        """
+        Example: Web analytics with itemsets.
     
-    Tracking user behavior where multiple actions can happen simultaneously
-    (e.g., adding multiple items to cart at once).
-    """)
-    return
+        Users can view multiple pages in parallel (multiple tabs) before
+        moving to the next set of pages.
+        """
+        print("\n" + "=" * 80)
+        print("EXAMPLE 3: Web Clickstream with Parallel Page Views")
+        print("=" * 80)
+    
+        # User sessions with parallel page views
+        sessions = [
+            # User 1: Opened Home & Products in tabs, then viewed Checkout
+            [['Home', 'Products'], ['Checkout']],
+        
+            # User 2: Home and Products together, then Cart, then Checkout
+            [['Home', 'Products'], ['Cart'], ['Checkout']],
+        
+            # User 3: Home page, then Products & Cart together, then Checkout
+            [['Home'], ['Products', 'Cart'], ['Checkout']],
+        
+            # User 4: Home & Products together, then Checkout
+            [['Home', 'Products'], ['Checkout']],
+        ]
+    
+        print("\nUser sessions (parallel page views):")
+        for i, session in enumerate(sessions, start=1):
+            print(f"   User {i}: {session}")
+    
+        gsp = GSP(sessions)
+        patterns = gsp.search(min_support=0.5)
+    
+        print("\nFrequent navigation patterns (min_support=0.5):")
+        for i, level_patterns in enumerate(patterns, start=1):
+            if level_patterns:
+                print(f"\n   {i}-sequences:")
+                for pattern, support in level_patterns.items():
+                    print(f"      {pattern} - in {support} sessions")
 
 
-@app.cell(hide_code=False)
-def _(GSP, mo):
-    """E-commerce example"""
-    clickstream_transactions = [
-        # User 1: Viewed homepage, added multiple items to cart together, then purchased
-        [['HomePage'], ['AddToCart_ProductA', 'AddToCart_ProductB'], ['Purchase']],
+    def example_spm_format():
+        """
+        Example: Reading itemsets from SPM format files.
+    
+        SPM format uses delimiters:
+        - `-1` marks end of itemset
+        - `-2` marks end of sequence
+        """
+        print("\n" + "=" * 80)
+        print("EXAMPLE 4: Reading Itemsets from SPM Format")
+        print("=" * 80)
+    
+        import tempfile
+        import os
+        from gsppy.utils import read_transactions_from_spm
+    
+        # Create a temporary SPM file with itemsets
+        spm_content = """1 2 -1 3 -1 -2
+    1 -1 3 4 -1 -2
+    1 2 -1 3 -1 -2"""
+    
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            f.write(spm_content)
+            temp_path = f.name
+    
+        try:
+            print(f"\nSPM file content:\n{spm_content}")
         
-        # User 2: Viewed homepage, searched, added one item, purchased
-        [['HomePage'], ['Search'], ['AddToCart_ProductA'], ['Purchase']],
+            # Read with itemsets flattened (backward compatible)
+            print("\nReading with itemsets flattened (preserve_itemsets=False):")
+            flat_txs = read_transactions_from_spm(temp_path, preserve_itemsets=False)
+            for i, tx in enumerate(flat_txs, start=1):
+                print(f"   Transaction {i}: {tx}")
         
-        # User 3: Viewed homepage, added multiple items, purchased
-        [['HomePage'], ['AddToCart_ProductA', 'AddToCart_ProductB'], ['Purchase']],
+            # Read with itemsets preserved
+            print("\nReading with itemsets preserved (preserve_itemsets=True):")
+            itemset_txs = read_transactions_from_spm(temp_path, preserve_itemsets=True)
+            for i, tx in enumerate(itemset_txs, start=1):
+                print(f"   Transaction {i}: {tx}")
+            
+            # Use in GSP
+            print("\nRunning GSP on itemset data:")
+            gsp = GSP(itemset_txs)
+            patterns = gsp.search(min_support=0.66)
+            print(f"   Frequent patterns: {patterns}")
         
-        # User 4: Viewed homepage, viewed multiple products, added to cart, purchased
-        [['HomePage'], ['ViewProduct_A', 'ViewProduct_B'], ['AddToCart_ProductA'], ['Purchase']],
-        
-        # User 5: Viewed homepage, added to cart, purchased
-        [['HomePage'], ['AddToCart_ProductA'], ['Purchase']],
-    ]
-    
-    gsp_clickstream = GSP(clickstream_transactions)
-    patterns_clickstream = gsp_clickstream.search(min_support=0.6)
-    
-    _output_clickstream = ["**User clickstream data:**\n"]
-    for _usr_idx, _stream in enumerate(clickstream_transactions, start=1):
-        _output_clickstream.append(f"- User {_usr_idx}: `{_stream}`")
-    
-    _output_clickstream.append(f"\n\n**Frequent patterns (min_support=0.6):**\n")
-    _output_clickstream.append("These patterns show common user journeys through the site.\n")
-    
-    for _lvl_idx, _lvl_patterns in enumerate(patterns_clickstream, start=1):
-        _output_clickstream.append(f"\n**Level {_lvl_idx}** ({len(_lvl_patterns)} patterns):")
-        for _ptrn, _sup in sorted(_lvl_patterns.items(), key=lambda x: x[1], reverse=True):
-            _output_clickstream.append(f"  - `{_ptrn}` | Support: {_sup}")
-    
-    mo.md("\n".join(_output_clickstream))
-    return clickstream_transactions, gsp_clickstream, patterns_clickstream
+        finally:
+            os.unlink(temp_path)
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Conclusion"""
-    mo.md("""
-    ## Key Takeaways
+    if __name__ == '__main__':
+        # Run all examples
+        example_flat_vs_itemset()
+        example_market_basket()
+        example_clickstream()
+        example_spm_format()
     
-    Using itemsets in GSP-Py allows you to:
-    
-    1. **Model simultaneous events**: Capture items that occur together at the same time
-    2. **More accurate patterns**: Distinguish between items bought together vs. sequentially
-    3. **Richer analysis**: Find patterns like "customers who buy A and B together often return to buy C"
-    
-    ### When to Use Itemsets
-    
-    - **Market basket analysis**: Multiple items purchased in single transaction
-    - **Web analytics**: Multiple clicks/actions happening simultaneously
-    - **Medical records**: Multiple symptoms or treatments occurring at the same time
-    - **Manufacturing**: Multiple parts installed together in assembly process
-    
-    ### Syntax Reminder
-    
-    - Flat: `[['A', 'B', 'C']]` - each item is separate
-    - Itemset: `[[['A', 'B'], ['C']]]` - A and B together, then C
-    """)
+        print("\n" + "=" * 80)
+        print("Summary:")
+        print("=" * 80)
+        print("✓ Itemsets capture co-occurrence of items at the same time step")
+        print("✓ Flat sequences are automatically normalized to itemsets internally")
+        print("✓ Both formats work seamlessly with GSP-Py")
+        print("✓ Use itemsets when temporal co-occurrence matters in your domain")
+        print("=" * 80)
     return
 
 

@@ -1,6 +1,6 @@
 # GSP-Py Interactive Notebooks
 
-This directory contains interactive [marimo](https://marimo.io/) notebooks demonstrating various features of GSP-Py.
+This directory contains interactive [marimo](https://marimo.io/) notebooks demonstrating various features of GSP-Py. These notebooks are converted from the original examples in the `examples/` directory.
 
 ## Available Notebooks
 
@@ -16,13 +16,38 @@ Demonstrates the Sequence abstraction in GSP-Py:
 Shows how to use itemsets where multiple items occur together:
 - Flat vs. itemset sequences
 - Market basket analysis with itemsets
-- E-commerce click streams with concurrent actions
+- Medical records example
+- Product bundles example
 
-### 3. `dataframe_example.py`
+### 3. `dataframe_examples.py`
 Integration with Polars and Pandas DataFrames:
 - Polars DataFrame with grouped format
 - Pandas DataFrame with sequence format
 - Temporal mining with timestamps
+- Reading from Parquet files
+- Performance comparison
+
+### 4. `hooks_example.py`
+Using preprocessing, postprocessing, and candidate filtering hooks:
+- Custom preprocessing hooks
+- Candidate filtering strategies
+- Postprocessing transformations
+- Practical examples with hooks
+
+### 5. `custom_hooks.py`
+Advanced custom hooks for pattern mining:
+- Normalization and filtering hooks
+- Length and support constraint filters
+- Pattern transformation and enrichment
+- Metadata addition and top-k filtering
+
+### 6. `parquet_roundtrip_example.py`
+Complete workflow for using Parquet files:
+- Loading transactions from CSV
+- Converting to Parquet format
+- Running GSP mining on Parquet data
+- Exporting results to Parquet
+- Handling edge cases and errors
 
 ## Running Notebooks Locally
 

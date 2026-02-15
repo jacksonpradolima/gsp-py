@@ -9,8 +9,8 @@ GSP-Py provides interactive notebook examples using [marimo](https://marimo.io/)
 Learn how to use the Sequence class for working with sequential patterns in a structured way.
 
 **Topics covered:**
-- Traditional dict-based output
-- Sequence objects and their properties
+- Traditional dict-based output vs. Sequence objects
+- Accessing sequence properties (items, support, length)
 - Filtering and analyzing sequences
 - Creating custom sequence objects
 - Pattern analysis and statistics
@@ -24,8 +24,8 @@ Understand how to work with itemsets where multiple items can occur together at 
 **Topics covered:**
 - Flat vs. itemset sequences
 - Market basket analysis with itemsets
-- E-commerce click streams with concurrent actions
-- When and how to use itemsets
+- Medical records example
+- Product bundles example
 
 **Notebook:** [`notebooks/itemset_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/itemset_example.py)
 
@@ -37,9 +37,47 @@ Learn how to use GSP-Py with Polars and Pandas DataFrames for efficient pattern 
 - Polars DataFrame with grouped format
 - Pandas DataFrame with sequence format
 - Temporal mining with timestamps
-- Performance benefits of DataFrame integration
+- Reading from Parquet files
+- Performance comparison
 
-**Notebook:** [`notebooks/dataframe_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/dataframe_example.py)
+**Notebook:** [`notebooks/dataframe_examples.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/dataframe_examples.py)
+
+### 4. Hooks Example
+
+Explore how to use preprocessing, postprocessing, and candidate filtering hooks.
+
+**Topics covered:**
+- Custom preprocessing hooks
+- Candidate filtering strategies
+- Postprocessing transformations
+- Practical examples with hooks
+
+**Notebook:** [`notebooks/hooks_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/hooks_example.py)
+
+### 5. Custom Hooks
+
+Advanced custom hooks for preprocessing, postprocessing, and candidate filtering.
+
+**Topics covered:**
+- Normalization and filtering hooks
+- Length and support constraint filters
+- Pattern transformation and enrichment
+- Metadata addition and top-k filtering
+
+**Notebook:** [`notebooks/custom_hooks.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/custom_hooks.py)
+
+### 6. Parquet Round-trip Example
+
+Complete workflow for using Parquet files with GSP-Py.
+
+**Topics covered:**
+- Loading transactions from CSV
+- Converting to Parquet format
+- Running GSP mining on Parquet data
+- Exporting results to Parquet
+- Handling edge cases and errors
+
+**Notebook:** [`notebooks/parquet_roundtrip_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/parquet_roundtrip_example.py)
 
 ## Running Notebooks Locally
 

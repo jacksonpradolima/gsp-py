@@ -1,310 +1,246 @@
-"""
-Sequence Abstraction Example for GSP-Py
-
-This interactive notebook demonstrates how to use the Sequence class in GSP-Py
-for working with sequential patterns in a more structured way.
-"""
-
 import marimo
 
-__generated_with = "0.19.9"
-app = marimo.App(width="medium")
+__generated_with = "0.19.11"
+app = marimo.App()
 
 
-@app.cell(hide_code=False)
+@app.cell
 def _():
-    """Import required libraries"""
+    """
+    Example: Using the Sequence abstraction in GSP-Py.
+
+    This example demonstrates how to use the Sequence class to work with
+    sequential patterns in a more structured and maintainable way. The Sequence
+    class encapsulates pattern items, support counts, and provides a rich API
+    for pattern manipulation.
+
+    Author: Jackson Antonio do Prado Lima
+    Email: jacksonpradolima@gmail.com
+    """
+
     from gsppy import GSP, Sequence, sequences_to_dict
-    import marimo as mo
-    return GSP, Sequence, sequences_to_dict, mo
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Introduction"""
-    mo.md("""
-    # GSP-Py: Sequence Abstraction Example
+    def example_1_traditional_dict_output(gsp):
+        """Example 1: Traditional Dict-based Output (Backward Compatible)."""
+        print("Example 1: Traditional Dict-based Output")
+        print("-" * 70)
     
-    This notebook demonstrates how to use the **Sequence abstraction** in GSP-Py for 
-    working with sequential patterns. The Sequence class provides a rich API for 
-    pattern manipulation, filtering, and analysis.
+        result_dict = gsp.search(min_support=0.3, return_sequences=False)
     
-    ## Sample Data
+        print(f"Found {len(result_dict)} levels of patterns\n")
     
-    We'll use a simple transactional dataset representing customer purchases:
-    """)
-    return
+        for level, patterns in enumerate(result_dict, start=1):
+            print(f"Level {level} ({len(patterns)} patterns):")
+            for pattern, support in sorted(patterns.items(), key=lambda x: x[1], reverse=True):
+                print(f"  Pattern: {str(pattern):30} Support: {support}")
+            print()
 
 
-@app.cell(hide_code=False)
-def _(GSP, mo):
-    """Define sample data and create GSP instance"""
-    transactions = [
-        ["Bread", "Milk"],
-        ["Bread", "Diaper", "Beer", "Eggs"],
-        ["Milk", "Diaper", "Beer", "Coke"],
-        ["Bread", "Milk", "Diaper", "Beer"],
-        ["Bread", "Milk", "Diaper", "Coke"],
-    ]
+    def example_2_sequence_objects(gsp):
+        """Example 2: Using Sequence Objects (New Feature)."""
+        print("\nExample 2: Using Sequence Objects")
+        print("-" * 70)
     
-    mo.md(f"""
-    **Transactions:**
-    ```python
-    {transactions}
-    ```
+        result_seq = gsp.search(min_support=0.3, return_sequences=True)
     
-    Total transactions: {len(transactions)}
-    """)
+        print(f"Found {len(result_seq)} levels of patterns\n")
     
-    # Initialize GSP
-    gsp = GSP(transactions)
+        for level, sequences in enumerate(result_seq, start=1):
+            print(f"Level {level} ({len(sequences)} patterns):")
+            # Sort by support (descending)
+            sorted_sequences = sorted(sequences, key=lambda s: s.support, reverse=True)
+            for seq in sorted_sequences:
+                print(f"  {seq}")  # Uses __str__ method
+            print()
     
-    return gsp, transactions
+        return result_seq
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 1 Header"""
-    mo.md("""
-    ## Example 1: Traditional Dict-based Output
+    def example_3_sequence_properties(result_seq):
+        """Example 3: Working with Sequence Properties."""
+        print("\nExample 3: Accessing Sequence Properties")
+        print("-" * 70)
     
-    This is the backward-compatible way to get results as dictionaries.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(gsp, mo):
-    """Example 1: Traditional output"""
-    result_dict = gsp.search(min_support=0.3, return_sequences=False)
-    
-    _output_lines_1 = [f"Found {len(result_dict)} levels of patterns\n"]
-    
-    for _level1, _patterns in enumerate(result_dict, start=1):
-        _output_lines_1.append(f"\n**Level {_level1}** ({len(_patterns)} patterns):")
-        for _pattern, _support in sorted(_patterns.items(), key=lambda x: x[1], reverse=True):
-            _output_lines_1.append(f"  - Pattern: `{str(_pattern):30}` Support: {_support}")
-    
-    mo.md("\n".join(_output_lines_1))
-    return result_dict,
-
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 2 Header"""
-    mo.md("""
-    ## Example 2: Using Sequence Objects
-    
-    The new Sequence abstraction provides a richer interface for working with patterns.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(gsp, mo):
-    """Example 2: Sequence objects"""
-    result_seq = gsp.search(min_support=0.3, return_sequences=True)
-    
-    _output_lines_2 = [f"Found {len(result_seq)} levels of patterns\n"]
-    
-    for _level2, _sequences in enumerate(result_seq, start=1):
-        _output_lines_2.append(f"\n**Level {_level2}** ({len(_sequences)} patterns):")
-        _sorted_sequences = sorted(_sequences, key=lambda s: s.support, reverse=True)
-        for _seq2 in _sorted_sequences:
-            _output_lines_2.append(f"  - {_seq2}")
-    
-    mo.md("\n".join(_output_lines_2))
-    return result_seq,
-
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 3 Header"""
-    mo.md("""
-    ## Example 3: Accessing Sequence Properties
-    
-    Sequence objects expose many useful properties for analysis.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(result_seq, mo):
-    """Example 3: Sequence properties"""
-    _result3 = None
-    if len(result_seq) > 1 and result_seq[1]:
-        level_2_sequences = result_seq[1]
-        top_sequence = max(level_2_sequences, key=lambda s: s.support)
+        # Get the most frequent 2-sequences if available
+        if len(result_seq) > 1 and result_seq[1]:
+            level_2_sequences = result_seq[1]
+            top_sequence = max(level_2_sequences, key=lambda s: s.support)
         
-        _result3 = mo.md(f"""
-        **Top 2-sequence pattern:**
+            print("Top 2-sequence pattern:")
+            print(f"  Items:        {top_sequence.items}")
+            print(f"  Support:      {top_sequence.support}")
+            print(f"  Length:       {top_sequence.length}")
+            print(f"  First item:   {top_sequence.first_item}")
+            print(f"  Last item:    {top_sequence.last_item}")
+            print(f"  As tuple:     {top_sequence.as_tuple()}")
+            print()
+
+
+    def example_4_filtering_sequences(result_seq):
+        """Example 4: Filtering and Analyzing Sequences."""
+        print("\nExample 4: Filtering and Analyzing Sequences")
+        print("-" * 70)
+    
+        # Find all patterns containing "Milk"
+        milk_patterns = []
+        for level in result_seq:
+            for seq in level:
+                if "Milk" in seq:  # Uses __contains__ method
+                    milk_patterns.append(seq)
+    
+        print(f"Found {len(milk_patterns)} patterns containing 'Milk':")
+        for seq in milk_patterns:
+            print(f"  {seq}")
+        print()
+    
+        # Find patterns with high support (>= 3)
+        high_support_patterns = []
+        for level in result_seq:
+            for seq in level:
+                if seq.support >= 3:
+                    high_support_patterns.append(seq)
+    
+        print(f"\nFound {len(high_support_patterns)} patterns with support >= 3:")
+        for seq in sorted(high_support_patterns, key=lambda s: s.support, reverse=True):
+            print(f"  {seq}")
+        print()
+
+
+    def example_5_format_conversion(result_seq):
+        """Example 5: Converting Between Formats."""
+        print("\nExample 5: Converting Between Formats")
+        print("-" * 70)
+    
+        # Convert Sequence objects back to dict format for compatibility
+        if result_seq:
+            level_1_dict = sequences_to_dict(result_seq[0])
+            print("Level 1 patterns as dictionary:")
+            for pattern, support in sorted(level_1_dict.items(), key=lambda x: x[1], reverse=True):
+                print(f"  {pattern}: {support}")
+        print()
+
+
+    def example_6_iterating_sequences(result_seq):
+        """Example 6: Iterating Over Sequence Items."""
+        print("\nExample 6: Iterating Over Sequence Items")
+        print("-" * 70)
+    
+        if len(result_seq) > 1 and result_seq[1]:
+            sample_seq = result_seq[1][0]
+            print(f"Iterating over items in pattern {sample_seq.items}:")
+            for idx, item in enumerate(sample_seq):
+                print(f"  Position {idx}: {item}")
+            print()
         
-        - Items: `{top_sequence.items}`
-        - Support: `{top_sequence.support}`
-        - Length: `{top_sequence.length}`
-        - First item: `{top_sequence.first_item}`
-        - Last item: `{top_sequence.last_item}`
-        - As tuple: `{top_sequence.as_tuple()}`
-        """)
-    else:
-        _result3 = mo.md("No 2-sequence patterns found.")
-    _result3
-    return level_2_sequences, top_sequence
+            # Accessing by index
+            print("Accessing items by index:")
+            print(f"  First item:  {sample_seq[0]}")
+            print(f"  Last item:   {sample_seq[-1]}")
+            if sample_seq.length >= 2:
+                print(f"  Slice [0:2]: {sample_seq[0:2]}")
+            print()
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 4 Header"""
-    mo.md("""
-    ## Example 4: Filtering and Analyzing Sequences
+    def example_7_custom_sequences():
+        """Example 7: Creating Custom Sequence Objects."""
+        print("\nExample 7: Creating Custom Sequence Objects")
+        print("-" * 70)
     
-    You can filter patterns by content or support values.
-    """)
-    return
+        # Create a new Sequence from items
+        custom_seq = Sequence.from_tuple(("Custom", "Pattern"), support=10)
+        print(f"Created custom sequence: {custom_seq}")
+    
+        # Extend a sequence with a new item
+        extended_seq = custom_seq.extend("Extended")
+        print(f"Extended sequence: {extended_seq}")
+    
+        # Add metadata to a sequence
+        seq_with_metadata = custom_seq.with_metadata(
+            confidence=0.85,
+            lift=1.5,
+            note="Important pattern"
+        )
+        print(f"Sequence with metadata: {seq_with_metadata}")
+        if seq_with_metadata.metadata:
+            print(f"  Metadata: {seq_with_metadata.metadata}")
+        print()
 
 
-@app.cell(hide_code=False)
-def _(result_seq, mo):
-    """Example 4: Filtering sequences"""
-    # Find all patterns containing "Milk"
-    milk_patterns = []
-    for _level4 in result_seq:
-        for _seq4 in _level4:
-            if "Milk" in _seq4:
-                milk_patterns.append(_seq4)
+    def example_8_pattern_statistics(result_seq):
+        """Example 8: Using Sequences in Data Analysis."""
+        print("\nExample 8: Pattern Analysis Statistics")
+        print("-" * 70)
     
-    _output_lines_4 = [f"Found {len(milk_patterns)} patterns containing 'Milk':\n"]
-    for _seq4a in milk_patterns:
-        _output_lines_4.append(f"  - {_seq4a}")
+        all_sequences = [seq for level in result_seq for seq in level]
     
-    # Find patterns with high support (>= 3)
-    high_support_patterns = []
-    for _level4b in result_seq:
-        for _seq4b in _level4b:
-            if _seq4b.support >= 3:
-                high_support_patterns.append(_seq4b)
-    
-    _output_lines_4.append(f"\n\nFound {len(high_support_patterns)} patterns with support >= 3:\n")
-    for _seq4c in sorted(high_support_patterns, key=lambda s: s.support, reverse=True):
-        _output_lines_4.append(f"  - {_seq4c}")
-    
-    mo.md("\n".join(_output_lines_4))
-    return high_support_patterns, milk_patterns
-
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 5 Header"""
-    mo.md("""
-    ## Example 5: Creating Custom Sequence Objects
-    
-    You can create and manipulate Sequence objects programmatically.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(Sequence, mo):
-    """Example 7: Custom sequences"""
-    # Create a new Sequence from items
-    custom_seq = Sequence.from_tuple(("Custom", "Pattern"), support=10)
-    
-    # Extend a sequence with a new item
-    extended_seq = custom_seq.extend("Extended")
-    
-    # Add metadata to a sequence
-    seq_with_metadata = custom_seq.with_metadata(
-        confidence=0.85,
-        lift=1.5,
-        note="Important pattern"
-    )
-    
-    metadata_str = str(seq_with_metadata.metadata) if seq_with_metadata.metadata else "None"
-    
-    mo.md(f"""
-    **Created custom sequence:** `{custom_seq}`
-    
-    **Extended sequence:** `{extended_seq}`
-    
-    **Sequence with metadata:** `{seq_with_metadata}`
-    - Metadata: `{metadata_str}`
-    """)
-    return custom_seq, extended_seq, seq_with_metadata
-
-
-@app.cell(hide_code=False)
-def _(mo):
-    """Example 6 Header"""
-    mo.md("""
-    ## Example 6: Pattern Analysis Statistics
-    
-    Compute aggregate statistics across all discovered patterns.
-    """)
-    return
-
-
-@app.cell(hide_code=False)
-def _(result_seq, mo):
-    """Example 8: Pattern statistics"""
-    all_sequences = [_seq8 for _level8 in result_seq for _seq8 in _level8]
-    
-    _result8 = None
-    if all_sequences:
-        total_patterns = len(all_sequences)
-        avg_support = sum(_s.support for _s in all_sequences) / total_patterns
-        max_support = max(_s.support for _s in all_sequences)
-        min_support = min(_s.support for _s in all_sequences)
-        avg_length = sum(_s.length for _s in all_sequences) / total_patterns
+        if all_sequences:
+            total_patterns = len(all_sequences)
+            avg_support = sum(seq.support for seq in all_sequences) / total_patterns
+            max_support = max(seq.support for seq in all_sequences)
+            min_support = min(seq.support for seq in all_sequences)
+            avg_length = sum(seq.length for seq in all_sequences) / total_patterns
         
-        # Group by length
-        patterns_by_length = {}
-        for _seq8b in all_sequences:
-            _length = _seq8b.length
-            if _length not in patterns_by_length:
-                patterns_by_length[_length] = []
-            patterns_by_length[_length].append(_seq8b)
+            print(f"Total patterns found:    {total_patterns}")
+            print(f"Average support:         {avg_support:.2f}")
+            print(f"Max support:             {max_support}")
+            print(f"Min support:             {min_support}")
+            print(f"Average pattern length:  {avg_length:.2f}")
+            print()
         
-        length_stats = "\n".join([
-            f"  - Length {_len}: {len(patterns_by_length[_len])} patterns"
-            for _len in sorted(patterns_by_length.keys())
-        ])
+            # Group by length
+            patterns_by_length = {}
+            for seq in all_sequences:
+                length = seq.length
+                if length not in patterns_by_length:
+                    patterns_by_length[length] = []
+                patterns_by_length[length].append(seq)
         
-        _result8 = mo.md(f"""
-        **Overall Statistics:**
-        
-        - Total patterns found: `{total_patterns}`
-        - Average support: `{avg_support:.2f}`
-        - Max support: `{max_support}`
-        - Min support: `{min_support}`
-        - Average pattern length: `{avg_length:.2f}`
-        
-        **Patterns grouped by length:**
-        
-        {length_stats}
-        """)
-    else:
-        _result8 = mo.md("No patterns found.")
-    _result8
-    return all_sequences, avg_length, avg_support, max_support, min_support, patterns_by_length, total_patterns
+            print("Patterns grouped by length:")
+            for length in sorted(patterns_by_length.keys()):
+                count = len(patterns_by_length[length])
+                print(f"  Length {length}: {count} patterns")
 
 
-@app.cell(hide_code=False)
-def _(mo):
-    """Conclusion"""
-    mo.md("""
-    ## Conclusion
+    def main():
+        """Demonstrate Sequence abstraction usage."""
     
-    The Sequence abstraction in GSP-Py provides a powerful and intuitive way to work with 
-    sequential patterns. Key benefits include:
+        # Define sample transactional data
+        transactions = [
+            ["Bread", "Milk"],
+            ["Bread", "Diaper", "Beer", "Eggs"],
+            ["Milk", "Diaper", "Beer", "Coke"],
+            ["Bread", "Milk", "Diaper", "Beer"],
+            ["Bread", "Milk", "Diaper", "Coke"],
+        ]
     
-    - **Rich API**: Access properties like `items`, `support`, `length`, etc.
-    - **Filtering**: Use Python's `in` operator to check for item membership
-    - **Extensibility**: Create custom sequences and add metadata
-    - **Statistics**: Easily compute aggregate statistics
-    - **Compatibility**: Convert between Sequence objects and traditional dict format
+        print("=" * 70)
+        print("GSP-Py: Sequence Abstraction Example")
+        print("=" * 70)
+        print()
     
-    For more examples, check out the other notebooks in this documentation!
-    """)
+        # Initialize GSP
+        gsp = GSP(transactions)
+    
+        # Run examples
+        example_1_traditional_dict_output(gsp)
+        result_seq = example_2_sequence_objects(gsp)
+        example_3_sequence_properties(result_seq)
+        example_4_filtering_sequences(result_seq)
+        example_5_format_conversion(result_seq)
+        example_6_iterating_sequences(result_seq)
+        example_7_custom_sequences()
+        example_8_pattern_statistics(result_seq)
+    
+        print()
+        print("=" * 70)
+        print("Example completed successfully!")
+        print("=" * 70)
+
+    def _main_():
+        main()
+
+    _main_()
     return
 
 
