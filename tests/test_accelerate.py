@@ -524,20 +524,28 @@ class TestEdgeCases:
 
     def test_cache_clear_behavior(self):
         """Test that clearing cache works correctly."""
-        _ENCODED_CACHE.clear()
-        transactions = [("A", "B")]
+        # Save initial cache state
+        initial_cache = dict(_ENCODED_CACHE)
+        
+        try:
+            _ENCODED_CACHE.clear()
+            transactions = [("A", "B")]
 
-        # Encode once
-        _get_encoded_transactions(transactions)
-        assert len(_ENCODED_CACHE) == 1
+            # Encode once
+            _get_encoded_transactions(transactions)
+            assert len(_ENCODED_CACHE) == 1
 
-        # Clear and verify
-        _ENCODED_CACHE.clear()
-        assert len(_ENCODED_CACHE) == 0
+            # Clear and verify
+            _ENCODED_CACHE.clear()
+            assert len(_ENCODED_CACHE) == 0
 
-        # Should recompute after clear
-        _get_encoded_transactions(transactions)
-        assert len(_ENCODED_CACHE) == 1
+            # Should recompute after clear
+            _get_encoded_transactions(transactions)
+            assert len(_ENCODED_CACHE) == 1
+        finally:
+            # Restore cache to avoid test order dependencies
+            _ENCODED_CACHE.clear()
+            _ENCODED_CACHE.update(initial_cache)
 
 
 class TestRustBackendSimulation:
@@ -664,7 +672,7 @@ class TestGPUBackendSimulation:
         # GPU singleton path should not be called (no singletons)
         assert not mock_cp.asarray.called
         # Result should still contain the patterns (via Python fallback)
-        assert len(result) >= 0
+        assert len(result) > 0
 
     @patch("gsppy.accelerate._gpu_available", True)
     @patch("gsppy.accelerate._rust_available", True)
