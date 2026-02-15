@@ -1,3 +1,5 @@
+fail_fast: true
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -11,8 +13,9 @@ repos:
     rev: v0.6.9
     hooks:
       - id: ruff
-        args: ["--fix"]
+        args: ["--fix", "--exit-non-zero-on-fix"]
       - id: ruff-format
+        args: ["--exit-non-zero-on-format"]
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.6.0
     hooks:
@@ -34,3 +37,4 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]
+        require_serial: true
