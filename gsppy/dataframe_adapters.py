@@ -185,18 +185,22 @@ def _polars_sequence_format(
     Returns:
         List of transactions
     """
-    # Collect pl.LazyFrame if needed
+    # Ensure we have a DataFrame by collecting if needed
     if isinstance(df, pl.LazyFrame):
-        df = df.collect()
+        collected = df.collect()
+        assert isinstance(collected, pl.DataFrame)
+        data = collected
+    else:
+        data = df
 
-    _require_columns(df.columns, sequence_col)
+    _require_columns(data.columns, sequence_col)
 
-    sequences: List[Any] = df[sequence_col].to_list()
+    sequences: List[Any] = data[sequence_col].to_list()
 
     if timestamp_col is not None:
-        _require_columns(df.columns, timestamp_col)
+        _require_columns(data.columns, timestamp_col)
 
-        timestamps: List[Any] = df[timestamp_col].to_list()
+        timestamps: List[Any] = data[timestamp_col].to_list()
 
         # Create timestamped transactions
         return _build_timestamped_transactions(sequences, timestamps, sequence_col, timestamp_col)
@@ -223,20 +227,24 @@ def _polars_grouped_format(
     Returns:
         List of transactions
     """
-    # Collect pl.LazyFrame if needed
+    # Ensure we have a DataFrame by collecting if needed
     if isinstance(df, pl.LazyFrame):
-        df = df.collect()
+        collected = df.collect()
+        assert isinstance(collected, pl.DataFrame)
+        data = collected
+    else:
+        data = df
 
     # Validate required columns exist
-    _require_columns(df.columns, transaction_col, item_col)
+    _require_columns(data.columns, transaction_col, item_col)
 
     # Sort by transaction and optionally timestamp
     sort_cols = [transaction_col]
     if timestamp_col is not None:
-        _require_columns(df.columns, timestamp_col)
+        _require_columns(data.columns, timestamp_col)
         sort_cols.append(timestamp_col)
 
-    df_sorted = df.sort(sort_cols)
+    df_sorted = data.sort(sort_cols)
 
     # Group by transaction
     if timestamp_col is not None:
