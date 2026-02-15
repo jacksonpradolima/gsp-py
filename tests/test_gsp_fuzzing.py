@@ -58,7 +58,7 @@ def transaction_lists(draw: st.DrawFn, min_transactions: int = 2, max_transactio
     return transactions
 
 
-@given(transactions=transaction_lists())
+@given(transactions=transaction_lists())  # type: ignore[missing-argument]
 @settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_returns_valid_output(transactions: List[List[str]]) -> None:
     """
@@ -89,7 +89,7 @@ def test_gsp_returns_valid_output(transactions: List[List[str]]) -> None:
             assert support <= len(transactions), "Support cannot exceed number of transactions"
 
 
-@given(transactions=transaction_lists())
+@given(transactions=transaction_lists())  # type: ignore[missing-argument]
 @settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_support_monotonicity(transactions: List[List[str]]) -> None:
     """
@@ -122,7 +122,7 @@ def test_gsp_support_monotonicity(transactions: List[List[str]]) -> None:
     )
 
 
-@given(transactions=transaction_lists())
+@given(transactions=transaction_lists())  # type: ignore[missing-argument]
 @settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_pattern_length_increases(transactions: List[List[str]]) -> None:
     """
@@ -142,7 +142,7 @@ def test_gsp_pattern_length_increases(transactions: List[List[str]]) -> None:
             )
 
 
-@given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=1.0))
+@given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=1.0))  # type: ignore[missing-argument]
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_respects_min_support(transactions: List[List[str]], min_support: float) -> None:
     """
@@ -164,7 +164,7 @@ def test_gsp_respects_min_support(transactions: List[List[str]], min_support: fl
             )
 
 
-@given(transactions=transaction_lists())
+@given(transactions=transaction_lists())  # type: ignore[missing-argument]
 @settings(max_examples=10, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_first_level_contains_single_items(transactions: List[List[str]]) -> None:
     """
@@ -185,7 +185,7 @@ def test_gsp_first_level_contains_single_items(transactions: List[List[str]]) ->
             )
 
 
-@given(transactions=transaction_lists(min_transactions=2, max_transactions=10))
+@given(transactions=transaction_lists(min_transactions=2, max_transactions=10))  # type: ignore[missing-argument]
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_deterministic(transactions: List[List[str]]) -> None:
     """
@@ -204,7 +204,7 @@ def test_gsp_deterministic(transactions: List[List[str]]) -> None:
     assert result1 == result2, "GSP should produce identical results for the same input"
 
 
-@given(transactions=transaction_lists())
+@given(transactions=transaction_lists())  # type: ignore[missing-argument]
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_pattern_hierarchy(transactions: List[List[str]]) -> None:
     """
@@ -235,7 +235,7 @@ def test_gsp_pattern_hierarchy(transactions: List[List[str]]) -> None:
             )
 
 
-@given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=0.99))
+@given(transactions=transaction_lists(), min_support=st.floats(min_value=0.01, max_value=0.99))  # type: ignore[missing-argument]
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_no_duplicate_patterns(transactions: List[List[str]], min_support: float) -> None:
     """
@@ -276,7 +276,7 @@ def test_gsp_handles_diverse_inputs(transactions: List[List[str]]) -> None:
         assert "multiple transactions" in str(e).lower(), f"Unexpected error: {e}"
 
 
-@given(transactions=transaction_lists(min_transactions=5, max_transactions=20))
+@given(transactions=transaction_lists(min_transactions=5, max_transactions=20))  # type: ignore[missing-argument]
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> None:
     """
@@ -290,13 +290,13 @@ def test_gsp_empty_result_with_high_support(transactions: List[List[str]]) -> No
 
     # Either empty or very few patterns
     total_patterns = sum(len(level) for level in result)
-    assert total_patterns <= 5, (
-        f"With min_support=0.95, expected very few or no patterns, but found {total_patterns} patterns"
-    )
+    assert (
+        total_patterns <= 5
+    ), f"With min_support=0.95, expected very few or no patterns, but found {total_patterns} patterns"
 
 
 @given(
-    transactions=transaction_lists(min_transactions=10, max_transactions=30),
+    transactions=transaction_lists(min_transactions=10, max_transactions=30),  # type: ignore[missing-argument]
     support_fraction=st.floats(min_value=0.1, max_value=0.9),
 )
 @settings(max_examples=5, deadline=None, suppress_health_check=[HealthCheck.too_slow])
