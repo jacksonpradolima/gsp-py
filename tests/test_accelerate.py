@@ -63,7 +63,7 @@ class TestEncodingFunctions:
     def test_encode_transactions_single_item(self):
         """Test encoding with single-item transactions."""
         transactions = [("X",), ("Y",), ("Z",)]
-        enc_tx, inv_vocab, vocab = _encode_transactions(transactions)
+        enc_tx, _, vocab = _encode_transactions(transactions)
 
         assert len(enc_tx) == 3
         assert len(vocab) == 3
@@ -72,7 +72,7 @@ class TestEncodingFunctions:
     def test_encode_transactions_repeated_items(self):
         """Test encoding with repeated items in same transaction."""
         transactions = [("A", "A", "B"), ("C", "C", "C")]
-        enc_tx, inv_vocab, vocab = _encode_transactions(transactions)
+        enc_tx, _, vocab = _encode_transactions(transactions)
 
         # Should encode each occurrence
         assert enc_tx[0] == [vocab["A"], vocab["A"], vocab["B"]]
@@ -643,9 +643,8 @@ class TestGPUBackendSimulation:
     @patch("gsppy.accelerate.cp")
     def test_support_counts_gpu_singletons_filtering(self, mock_cp):
         """Test GPU backend filters singletons below min_support."""
-        # Mock CuPy operations - some items don't meet min_support
         mock_cp_counts = Mock()
-        mock_cp_counts.get.return_value = [3, 1, 2]  # A=3, B=1, C=2
+        mock_cp_counts.get.return_value = [3, 1, 2]
 
         mock_cp.asarray.return_value = Mock()
         mock_cp.bincount.return_value = mock_cp_counts
@@ -777,7 +776,7 @@ class TestIntegration:
         """Test that encoding and decoding produces original data."""
         transactions = [("X", "Y", "Z"), ("Y", "Z", "W")]
 
-        enc_tx, inv_vocab, vocab = _encode_transactions(transactions)
+        enc_tx, inv_vocab, _ = _encode_transactions(transactions)
 
         # Decode back
         decoded_transactions = []
