@@ -64,7 +64,7 @@ rust = [
     "maturin==1.11.5"
 ]
 gpu = [
-    "cupy>=11,<14"
+    "cupy>=11,<15"
 ]
 dataframe = [
     "polars>=1.37.1",
