@@ -1,6 +1,150 @@
 # CHANGELOG
 
 
+## v5.3.0 (2026-02-22)
+
+### Bug Fixes
+
+- Address code review comments
+  ([`96eefb3`](https://github.com/jacksonpradolima/gsp-py/commit/96eefb370664f5b1389536394b8b8a924d4400c7))
+
+- Add ruff lint ignore for notebooks (T201, T203 for print statements) - Update custom_hooks.py
+  docstring import from examples. to notebooks. - Update CLI example in custom_hooks.py from
+  examples. to notebooks. - Fix itemset_example topics in notebooks/README.md and docs/examples.md
+  (removed incorrect "Medical records" and "Product bundles", added correct "Web clickstream" and
+  "SPM format" examples) - Fix import sorting in itemset_example.py (ruff auto-fix)
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+### Build System
+
+- **deps**: Bump cryptography from 46.0.4 to 46.0.5
+  ([`44b1e41`](https://github.com/jacksonpradolima/gsp-py/commit/44b1e417fb7301d660f2bc4b7ad8041588122d57))
+
+build(deps): bump cryptography from 46.0.4 to 46.0.5
+
+- **deps**: Bump cryptography from 46.0.4 to 46.0.5
+  ([`1a39a48`](https://github.com/jacksonpradolima/gsp-py/commit/1a39a4816b56f8734c14c3138e3336d414ddf2c2))
+
+Bumps [cryptography](https://github.com/pyca/cryptography) from 46.0.4 to 46.0.5. -
+  [Changelog](https://github.com/pyca/cryptography/blob/main/CHANGELOG.rst) -
+  [Commits](https://github.com/pyca/cryptography/compare/46.0.4...46.0.5)
+
+--- updated-dependencies: - dependency-name: cryptography dependency-version: 46.0.5
+
+dependency-type: indirect
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump hypothesis from 6.151.5 to 6.151.6
+  ([`c0274cf`](https://github.com/jacksonpradolima/gsp-py/commit/c0274cfa35f80b62dc86aac6baa887b1bdc6c53c))
+
+build(deps): bump hypothesis from 6.151.5 to 6.151.6
+
+- **deps**: Bump hypothesis from 6.151.5 to 6.151.6
+  ([`f112738`](https://github.com/jacksonpradolima/gsp-py/commit/f112738c4197782635285cca923c83e465e438bf))
+
+Bumps [hypothesis](https://github.com/HypothesisWorks/hypothesis) from 6.151.5 to 6.151.6. -
+  [Release notes](https://github.com/HypothesisWorks/hypothesis/releases) -
+  [Commits](https://github.com/HypothesisWorks/hypothesis/compare/hypothesis-python-6.151.5...hypothesis-python-6.151.6)
+
+--- updated-dependencies: - dependency-name: hypothesis dependency-version: 6.151.6
+
+dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump pandas-stubs from 2.3.3.260113 to 3.0.0.260204
+  ([`ae29498`](https://github.com/jacksonpradolima/gsp-py/commit/ae2949808782bf5ef482d0cdd91e5ab453a85873))
+
+build(deps): bump pandas-stubs from 2.3.3.260113 to 3.0.0.260204
+
+- **deps**: Bump pandas-stubs from 2.3.3.260113 to 3.0.0.260204
+  ([`f8491dc`](https://github.com/jacksonpradolima/gsp-py/commit/f8491dcd26f318a02e10b44741756fe3dd9cc169))
+
+Bumps [pandas-stubs](https://github.com/pandas-dev/pandas-stubs) from 2.3.3.260113 to 3.0.0.260204.
+  - [Changelog](https://github.com/pandas-dev/pandas-stubs/blob/main/docs/release_procedure.md) -
+  [Commits](https://github.com/pandas-dev/pandas-stubs/compare/v2.3.3.260113...v3.0.0.260204)
+
+--- updated-dependencies: - dependency-name: pandas-stubs dependency-version: 3.0.0.260204
+
+dependency-type: direct:production
+
+update-type: version-update:semver-major
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump polars from 1.37.1 to 1.38.1
+  ([`9d539b1`](https://github.com/jacksonpradolima/gsp-py/commit/9d539b1e02bc86c7c36e2b96e3b702a4cebc9a50))
+
+build(deps): bump polars from 1.37.1 to 1.38.1
+
+- **deps**: Bump polars from 1.37.1 to 1.38.1
+  ([`b5064c1`](https://github.com/jacksonpradolima/gsp-py/commit/b5064c186745ce26d0581130e564b24b882f93a6))
+
+Bumps [polars](https://github.com/pola-rs/polars) from 1.37.1 to 1.38.1. - [Release
+  notes](https://github.com/pola-rs/polars/releases) -
+  [Commits](https://github.com/pola-rs/polars/compare/py-1.37.1...py-1.38.1)
+
+--- updated-dependencies: - dependency-name: polars dependency-version: 1.38.1
+
+dependency-type: direct:production
+
+update-type: version-update:semver-minor
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump ty from 0.0.14 to 0.0.16
+  ([`9e5abf3`](https://github.com/jacksonpradolima/gsp-py/commit/9e5abf312380ead852d6a9d4ef1214e2a5410a27))
+
+Bumps [ty](https://github.com/astral-sh/ty) from 0.0.14 to 0.0.16. - [Release
+  notes](https://github.com/astral-sh/ty/releases) -
+  [Changelog](https://github.com/astral-sh/ty/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/astral-sh/ty/compare/0.0.14...0.0.16)
+
+--- updated-dependencies: - dependency-name: ty dependency-version: 0.0.16
+
+dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+- **deps**: Bump ty from 0.0.14 to 0.0.17
+  ([`1447c03`](https://github.com/jacksonpradolima/gsp-py/commit/1447c03a866b46849bc0515b0ace6fdf5b02aa00))
+
+build(deps): bump ty from 0.0.14 to 0.0.17
+
+### Chores
+
+- Migrate examples to interactive marimo notebooks and remove examples directory
+  ([`f442592`](https://github.com/jacksonpradolima/gsp-py/commit/f44259259c99d11bd67c133ae77474eafd87860d))
+
+chore: migrate examples to interactive marimo notebooks and remove examples directory
+
+- Update uv.lock for version 5.2.0
+  ([`d158cef`](https://github.com/jacksonpradolima/gsp-py/commit/d158cef578e9d82a6788b3d44fa0e113f2f6fdb0))
+
+### Testing
+
+- Add comprehensive test suite for accelerate.py (97% coverage)
+  ([`e7af294`](https://github.com/jacksonpradolima/gsp-py/commit/e7af294080bf602b5753c2439e796caad83311ce))
+
+test: add comprehensive test suite for accelerate.py (97% coverage)
+
+
 ## v5.2.0 (2026-02-10)
 
 ### Bug Fixes
@@ -10,8 +154,56 @@
 
 Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
 
+- Ensure itemset_example notebook executes all examples
+  ([`ffaa847`](https://github.com/jacksonpradolima/gsp-py/commit/ffaa847930cc66543361aeb88ff4f9fa2e7582f2))
+
+- Remove if __name__ == '__main__' guard from function calls in marimo cell - Function calls were
+  inside __name__ guard which prevented execution in marimo - All 4 examples now execute properly:
+  flat vs itemset, market basket, clickstream, SPM format
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Migrate existing examples to marimo notebooks
+  ([`78189c1`](https://github.com/jacksonpradolima/gsp-py/commit/78189c1f23eefde7ebf3147cfae51f880ea659ac))
+
+- Convert all 6 examples from examples/ directory to marimo notebooks - Remove custom notebooks and
+  replace with actual example migrations - Update docs/examples.md to list all 6 notebooks - Update
+  notebooks/README.md to describe all 6 notebooks
+
+Migrated notebooks: - sequence_example.py - itemset_example.py - dataframe_examples.py -
+  hooks_example.py - custom_hooks.py - parquet_roundtrip_example.py
+
+Addresses feedback to migrate existing examples instead of creating new ones.
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
 - Remove ENHANCEMENT_SUMMARY.md, remove duplicate Testing section, clarify test assertion
   ([`4c37a78`](https://github.com/jacksonpradolima/gsp-py/commit/4c37a7805acfdd78e8b6a7d79618847bed90ef1a))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Remove examples directory and update all references
+  ([`d9ccf52`](https://github.com/jacksonpradolima/gsp-py/commit/d9ccf524493d7b075d60556800ab33943a83ec26))
+
+- Remove examples/ directory entirely (all content now in notebooks/) - Update README.md to
+  reference notebooks instead of examples - Update docs/usage.md to reference marimo notebooks -
+  Update docs/examples.md with comprehensive marimo setup guide - Update notebooks/README.md to
+  remove examples directory mention - Update notebooks/custom_hooks.py to reference notebooks/ path
+  - Enhance documentation with marimo features and usage instructions
+
+All references to examples/ directory have been removed from the codebase. Documentation now focuses
+  on marimo notebooks as the primary way to explore examples.
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Remove HTML exports from docs directory
+  ([`024d71f`](https://github.com/jacksonpradolima/gsp-py/commit/024d71fcf10de8184d67a0c6e1a9d71e5a0483f4))
+
+- Remove dataframe_example.html, itemset_example.html, sequence_example.html - Update examples.md to
+  link to notebooks on GitHub instead of HTML files - Update notebooks/README.md to remove HTML
+  export instructions for docs
+
+Addresses feedback that HTML files in docs/ directory are not needed.
 
 Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
 
@@ -57,10 +249,36 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
 
+- Add interactive examples section to README
+  ([`4de23e0`](https://github.com/jacksonpradolima/gsp-py/commit/4de23e091cd5189809222c3cdbce013ee83605c5))
+
+- Add Interactive Examples section linking to marimo notebooks - Update table of contents to include
+  new section - Provide instructions for running notebooks locally
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Add README for notebooks directory
+  ([`a42d332`](https://github.com/jacksonpradolima/gsp-py/commit/a42d33252574bad45834fab2910d6060af51f58f))
+
+- Explain available notebooks and their purpose - Provide instructions for running notebooks locally
+  - Document notebook structure and export process - Add contributing guidelines for notebook
+  development
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
 ### Features
 
 - Add fuzzing test runner and comprehensive test documentation
   ([`9630244`](https://github.com/jacksonpradolima/gsp-py/commit/963024463fac550b54f6c736fd11eb08fb21428f))
+
+Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
+
+- Add marimo notebook examples with mkdocs integration
+  ([`f3747ef`](https://github.com/jacksonpradolima/gsp-py/commit/f3747ef9bfb33e431f2322c8dcadb63e823ea42c))
+
+- Add marimo as docs dependency - Create 3 interactive marimo notebooks (sequence, itemset,
+  dataframe examples) - Export notebooks to HTML in docs directory - Add examples.md documentation
+  page with links to notebooks - Update mkdocs.yml navigation to include Interactive Examples
 
 Co-authored-by: jacksonpradolima <7774063+jacksonpradolima@users.noreply.github.com>
 
