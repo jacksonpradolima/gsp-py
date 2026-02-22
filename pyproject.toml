@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gsppy"
-version = "5.1.0"
+version = "5.2.0"
 description = "GSP (Generalized Sequence Pattern) algorithm in Python"
 keywords = ["GSP", "sequential patterns", "data analysis", "sequence mining"]
 license = { file = "LICENSE" }
@@ -43,7 +43,7 @@ dev = [
     "cython==3.2.4",
     "hatch==1.16.3",
     "hatchling==1.28.0",
-    "hypothesis==6.151.5",
+    "hypothesis==6.151.6",
     "pylint==4.0.4",
     "pyright==1.1.408",
     "pytest==9.0.2",
@@ -51,7 +51,7 @@ dev = [
     "pytest-cov==7.0.0",
     "ruff==0.15.0",
     "tox==4.34.1",
-    "ty==0.0.14",
+    "ty==0.0.17",
 ]
 docs = [
     "mkdocs>=1.6,<2",
@@ -177,8 +177,11 @@ reportPrivateUsage = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--tb=short -v"
+addopts = "--tb=short -v --durations=10 -m 'not integration'"
 xfail_strict = true
+markers = [
+    "integration: marks tests as integration tests (deselected by default, run with -m integration)",
+]
 filterwarnings = [
     "error"
 ]
