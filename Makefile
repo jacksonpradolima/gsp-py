@@ -53,7 +53,7 @@ setup: ensure-uv
 
 install: ensure-uv setup
 	# Sync dependencies from uv.lock (project + dev extras) into .venv
-	$(UV) sync --frozen --extra dev --extra dataframe
+	$(UV) sync --frozen --extra dev --extra dataframe --extra docs
 	# Ensure project is installed in editable mode
 	$(UV) run --python $(PYTHON) --no-project pip install -e .
 
