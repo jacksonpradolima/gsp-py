@@ -29,7 +29,8 @@
         "ms-pyright.pyright",
         "ms-toolsai.jupyter",
         "charliermarsh.ruff",
-        "astral-sh.ty"
+        "astral-sh.ty",
+        "marimo-team.vscode-marimo"
       ]
     }
   }
