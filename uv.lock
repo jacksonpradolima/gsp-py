@@ -614,7 +614,7 @@ wheels = [
 
 [[package]]
 name = "gsppy"
-version = "5.2.0"
+version = "5.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -670,8 +670,8 @@ requires-dist = [
     { name = "cython", marker = "extra == 'dev'", specifier = "==3.2.4" },
     { name = "hatch", marker = "extra == 'dev'", specifier = "==1.16.3" },
     { name = "hatchling", marker = "extra == 'dev'", specifier = "==1.28.0" },
-    { name = "marimo", marker = "extra == 'docs'", specifier = ">=0.19.11" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = "==6.151.6" },
+    { name = "marimo", marker = "extra == 'docs'", specifier = ">=0.19.11" },
     { name = "maturin", marker = "extra == 'rust'", specifier = "==1.11.5" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5,<1" },
