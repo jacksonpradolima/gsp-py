@@ -154,6 +154,7 @@ known-first-party = ["gsp", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = ["T201", "T203"]
+"notebooks/**.py" = ["T201", "T203"]
 "gsppy/utils.py" = ["TID251"]
 
 [tool.pyright]

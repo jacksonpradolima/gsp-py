@@ -44,7 +44,7 @@ def _():
 
         Example:
             >>> from gsppy.gsp import GSP
-            >>> from examples.custom_hooks import normalize_to_lowercase
+            >>> from notebooks.custom_hooks import normalize_to_lowercase
             >>> transactions = [["Apple", "Banana"], ["APPLE", "orange"]]
             >>> gsp = GSP(transactions)
             >>> patterns = gsp.search(min_support=0.5, preprocess_fn=normalize_to_lowercase)
@@ -276,7 +276,7 @@ def _():
 
     1. Basic filtering:
        $ gsppy --file data.json --min_support 0.3 \\
-               --candidate-filter-hook examples.custom_hooks.high_confidence_filter
+               --candidate-filter-hook notebooks.custom_hooks.high_confidence_filter
 
     2. Preprocessing:
        $ gsppy --file data.json --min_support 0.3 \\

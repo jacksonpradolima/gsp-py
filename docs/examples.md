@@ -33,8 +33,8 @@ Understand how to work with itemsets where multiple items can occur together at 
 **Topics covered:**
 - Flat vs. itemset sequences
 - Market basket analysis with itemsets
-- Medical records example
-- Product bundles example
+- Web clickstream with parallel page views
+- Reading itemsets from SPM format
 
 **Notebook:** [`notebooks/itemset_example.py`](https://github.com/jacksonpradolima/gsp-py/tree/master/notebooks/itemset_example.py)
 

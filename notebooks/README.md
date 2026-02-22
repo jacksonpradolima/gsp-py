@@ -16,8 +16,8 @@ Demonstrates the Sequence abstraction in GSP-Py:
 Shows how to use itemsets where multiple items occur together:
 - Flat vs. itemset sequences
 - Market basket analysis with itemsets
-- Medical records example
-- Product bundles example
+- Web clickstream with parallel page views
+- Reading itemsets from SPM format
 
 ### 3. `dataframe_examples.py`
 Integration with Polars and Pandas DataFrames:

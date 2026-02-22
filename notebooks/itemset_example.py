@@ -163,8 +163,9 @@ def _():
         print("EXAMPLE 4: Reading Itemsets from SPM Format")
         print("=" * 80)
     
-        import tempfile
         import os
+        import tempfile
+
         from gsppy.utils import read_transactions_from_spm
     
         # Create a temporary SPM file with itemsets
