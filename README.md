@@ -35,17 +35,18 @@ Sequence Pattern (GSP)** algorithm. Ideal for market basket analysis, temporal m
     - [❖ Install via PyPI](#option-2-install-via-pip)
 4. [🛠️ Developer Installation](#developer-installation)
 5. [📖 Documentation](#documentation)
-6. [💡 Usage](#usage)
+6. [🎯 Interactive Examples](#interactive-examples)
+7. [💡 Usage](#usage)
     - [✅ Example: Analyzing Sales Data](#example-analyzing-sales-data)
     - [📊 Explanation: Support and Results](#explanation-support-and-results)
     - [📊 DataFrame Input Support](#dataframe-input-support)
     - [🔗 Itemset Support](#itemset-support)
     - [⏱️ Temporal Constraints](#temporal-constraints)
-7. [⌨️ Typing](#typing)
-8. [🌟 Planned Features](#planned-features)
-9. [🤝 Contributing](#contributing)
-10. [📝 License](#license)
-11. [📖 Citation](#citation)
+8. [⌨️ Typing](#typing)
+9. [🌟 Planned Features](#planned-features)
+10. [🤝 Contributing](#contributing)
+11. [📝 License](#license)
+12. [📖 Citation](#citation)
 
 ---
 
@@ -303,6 +304,23 @@ Replace `<version>` with the numeric package version (for example, `3.1.1`) in t
   ```
 
 The docs use MkDocs with the Material theme and mkdocstrings to render the Python API directly from docstrings.
+
+## 🎯 Interactive Examples
+
+GSP-Py provides interactive [marimo](https://marimo.io/) notebooks that demonstrate various features with executable code:
+
+- **[Sequence Abstraction](https://jacksonpradolima.github.io/gsp-py/examples.html#1-sequence-abstraction-example)**: Learn how to use the Sequence class for structured pattern manipulation
+- **[Itemset Support](https://jacksonpradolima.github.io/gsp-py/examples.html#2-itemset-support-example)**: Work with itemsets where multiple items occur together
+- **[DataFrame Integration](https://jacksonpradolima.github.io/gsp-py/examples.html#3-dataframe-integration-example)**: Use GSP-Py with Polars and Pandas DataFrames
+
+These notebooks can be viewed in the [documentation](https://jacksonpradolima.github.io/gsp-py/examples.html) or run locally:
+
+```bash
+pip install marimo 'gsppy[dataframe]'
+git clone https://github.com/jacksonpradolima/gsp-py.git
+cd gsp-py
+marimo edit notebooks/sequence_example.py
+```
 
 ## 💡 Usage
 
@@ -654,7 +672,7 @@ seq_result = gsp.search(min_support=0.3, return_sequences=True)
 dict_format = sequences_to_dict(seq_result[0])  # Convert to dict
 ```
 
-For a complete example, see [examples/sequence_example.py](examples/sequence_example.py).
+For a complete interactive example, see the [sequence_example.py marimo notebook](notebooks/sequence_example.py).
 
 ### Loading SPM/GSP Format Files
 
@@ -1128,7 +1146,7 @@ patterns = gsp.search(min_support=0.5)
 
 ### Complete Example
 
-See [examples/itemset_example.py](examples/itemset_example.py) for comprehensive examples including:
+See the [itemset_example.py marimo notebook](notebooks/itemset_example.py) for comprehensive examples including:
 
 - Market basket analysis with itemsets
 - Web clickstream with parallel page views

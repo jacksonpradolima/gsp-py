@@ -59,6 +59,8 @@ docs = [
     "mkdocs-literate-nav>=0.6,<1",
     "mkdocs-material>=9.5,<10",
     "mkdocstrings[python]>=0.26,<1.1",
+    "marimo>=0.19.11",
+    "pyzmq>=27.1.0",
 ]
 rust = [
     "maturin==1.11.5"
@@ -152,6 +154,7 @@ known-first-party = ["gsp", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = ["T201", "T203"]
+"notebooks/**.py" = ["T201", "T203"]
 "gsppy/utils.py" = ["TID251"]
 
 [tool.pyright]
