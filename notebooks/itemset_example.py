@@ -201,21 +201,20 @@ def _():
             os.unlink(temp_path)
 
 
-    if __name__ == '__main__':
-        # Run all examples
-        example_flat_vs_itemset()
-        example_market_basket()
-        example_clickstream()
-        example_spm_format()
-    
-        print("\n" + "=" * 80)
-        print("Summary:")
-        print("=" * 80)
-        print("✓ Itemsets capture co-occurrence of items at the same time step")
-        print("✓ Flat sequences are automatically normalized to itemsets internally")
-        print("✓ Both formats work seamlessly with GSP-Py")
-        print("✓ Use itemsets when temporal co-occurrence matters in your domain")
-        print("=" * 80)
+    # Run all examples
+    example_flat_vs_itemset()
+    example_market_basket()
+    example_clickstream()
+    example_spm_format()
+
+    print("\n" + "=" * 80)
+    print("Summary:")
+    print("=" * 80)
+    print("✓ Itemsets capture co-occurrence of items at the same time step")
+    print("✓ Flat sequences are automatically normalized to itemsets internally")
+    print("✓ Both formats work seamlessly with GSP-Py")
+    print("✓ Use itemsets when temporal co-occurrence matters in your domain")
+    print("=" * 80)
     return
 
 
