@@ -63,7 +63,7 @@ docs = [
     "pyzmq>=27.1.0",
 ]
 rust = [
-    "maturin==1.11.5"
+    "maturin==1.12.4"
 ]
 gpu = [
     "cupy>=11,<14"
