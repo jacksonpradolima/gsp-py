@@ -100,7 +100,7 @@ format: ensure-uv
 typecheck: ensure-uv
 	# Run both static type checkers
 	$(UV) run --python $(PYTHON) --no-project pyright gsppy
-	$(UV) run --python $(PYTHON) --no-project ty check .
+	$(UV) run --python $(PYTHON) --no-project ty check gsppy tests
 
 tox: dev-install
 	# Use the project venv and avoid re-resolving the project
