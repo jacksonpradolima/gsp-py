@@ -47,7 +47,7 @@ jobs:
           uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml
 
       - name: Run ty
-        run: uv run ty check .
+        run: uv run ty check gsppy tests
 
       - name: Run pyright
         run: uv run pyright
