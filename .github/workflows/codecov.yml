@@ -54,7 +54,7 @@ jobs:
                     uv run pytest --cov --cov-branch --junitxml=junit.xml -o junit_family=legacy
 
             -   name: Upload coverage to Codecov
-                uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.3.2
+                uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5.3.2
                 with:
                     token: ${{ secrets.CODECOV_TOKEN }}
                     files: coverage.xml
@@ -106,7 +106,7 @@ jobs:
                     uv run pytest --cov=gsppy --cov-branch --cov-report=term-missing:skip-covered --cov-report=xml --junitxml=junit-rust.xml -o junit_family=legacy
 
             -   name: Upload coverage to Codecov (rust)
-                uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.3.2
+                uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5.3.2
                 with:
                     files: coverage.xml
                     flags: rust
