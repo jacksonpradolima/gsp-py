@@ -666,7 +666,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
-    { name = "cupy", marker = "extra == 'gpu'", specifier = ">=11,<14" },
+    { name = "cupy", marker = "extra == 'gpu'", specifier = ">=11,<15" },
     { name = "cython", marker = "extra == 'dev'", specifier = "==3.2.4" },
     { name = "hatch", marker = "extra == 'dev'", specifier = "==1.16.3" },
     { name = "hatchling", marker = "extra == 'dev'", specifier = "==1.29.0" },
