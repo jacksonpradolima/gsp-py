@@ -18,7 +18,7 @@ Email: jacksonpradolima@gmail.com
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple, Union, Iterator, Optional, cast
+from typing import Any, Dict, List, Tuple, Union, Mapping, Iterator, Optional, cast
 from dataclasses import field, dataclass
 from typing_extensions import override
 
@@ -307,7 +307,7 @@ def sequences_to_dict(sequences: List[Sequence]) -> dict[Tuple[str, ...], int]:
     return {seq.items: seq.support for seq in sequences}
 
 
-def dict_to_sequences(pattern_dict: dict[Tuple[str, ...], int]) -> List[Sequence]:
+def dict_to_sequences(pattern_dict: Mapping[Tuple[str, ...], int]) -> List[Sequence]:
     """
     Convert a dictionary of patterns to a list of Sequence objects.
 

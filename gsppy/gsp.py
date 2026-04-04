@@ -147,10 +147,10 @@ class GSP:
     def __init__(
         self,
         raw_transactions: Union[
-            List[List[str]],
-            List[List[Tuple[str, float]]],
-            List[List[List[str]]],
-            List[List[List[Tuple[str, float]]]],
+            TypingSequence[TypingSequence[str]],
+            TypingSequence[TypingSequence[Tuple[str, float]]],
+            TypingSequence[TypingSequence[TypingSequence[str]]],
+            TypingSequence[TypingSequence[TypingSequence[Tuple[str, float]]]],
             "pl.DataFrame",
             "pl.LazyFrame",
             "pd.DataFrame",
@@ -269,10 +269,10 @@ class GSP:
     def _convert_input_data(
         self,
         raw_transactions: Union[
-            List[List[str]],
-            List[List[Tuple[str, float]]],
-            List[List[List[str]]],
-            List[List[List[Tuple[str, float]]]],
+            TypingSequence[TypingSequence[str]],
+            TypingSequence[TypingSequence[Tuple[str, float]]],
+            TypingSequence[TypingSequence[TypingSequence[str]]],
+            TypingSequence[TypingSequence[TypingSequence[Tuple[str, float]]]],
             "pl.DataFrame",
             "pl.LazyFrame",
             "pd.DataFrame",
@@ -322,7 +322,7 @@ class GSP:
         try:
             logger.debug("Converting DataFrame input to transaction list")
             transactions = dataframe_to_transactions(
-                raw_transactions,
+                cast(Any, raw_transactions),
                 transaction_col=transaction_col,
                 item_col=item_col,
                 timestamp_col=timestamp_col,
@@ -545,7 +545,7 @@ class GSP:
 
     @staticmethod
     def _detect_timestamps_in_transactions(
-        transactions: List[
+        transactions: TypingSequence[
             Union[
                 Tuple[str, ...],
                 Tuple[Tuple[str, float], ...],
@@ -580,8 +580,8 @@ class GSP:
 
     @staticmethod
     def _worker_batch(
-        batch: List[Tuple[str, ...]],
-        transactions: List[
+        batch: TypingSequence[Tuple[str, ...]],
+        transactions: TypingSequence[
             Union[
                 Tuple[str, ...],
                 Tuple[Tuple[str, float], ...],
@@ -804,11 +804,11 @@ class GSP:
                 all_items_list: List[str] = []
                 for transaction in self.transactions:
                     all_items_list.extend(self._extract_items_from_transaction(transaction))
-                
+
                 # Create singleton candidates from unique items
                 unique_items = set(all_items_list)
                 self.unique_candidates = [(item,) for item in sorted(unique_items)]
-                
+
                 # Recompute max_size based on preprocessed transactions
                 self.max_size = max(len(tx) for tx in self.transactions) if self.transactions else 0
                 logger.debug("Recomputed unique candidates after preprocessing: %d items", len(self.unique_candidates))
@@ -820,9 +820,7 @@ class GSP:
 
         return transactions_to_use, backup_state
 
-    def _apply_postprocess_hook(
-        self, result: Any, postprocess_fn: Optional[Callable[[Any], Any]]
-    ) -> Any:
+    def _apply_postprocess_hook(self, result: Any, postprocess_fn: Optional[Callable[[Any], Any]]) -> Any:
         """Apply postprocessing hook to results."""
         if postprocess_fn is not None:
             try:
@@ -837,9 +835,7 @@ class GSP:
                 raise RuntimeError(error_msg) from e
         return result
 
-    def _restore_preprocessing_state(
-        self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]], int]]
-    ) -> None:
+    def _restore_preprocessing_state(self, backup_state: Optional[Tuple[Any, List[Tuple[str, ...]], int]]) -> None:
         """Restore original state after preprocessing."""
         if backup_state is not None:
             self.transactions, self.unique_candidates, self.max_size = backup_state
@@ -1113,7 +1109,9 @@ class GSP:
             # repeat until no frequent sequence or no candidate can be found
             # If max_k is provided, stop generating candidates beyond that length
             while (
-                self.freq_patterns[k_items - 1] and k_items + 1 <= self.max_size and (max_k is None or k_items + 1 <= max_k)
+                self.freq_patterns[k_items - 1]
+                and k_items + 1 <= self.max_size
+                and (max_k is None or k_items + 1 <= max_k)
             ):
                 k_items += 1
 

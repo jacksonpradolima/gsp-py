@@ -55,7 +55,7 @@ This implementation is distributed under the MIT License.
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Mapping, Optional
+from typing import List, Tuple, Mapping, Optional, Sequence
 from typing_extensions import override
 
 PruningContext = Mapping[str, object]
@@ -336,7 +336,7 @@ class CombinedPruning(PruningStrategy):
         strategies (List[PruningStrategy]): List of pruning strategies to combine.
     """
 
-    def __init__(self, strategies: List[PruningStrategy]):
+    def __init__(self, strategies: Sequence[PruningStrategy]):
         """
         Initialize combined pruning strategy.
 

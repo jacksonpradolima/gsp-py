@@ -36,7 +36,7 @@ import sys
 import json
 import logging
 import importlib
-from typing import Any, Dict, List, Tuple, Union, Callable, Optional, cast
+from typing import Any, Dict, List, Tuple, Union, Mapping, Callable, Optional, Sequence, cast
 
 import click
 
@@ -403,7 +403,7 @@ def read_transactions_from_arrow(
 
 
 def _flatten_patterns_to_rows(
-    patterns: List[Dict[Tuple[str, ...], int]],
+    patterns: Sequence[Mapping[Tuple[str, ...], int]],
     include_level: bool = True,
 ) -> List[Dict[str, Union[str, int]]]:
     """
@@ -430,7 +430,7 @@ def _flatten_patterns_to_rows(
 
 
 def write_patterns_to_parquet(
-    patterns: List[Dict[Tuple[str, ...], int]],
+    patterns: Sequence[Mapping[Tuple[str, ...], int]],
     output_path: str,
     include_level: bool = True,
 ) -> None:
@@ -463,7 +463,7 @@ def write_patterns_to_parquet(
 
 
 def write_patterns_to_arrow(
-    patterns: List[Dict[Tuple[str, ...], int]],
+    patterns: Sequence[Mapping[Tuple[str, ...], int]],
     output_path: str,
     include_level: bool = True,
 ) -> None:
@@ -496,7 +496,7 @@ def write_patterns_to_arrow(
 
 
 def write_patterns_to_csv(
-    patterns: List[Dict[Tuple[str, ...], int]],
+    patterns: Sequence[Mapping[Tuple[str, ...], int]],
     output_path: str,
     include_level: bool = True,
 ) -> None:
@@ -536,7 +536,7 @@ def write_patterns_to_csv(
 
 
 def write_patterns_to_json(
-    patterns: List[Dict[Tuple[str, ...], int]],
+    patterns: Sequence[Mapping[Tuple[str, ...], int]],
     output_path: str,
     include_level: bool = True,
 ) -> None:
