@@ -91,17 +91,19 @@ def valid_parquet_grouped_file() -> Generator[Any, Any, Any]:
     """Fixture to create a valid Parquet file with grouped format (transaction_id, item)."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Create a DataFrame with grouped format
-    df = pl.DataFrame({
-        "transaction_id": [1, 1, 2, 2, 3, 3, 3],
-        "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"]
-    })
+    df = pl.DataFrame(
+        {
+            "transaction_id": [1, 1, 2, 2, 3, 3, 3],
+            "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"],
+        }
+    )
     df.write_parquet(temp_file_name)
-    
+
     yield temp_file_name
     os.unlink(temp_file_name)
 
@@ -111,16 +113,14 @@ def valid_parquet_sequence_file() -> Generator[Any, Any, Any]:
     """Fixture to create a valid Parquet file with sequence format (sequence column)."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Create a DataFrame with sequence format
-    df = pl.DataFrame({
-        "sequence": [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]
-    })
+    df = pl.DataFrame({"sequence": [["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]]})
     df.write_parquet(temp_file_name)
-    
+
     yield temp_file_name
     os.unlink(temp_file_name)
 
@@ -130,17 +130,19 @@ def valid_arrow_file() -> Generator[Any, Any, Any]:
     """Fixture to create a valid Arrow/Feather file with grouped format."""
     pytest.importorskip("polars", reason="Arrow tests require Polars")
     import polars as pl
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".arrow") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Create a DataFrame with grouped format
-    df = pl.DataFrame({
-        "transaction_id": [1, 1, 2, 2, 3, 3, 3],
-        "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"]
-    })
+    df = pl.DataFrame(
+        {
+            "transaction_id": [1, 1, 2, 2, 3, 3, 3],
+            "item": ["Bread", "Milk", "Milk", "Diaper", "Bread", "Diaper", "Beer"],
+        }
+    )
     df.write_ipc(temp_file_name)
-    
+
     yield temp_file_name
     os.unlink(temp_file_name)
 
@@ -150,17 +152,14 @@ def invalid_parquet_missing_columns() -> Generator[Any, Any, Any]:
     """Fixture to create a Parquet file missing required columns."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Create a DataFrame with wrong column names
-    df = pl.DataFrame({
-        "wrong_col": [1, 2, 3],
-        "another_col": ["A", "B", "C"]
-    })
+    df = pl.DataFrame({"wrong_col": [1, 2, 3], "another_col": ["A", "B", "C"]})
     df.write_parquet(temp_file_name)
-    
+
     yield temp_file_name
     os.unlink(temp_file_name)
 
@@ -412,7 +411,7 @@ def test_setup_logging_verbose(monkeypatch: MonkeyPatch):
         # Check that basicConfig was called with DEBUG level
         mock_basicConfig.assert_called_once()
         call_kwargs = mock_basicConfig.call_args[1]
-        assert call_kwargs['level'] == logging.DEBUG
+        assert call_kwargs["level"] == logging.DEBUG
 
     os.unlink(temp_file_name)
 
@@ -427,7 +426,7 @@ def test_cli_timestamped_json_parsing() -> None:
     try:
         # Read the file using detect_and_read_file
         transactions = detect_and_read_file(temp_file_name)
-        
+
         # Verify that nested lists were converted to tuples
         assert len(transactions) == 2
         assert isinstance(transactions[0], list)
@@ -450,7 +449,7 @@ def test_cli_temporal_constraints_flags(monkeypatch: MonkeyPatch):
     # Mock CLI arguments with temporal constraints
     monkeypatch.setattr(
         "sys.argv",
-        ["main", "--file", temp_file_name, "--min_support", "0.5", "--mingap", "1", "--maxgap", "5", "--maxspan", "10"]
+        ["main", "--file", temp_file_name, "--min_support", "0.5", "--mingap", "1", "--maxgap", "5", "--maxspan", "10"],
     )
 
     try:
@@ -474,7 +473,7 @@ def test_cli_empty_first_transaction_timestamped() -> None:
     try:
         # Read the file using detect_and_read_file
         transactions = detect_and_read_file(temp_file_name)
-        
+
         # Verify that timestamped data was detected despite empty first transaction
         assert len(transactions) == 3
         assert transactions[0] == []
@@ -487,35 +486,36 @@ def test_cli_empty_first_transaction_timestamped() -> None:
 def test_cli_verbose_flag_formatting() -> None:
     """
     Test that --verbose flag produces detailed log output with proper formatting.
-    
+
     Verifies that verbose mode includes timestamps, log levels, PID, and context.
     """
     # Create a valid JSON file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
-    
+
     # Run the CLI using subprocess to capture actual output
     cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    
+
     cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2", "--verbose"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
-    
+
     # Verify verbose output contains expected format elements
     output = process.stdout + process.stderr
-    
+
     # Check for timestamp format (ISO 8601: YYYY-MM-DDTHH:MM:SS)
-    assert any("T" in line and "|" in line for line in output.split("\n")), \
-        "Expected timestamp format in verbose output"
-    
+    assert any(
+        "T" in line and "|" in line for line in output.split("\n")
+    ), "Expected timestamp format in verbose output"
+
     # Check for log level labels
     assert "INFO" in output or "DEBUG" in output, "Expected log level labels in verbose output"
-    
+
     # Check for PID (Process ID)
     assert "PID:" in output, "Expected process ID in verbose output"
-    
+
     # Cleanup
     os.unlink(temp_file_name)
 
@@ -523,29 +523,29 @@ def test_cli_verbose_flag_formatting() -> None:
 def test_cli_non_verbose_simple_output() -> None:
     """
     Test that default (non-verbose) mode produces simple, clean output.
-    
+
     Verifies that non-verbose mode doesn't include timestamps, PIDs, or log levels.
     """
     # Create a valid JSON file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         json.dump([["Bread", "Milk"], ["Milk", "Diaper"], ["Bread", "Diaper", "Beer"]], temp_file)
         temp_file_name = temp_file.name
-    
+
     # Run the CLI without --verbose flag
     cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    
+
     cmd = [sys.executable, cli_script, "--file", temp_file_name, "--min_support", "0.2"]
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
-    
+
     output = process.stdout
-    
+
     # Check that simple mode doesn't have verbose formatting
     assert "PID:" not in output, "PID should not appear in non-verbose output"
     # Output should still have the results
     assert "Frequent Patterns Found:" in output, "Expected results in output"
-    
+
     # Cleanup
     os.unlink(temp_file_name)
 
@@ -553,7 +553,7 @@ def test_cli_non_verbose_simple_output() -> None:
 def test_cli_verbose_with_gsp_verbose(monkeypatch: MonkeyPatch):
     """
     Test that CLI --verbose flag is passed to GSP instance.
-    
+
     Verifies integration between CLI and GSP verbosity settings.
     """
     # Create a valid JSON file
@@ -566,10 +566,11 @@ def test_cli_verbose_with_gsp_verbose(monkeypatch: MonkeyPatch):
 
     # Capture the GSP initialization to check verbose parameter
     from unittest.mock import patch
+
     with patch("gsppy.cli.GSP") as mock_gsp:
         mock_instance = mock_gsp.return_value
         mock_instance.search.return_value = []
-        
+
         try:
             main()
         except SystemExit as e:
@@ -577,7 +578,7 @@ def test_cli_verbose_with_gsp_verbose(monkeypatch: MonkeyPatch):
                 pass  # Expected success exit
             else:
                 raise
-        
+
         # Verify GSP was initialized with verbose=True
         mock_gsp.assert_called_once()
         call_kwargs = mock_gsp.call_args[1]
@@ -592,17 +593,14 @@ def test_cli_spm_format_flag(monkeypatch: MonkeyPatch):
     Test CLI with --format spm option for SPM/GSP format files.
     """
     # Create an SPM format file
-    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".txt") as temp_file:
         temp_file.write("1 2 -1 3 -1 -2\n")
         temp_file.write("4 -1 5 6 -1 -2\n")
         temp_file.write("1 -1 2 3 -1 -2\n")
         temp_file_name = temp_file.name
 
     # Mock CLI arguments with --format spm
-    monkeypatch.setattr(
-        "sys.argv", 
-        ["main", "--file", temp_file_name, "--format", "spm", "--min_support", "0.3"]
-    )
+    monkeypatch.setattr("sys.argv", ["main", "--file", temp_file_name, "--format", "spm", "--min_support", "0.3"])
 
     try:
         with patch("gsppy.cli.logger.info") as mock_info:
@@ -620,35 +618,29 @@ def test_cli_spm_format_subprocess():
     Test CLI with SPM format using subprocess to verify real-world usage.
     """
     # Create an SPM format file
-    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt') as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".txt") as temp_file:
         temp_file.write("A B -1 C -1 -2\n")
         temp_file.write("A -1 B C -1 -2\n")
         temp_file_name = temp_file.name
-    
+
     # Get the CLI script path
     cli_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../gsppy/cli.py"))
-    
+
     # Set up the environment with the correct PYTHONPATH
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    
+
     # Construct the command to run the script
-    cmd = [
-        sys.executable, 
-        cli_script, 
-        "--file", temp_file_name, 
-        "--format", "spm",
-        "--min_support", "0.5"
-    ]
-    
+    cmd = [sys.executable, cli_script, "--file", temp_file_name, "--format", "spm", "--min_support", "0.5"]
+
     # Run the script using subprocess
     process = subprocess.run(cmd, text=True, capture_output=True, env=env)
-    
+
     # Assert that the output contains the expected message
     assert process.returncode == 0
     assert "Frequent Patterns Found:" in process.stdout
     assert "Pattern:" in process.stdout
-    
+
     # Cleanup
     os.unlink(temp_file_name)
 
@@ -661,13 +653,11 @@ def test_cli_spm_format_subprocess():
 def test_valid_parquet_grouped_file(valid_parquet_grouped_file: Generator[Any, Any, Any]):
     """Test if a valid Parquet file with grouped format is correctly read."""
     from gsppy.cli import read_transactions_from_parquet
-    
+
     transactions = read_transactions_from_parquet(
-        str(valid_parquet_grouped_file),
-        transaction_col="transaction_id",
-        item_col="item"
+        str(valid_parquet_grouped_file), transaction_col="transaction_id", item_col="item"
     )
-    
+
     # Expected: 3 transactions grouped by transaction_id
     assert len(transactions) == 3
     assert transactions[0] == ["Bread", "Milk"]
@@ -678,12 +668,9 @@ def test_valid_parquet_grouped_file(valid_parquet_grouped_file: Generator[Any, A
 def test_valid_parquet_sequence_file(valid_parquet_sequence_file: Generator[Any, Any, Any]):
     """Test if a valid Parquet file with sequence format is correctly read."""
     from gsppy.cli import read_transactions_from_parquet
-    
-    transactions = read_transactions_from_parquet(
-        str(valid_parquet_sequence_file),
-        sequence_col="sequence"
-    )
-    
+
+    transactions = read_transactions_from_parquet(str(valid_parquet_sequence_file), sequence_col="sequence")
+
     assert len(transactions) == 3
     assert transactions[0] == ["Bread", "Milk"]
     assert transactions[1] == ["Milk", "Diaper"]
@@ -693,13 +680,11 @@ def test_valid_parquet_sequence_file(valid_parquet_sequence_file: Generator[Any,
 def test_valid_arrow_file(valid_arrow_file: Generator[Any, Any, Any]):
     """Test if a valid Arrow/Feather file is correctly read."""
     from gsppy.cli import read_transactions_from_arrow
-    
+
     transactions = read_transactions_from_arrow(
-        str(valid_arrow_file),
-        transaction_col="transaction_id",
-        item_col="item"
+        str(valid_arrow_file), transaction_col="transaction_id", item_col="item"
     )
-    
+
     assert len(transactions) == 3
     assert transactions[0] == ["Bread", "Milk"]
     assert transactions[1] == ["Milk", "Diaper"]
@@ -712,14 +697,14 @@ def test_parquet_auto_detect(valid_parquet_grouped_file: Generator[Any, Any, Any
     # because they require column parameters, so we test the format detection logic
     from gsppy.cli import _load_transactions_by_format
     from gsppy.enums import DATAFRAME_EXTENSIONS, FileFormat
-    
+
     file_path = str(valid_parquet_grouped_file)
     _, file_extension = os.path.splitext(file_path)
     file_extension = file_extension.lower()
-    
+
     # Verify it's recognized as a dataframe format
     assert file_extension in DATAFRAME_EXTENSIONS
-    
+
     # Test loading with explicit format
     transactions = _load_transactions_by_format(
         file_path,
@@ -729,21 +714,21 @@ def test_parquet_auto_detect(valid_parquet_grouped_file: Generator[Any, Any, Any
         transaction_col="transaction_id",
         item_col="item",
         timestamp_col=None,
-        sequence_col=None
+        sequence_col=None,
     )
-    
+
     assert len(transactions) == 3
 
 
 def test_parquet_missing_columns_error(invalid_parquet_missing_columns: Generator[Any, Any, Any]):
     """Test that Parquet files with missing required columns raise appropriate errors."""
     from gsppy.cli import read_transactions_from_parquet
-    
+
     with pytest.raises(ValueError, match="Error reading transaction data from Parquet file"):
         read_transactions_from_parquet(
             str(invalid_parquet_missing_columns),
             transaction_col="transaction_id",  # This column doesn't exist
-            item_col="item"  # This column doesn't exist
+            item_col="item",  # This column doesn't exist
         )
 
 
@@ -756,7 +741,7 @@ def test_parquet_without_polars_error():
     pass
 
 
-@pytest.mark.skipif(True, reason="Difficult to properly mock ImportError when module is already imported")  
+@pytest.mark.skipif(True, reason="Difficult to properly mock ImportError when module is already imported")
 def test_arrow_without_polars_error():
     """Test that using Arrow without Polars installed gives helpful error message."""
     # Note: This test is skipped because properly mocking ImportError when polars
@@ -771,17 +756,22 @@ def test_parquet_cli_integration(valid_parquet_grouped_file: Generator[Any, Any,
         "sys.argv",
         [
             "gsppy",
-            "--file", str(valid_parquet_grouped_file),
-            "--min_support", "0.5",
-            "--transaction-col", "transaction_id",
-            "--item-col", "item"
+            "--file",
+            str(valid_parquet_grouped_file),
+            "--min_support",
+            "0.5",
+            "--transaction-col",
+            "transaction_id",
+            "--item-col",
+            "item",
         ],
     )
-    
+
     # Capture output
     from io import StringIO
+
     captured_output = StringIO()
-    
+
     with patch("sys.stdout", captured_output):
         try:
             main(standalone_mode=False)
@@ -789,7 +779,7 @@ def test_parquet_cli_integration(valid_parquet_grouped_file: Generator[Any, Any,
             # Click-based CLIs raise SystemExit even on success; only ignore successful exits
             if exc.code not in (0, None):
                 raise
-    
+
     output = captured_output.getvalue()
     # Verify the CLI processed the Parquet file successfully
     assert "Frequent Patterns Found:" in output or "Pattern:" in output or len(output) > 0
@@ -801,34 +791,32 @@ def test_parquet_with_timestamps():
     import polars as pl
 
     from gsppy.cli import read_transactions_from_parquet
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Create a DataFrame with timestamps
-    df = pl.DataFrame({
-        "transaction_id": [1, 1, 1, 2, 2, 3],
-        "item": ["A", "B", "C", "A", "B", "C"],
-        "timestamp": [1.0, 2.0, 5.0, 1.0, 3.0, 2.0]
-    })
-    df.write_parquet(temp_file_name)
-    
-    transactions = read_transactions_from_parquet(
-        temp_file_name,
-        transaction_col="transaction_id",
-        item_col="item",
-        timestamp_col="timestamp"
+    df = pl.DataFrame(
+        {
+            "transaction_id": [1, 1, 1, 2, 2, 3],
+            "item": ["A", "B", "C", "A", "B", "C"],
+            "timestamp": [1.0, 2.0, 5.0, 1.0, 3.0, 2.0],
+        }
     )
-    
+    df.write_parquet(temp_file_name)
+
+    transactions = read_transactions_from_parquet(
+        temp_file_name, transaction_col="transaction_id", item_col="item", timestamp_col="timestamp"
+    )
+
     # Verify timestamped format
     assert len(transactions) == 3
     # First transaction should have tuples (item, timestamp)
     assert isinstance(transactions[0][0], tuple)
     assert transactions[0][0][0] == "A"
     assert transactions[0][0][1] == pytest.approx(1.0)
-    
-    os.unlink(temp_file_name)
 
+    os.unlink(temp_file_name)
 
 
 def test_write_patterns_to_parquet():
@@ -837,30 +825,27 @@ def test_write_patterns_to_parquet():
     import polars as pl
 
     from gsppy.cli import write_patterns_to_parquet
-    
+
     # Sample patterns from GSP search
-    patterns = [
-        {('A',): 3, ('B',): 2},
-        {('A', 'B'): 2}
-    ]
-    
+    patterns: list[dict[tuple[str, ...], int]] = [{("A",): 3, ("B",): 2}, {("A", "B"): 2}]
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as temp_file:
         temp_file_name = temp_file.name
-    
+
     # Write patterns
     write_patterns_to_parquet(patterns, temp_file_name)
-    
+
     # Read back and verify
     df = pl.read_parquet(temp_file_name)
     assert len(df) == 3  # 3 patterns total
     assert "pattern" in df.columns
     assert "support" in df.columns
     assert "level" in df.columns
-    
+
     # Check values
     assert df.filter(pl.col("pattern") == "('A',)")["support"][0] == 3
     assert df.filter(pl.col("pattern") == "('A', 'B')")["level"][0] == 2
-    
+
     os.unlink(temp_file_name)
 
 
@@ -870,23 +855,20 @@ def test_write_patterns_to_arrow():
     import polars as pl
 
     from gsppy.cli import write_patterns_to_arrow
-    
-    patterns = [
-        {('A',): 3, ('B',): 2},
-        {('A', 'B'): 2}
-    ]
-    
+
+    patterns: list[dict[tuple[str, ...], int]] = [{("A",): 3, ("B",): 2}, {("A", "B"): 2}]
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".arrow") as temp_file:
         temp_file_name = temp_file.name
-    
+
     write_patterns_to_arrow(patterns, temp_file_name)
-    
+
     # Read back and verify
     df = pl.read_ipc(temp_file_name)
     assert len(df) == 3
     assert "pattern" in df.columns
     assert "support" in df.columns
-    
+
     os.unlink(temp_file_name)
 
 
@@ -895,28 +877,25 @@ def test_write_patterns_to_csv():
     import csv
 
     from gsppy.cli import write_patterns_to_csv
-    
-    patterns = [
-        {('A',): 3, ('B',): 2},
-        {('A', 'B'): 2}
-    ]
-    
+
+    patterns: list[dict[tuple[str, ...], int]] = [{("A",): 3, ("B",): 2}, {("A", "B"): 2}]
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".csv", mode="w") as temp_file:
         temp_file_name = temp_file.name
-    
+
     write_patterns_to_csv(patterns, temp_file_name)
-    
+
     # Read back and verify
-    with open(temp_file_name, 'r') as csvfile:
+    with open(temp_file_name, "r") as csvfile:
         reader = csv.DictReader(csvfile)
         rows = list(reader)
-    
+
     assert len(rows) == 3
-    assert rows[0]['pattern'] == "('A',)"
-    assert rows[0]['support'] == '3'
-    assert rows[0]['level'] == '1'
+    assert rows[0]["pattern"] == "('A',)"
+    assert rows[0]["support"] == "3"
+    assert rows[0]["level"] == "1"
     # Verify column order is pattern, support, level (consistent with Parquet/Arrow)
-    assert list(rows[0].keys()) == ['pattern', 'support', 'level']
+    assert list(rows[0].keys()) == ["pattern", "support", "level"]
 
     os.unlink(temp_file_name)
 
@@ -925,10 +904,7 @@ def test_write_patterns_to_json():
     """Test writing GSP patterns to JSON format."""
     from gsppy.cli import write_patterns_to_json
 
-    patterns = [
-        {('A',): 3, ('B',): 2},
-        {('A', 'B'): 2}
-    ]
+    patterns: list[dict[tuple[str, ...], int]] = [{("A",): 3, ("B",): 2}, {("A", "B"): 2}]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as temp_file:
         temp_file_name = temp_file.name
@@ -936,20 +912,21 @@ def test_write_patterns_to_json():
     write_patterns_to_json(patterns, temp_file_name)
 
     # Read back and verify
-    with open(temp_file_name, 'r') as jsonfile:
+    with open(temp_file_name, "r") as jsonfile:
         data = json.load(jsonfile)
 
     assert len(data) == 2  # 2 levels
     assert len(data[0]) == 2  # 2 patterns in level 1
-    assert data[0][0]['pattern'] == ['A']
-    assert data[0][0]['support'] == 3
+    assert data[0][0]["pattern"] == ["A"]
+    assert data[0][0]["support"] == 3
 
     os.unlink(temp_file_name)
 
 
 def test_write_empty_patterns():
     """Test writing empty patterns (edge case for schema inference)."""
-    from gsppy.cli import write_patterns_to_parquet, write_patterns_to_csv
+    from gsppy.cli import write_patterns_to_csv, write_patterns_to_parquet
+
     pytest.importorskip("polars", reason="Parquet tests require Polars")
 
     # Empty patterns
@@ -963,6 +940,7 @@ def test_write_empty_patterns():
 
     # Verify empty file created
     import polars as pl
+
     df = pl.read_parquet(parquet_file)
     assert len(df) == 0
     os.unlink(parquet_file)
@@ -974,10 +952,10 @@ def test_write_empty_patterns():
     write_patterns_to_csv(patterns, csv_file)
 
     # Verify empty file with headers
-    with open(csv_file, 'r') as f:
+    with open(csv_file, "r") as f:
         lines = f.readlines()
     assert len(lines) == 1  # Only header row
-    assert 'pattern' in lines[0]
+    assert "pattern" in lines[0]
     os.unlink(csv_file)
 
 
@@ -985,32 +963,27 @@ def test_cli_with_parquet_output(valid_json_file: Generator[Any, Any, Any], monk
     """Test CLI with Parquet output."""
     pytest.importorskip("polars", reason="Parquet tests require Polars")
     import polars as pl
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as output_file:
         output_file_name = output_file.name
-    
+
     monkeypatch.setattr(
         "sys.argv",
-        [
-            "gsppy",
-            "--file", str(valid_json_file),
-            "--min_support", "0.5",
-            "--output", output_file_name
-        ],
+        ["gsppy", "--file", str(valid_json_file), "--min_support", "0.5", "--output", output_file_name],
     )
-    
+
     try:
         main(standalone_mode=False)
     except SystemExit as exc:
         # Click-based CLIs raise SystemExit even on success; only ignore successful exits
         if exc.code not in (0, None):
             raise
-    
+
     # Verify output file was created and contains data
     assert os.path.exists(output_file_name)
     df = pl.read_parquet(output_file_name)
     assert len(df) > 0
     assert "pattern" in df.columns
     assert "support" in df.columns
-    
+
     os.unlink(output_file_name)

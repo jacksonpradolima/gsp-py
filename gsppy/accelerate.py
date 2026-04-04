@@ -15,7 +15,7 @@ Control backend via env var:
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Tuple, Optional, cast
+from typing import Any, Dict, List, Tuple, Mapping, Optional, Sequence, cast
 
 from .utils import split_into_batches, is_subsequence_in_list
 
@@ -23,7 +23,7 @@ from .utils import split_into_batches, is_subsequence_in_list
 _gpu_available = False
 cp: Any | None = None
 try:  # pragma: no cover - optional dependency path
-    import cupy as _cp_mod  # type: ignore[import-not-found]
+    import cupy as _cp_mod  # type: ignore[import-not-found]  # ty: ignore[unresolved-import]
 
     cp = cast(Any, _cp_mod)
 
@@ -43,7 +43,7 @@ _ENCODED_CACHE: Dict[int, Tuple[List[List[int]], Dict[int, str], Dict[str, int],
 
 
 def _get_encoded_transactions(
-    transactions: List[Tuple[str, ...]],
+    transactions: Sequence[Tuple[str, ...]],
 ) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
     """Return encoded transactions using a small in-memory cache.
 
@@ -78,7 +78,9 @@ def _env_backend() -> str:
     return os.environ.get("GSPPY_BACKEND", "auto").lower()
 
 
-def _encode_transactions(transactions: List[Tuple[str, ...]]) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
+def _encode_transactions(
+    transactions: Sequence[Tuple[str, ...]],
+) -> Tuple[List[List[int]], Dict[int, str], Dict[str, int]]:
     """Encode transactions of strings into integer IDs.
 
     Parameters:
@@ -103,7 +105,7 @@ def _encode_transactions(transactions: List[Tuple[str, ...]]) -> Tuple[List[List
     return enc_tx, inv_vocab, vocab
 
 
-def _encode_candidates(candidates: List[Tuple[str, ...]], vocab: Dict[str, int]) -> List[List[int]]:
+def _encode_candidates(candidates: Sequence[Tuple[str, ...]], vocab: Mapping[str, int]) -> List[List[int]]:
     """Encode candidate patterns using a provided vocabulary mapping."""
     return [[vocab[s] for s in cand] for cand in candidates]
 
@@ -130,6 +132,7 @@ def _support_counts_gpu_singletons(
     if not flat:
         return []
 
+    assert cp is not None
     cp_flat = cp.asarray(flat, dtype=cp.int32)  # type: ignore[name-defined, union-attr]
     counts = cp.bincount(cp_flat, minlength=vocab_size)  # type: ignore[attr-defined, union-attr]
     counts_host: Any = counts.get()  # back to host as a NumPy array
@@ -143,8 +146,8 @@ def _support_counts_gpu_singletons(
 
 
 def support_counts_python(
-    transactions: List[Tuple[str, ...]],
-    candidates: List[Tuple[str, ...]],
+    transactions: Sequence[Tuple[str, ...]],
+    candidates: Sequence[Tuple[str, ...]],
     min_support_abs: int,
     batch_size: int = 100,
 ) -> Dict[Tuple[str, ...], int]:
@@ -167,8 +170,8 @@ def support_counts_python(
 
 
 def support_counts(
-    transactions: List[Tuple[str, ...]],
-    candidates: List[Tuple[str, ...]],
+    transactions: Sequence[Tuple[str, ...]],
+    candidates: Sequence[Tuple[str, ...]],
     min_support_abs: int,
     batch_size: int = 100,
     backend: Optional[str] = None,

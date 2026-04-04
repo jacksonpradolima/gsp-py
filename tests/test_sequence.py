@@ -327,7 +327,7 @@ class TestUtilityFunctions:
 
     def test_dict_to_sequences(self) -> None:
         """Test converting dictionary to Sequences."""
-        pattern_dict = {("A",): 5, ("B",): 3, ("A", "B"): 2}
+        pattern_dict: dict[tuple[str, ...], int] = {("A",): 5, ("B",): 3, ("A", "B"): 2}
         sequences = dict_to_sequences(pattern_dict)
         assert len(sequences) == 3
         # Check all sequences are created correctly

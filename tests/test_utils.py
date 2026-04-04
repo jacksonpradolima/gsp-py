@@ -77,31 +77,23 @@ def test_is_subsequence_contiguous_vs_non_contiguous():
     # Pattern that appears with gaps (non-contiguous)
     # In contiguous mode: would NOT match
     # In non-contiguous mode: DOES match
-    assert is_subsequence_in_list(("a", "c"), ("a", "b", "c")), (
-        "Non-contiguous: ('a', 'c') should match in ('a', 'b', 'c')"
-    )
-    assert is_subsequence_in_list(("a", "d"), ("a", "b", "c", "d")), (
-        "Non-contiguous: ('a', 'd') should match in ('a', 'b', 'c', 'd')"
-    )
-    assert is_subsequence_in_list((1, 4), (1, 2, 3, 4, 5)), (
-        "Non-contiguous: (1, 4) should match in (1, 2, 3, 4, 5)"
-    )
+    assert is_subsequence_in_list(
+        ("a", "c"), ("a", "b", "c")
+    ), "Non-contiguous: ('a', 'c') should match in ('a', 'b', 'c')"
+    assert is_subsequence_in_list(
+        ("a", "d"), ("a", "b", "c", "d")
+    ), "Non-contiguous: ('a', 'd') should match in ('a', 'b', 'c', 'd')"
+    assert is_subsequence_in_list((1, 4), (1, 2, 3, 4, 5)), "Non-contiguous: (1, 4) should match in (1, 2, 3, 4, 5)"
 
     # Pattern that appears contiguously (would match in both modes)
-    assert is_subsequence_in_list(("a", "b"), ("a", "b", "c")), (
-        "Contiguous: ('a', 'b') should match in ('a', 'b', 'c')"
-    )
-    assert is_subsequence_in_list((2, 3), (1, 2, 3, 4)), (
-        "Contiguous: (2, 3) should match in (1, 2, 3, 4)"
-    )
+    assert is_subsequence_in_list(("a", "b"), ("a", "b", "c")), "Contiguous: ('a', 'b') should match in ('a', 'b', 'c')"
+    assert is_subsequence_in_list((2, 3), (1, 2, 3, 4)), "Contiguous: (2, 3) should match in (1, 2, 3, 4)"
 
     # Pattern with wrong order (would NOT match in either mode)
-    assert not is_subsequence_in_list(("c", "a"), ("a", "b", "c")), (
-        "Wrong order: ('c', 'a') should NOT match in ('a', 'b', 'c')"
-    )
-    assert not is_subsequence_in_list((3, 1), (1, 2, 3, 4)), (
-        "Wrong order: (3, 1) should NOT match in (1, 2, 3, 4)"
-    )
+    assert not is_subsequence_in_list(
+        ("c", "a"), ("a", "b", "c")
+    ), "Wrong order: ('c', 'a') should NOT match in ('a', 'b', 'c')"
+    assert not is_subsequence_in_list((3, 1), (1, 2, 3, 4)), "Wrong order: (3, 1) should NOT match in (1, 2, 3, 4)"
 
 
 def test_is_subsequence_with_gaps():
@@ -130,7 +122,7 @@ def test_generate_candidates_from_previous():
     Test the `generate_candidates_from_previous` utility function.
     """
     # Test if candidates are generated correctly
-    prev_patterns = {
+    prev_patterns: Dict[Tuple[str, ...], int] = {
         ("1", "2"): 3,
         ("2", "3"): 4,
         ("3", "4"): 5,

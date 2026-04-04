@@ -23,7 +23,7 @@ These utilities are designed to support sequence processing tasks and can be
 adapted to various domains, such as data mining, recommendation systems, and sequence analysis.
 """
 
-from typing import Any, Dict, List, Tuple, Union, Optional, Sequence, Generator, cast
+from typing import Any, List, Tuple, Union, Mapping, Optional, Sequence, Generator, cast
 from functools import lru_cache
 from itertools import product
 
@@ -642,7 +642,7 @@ def _check_maxspan(
     return True
 
 
-def generate_candidates_from_previous(prev_patterns: Dict[Tuple[str, ...], int]) -> List[Tuple[str, ...]]:
+def generate_candidates_from_previous(prev_patterns: Mapping[Tuple[str, ...], int]) -> List[Tuple[str, ...]]:
     """
     Generate joined candidates from the previous level's frequent patterns.
 
