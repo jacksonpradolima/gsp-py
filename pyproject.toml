@@ -1,6 +1,6 @@
 [build-system]
 requires = ["hatchling", "hatch-fancy-pypi-readme"]
-build-backend = "hatchling.build"
+build-backend = "hatchling*"
 
 [project]
 name = "gsppy"
@@ -40,18 +40,18 @@ gsppy = "gsppy.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "cython==3.2.4",
-    "hatch==1.16.3",
-    "hatchling==1.29.0",
-    "hypothesis==6.151.10",
-    "pylint==4.0.4",
-    "pyright==1.1.408",
-    "pytest==9.0.3",
-    "pytest-benchmark==5.2.3",
-    "pytest-cov==7.0.0",
-    "ruff==0.15.0",
-    "tox==4.52.0",
-    "ty==0.0.28",
+    "cython==3.3.0",
+    "hatch==1.18.1",
+    "hatchling==1.32.4",
+    "hypothesis==6.168.3",
+    "pylint==4.0.9",
+    "pyright==1.1.414",
+    "pytest==9.1.1",
+    "pytest-benchmark==5.3.0",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.9",
+    "tox==4.64.4",
+    "ty==0.0.84",
 ]
 docs = [
     "mkdocs>=1.6,<2",
@@ -63,7 +63,7 @@ docs = [
     "pyzmq>=27.1.0",
 ]
 rust = [
-    "maturin==1.11.5"
+    "maturin==1.15.0"
 ]
 gpu = [
     "cupy>=11,<15"
