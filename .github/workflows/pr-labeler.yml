@@ -23,7 +23,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Label based on changed files
-        uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213 # v6.1.0
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PR by size
-        uses: codelytv/pr-size-labeler@4ec67706cd878fbc1c8db0a5dcd28b6bb412e85a # v1.10.3
+        uses: codelytv/pr-size-labeler@19c335e7695ba922de938806dd129f0a9b992644 # v1.12.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'
@@ -66,14 +66,14 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Check for merge conflicts
-        uses: eps1lon/actions-label-merge-conflict@1df065ebe6e3310545d4f4c4e862e43bdca146f0 # v3.0.3
+        uses: eps1lon/actions-label-merge-conflict@0273be72a0bbd58fcd71d0d6c02c209b50d1e5e1 # v3.1.0
         with:
           dirtyLabel: 'status/conflicts'
           repoToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Label draft PRs
         if: github.event.pull_request.draft == true
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             await github.rest.issues.addLabels({
@@ -85,7 +85,7 @@ jobs:
 
       - name: Remove draft label when ready
         if: github.event.pull_request.draft == false && github.event.action == 'ready_for_review'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             try {
@@ -109,7 +109,7 @@ jobs:
     if: github.event_name == 'schedule'
     steps:
       - name: Mark stale PRs
-        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-pr-message: |
@@ -136,7 +136,7 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
     steps:
       - name: Check for blocked keywords in comments
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const blockedKeywords = [
@@ -300,7 +300,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Label PRs needing review
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const pr = context.payload.pull_request;
